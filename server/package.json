@@ -1,0 +1,27 @@
+{
+  "name": "liga-amateur-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "express-validator": "^7.0.0",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.0.0",
+    "nodemon": "^3.0.0",
+    "supertest": "^6.3.0",
+    "vitest": "^1.0.0"
+  }
+}
