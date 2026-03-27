@@ -4,12 +4,14 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 
-import authRouter from './routes/auth.js'
-import ligasRouter from './routes/ligas.js'
-import equiposRouter from './routes/equipos.js'
-import partidosRouter from './routes/partidos.js'
+import identityRouter from './routes/identity.js'
+import competitionRouter from './routes/competition.js'
+import rosterRouter from './routes/roster.js'
+import matchRouter from './routes/match.js'
 import statsRouter from './routes/stats.js'
-import jugadoresRouter from './routes/jugadores.js'
+import awardsRouter from './routes/awards.js'
+
+import { errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -31,12 +33,12 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', env: process.env.NODE_ENV })
 })
 
-app.use('/api/auth', authRouter)
-app.use('/api/ligas', ligasRouter)
-app.use('/api/equipos', equiposRouter)
-app.use('/api/partidos', partidosRouter)
-app.use('/api/stats', statsRouter)
-app.use('/api/jugadores', jugadoresRouter)
+app.use('/api/identity', identityRouter)
+app.use('/api/competition', competitionRouter)
+app.use('/api/roster', rosterRouter)
+app.use('/api/match', matchRouter)
+app.use('/api/stats', statsRouter)     // Público — sin auth
+app.use('/api/awards', awardsRouter)   // Admin — requireAuth + requireOrganizador
 
 // 404
 app.use((_req, res) => {
@@ -44,11 +46,7 @@ app.use((_req, res) => {
 })
 
 // Error handler global
-// eslint-disable-next-line no-unused-vars
-app.use((err, _req, res, _next) => {
-  console.error(err.stack)
-  res.status(500).json({ error: 'Error interno del servidor' })
-})
+app.use(errorHandler)
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`))

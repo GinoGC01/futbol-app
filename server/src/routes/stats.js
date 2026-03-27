@@ -1,50 +1,65 @@
 import { Router } from 'express'
-import { supabaseAdmin } from '../lib/supabase.js'
+import { query, param } from 'express-validator'
+import StatController from '../controllers/awards/StatController.js'
 
 const router = Router()
 
-// GET /api/stats/tabla?temporada_id=xxx
-router.get('/tabla', async (req, res) => {
-  const { temporada_id } = req.query
-  if (!temporada_id) return res.status(400).json({ error: 'temporada_id requerido' })
+// ============================================
+// RUTAS PÚBLICAS — Sin autenticación
+// Cualquiera puede ver estadísticas desde su celular
+// ============================================
 
-  const { data, error } = await supabaseAdmin
-    .from('vista_tabla_posiciones')
-    .select('*')
-    .eq('temporada_id', temporada_id)
+// Tabla de posiciones de una fase o temporada
+router.get(
+  '/tabla',
+  [
+    query('fase_id').optional().isUUID(),
+    query('temporada_id').optional().isUUID()
+  ],
+  StatController.getTablaPosiciones
+)
 
-  if (error) return res.status(500).json({ error: error.message })
-  res.json(data)
-})
+// Ranking de goleadores
+router.get(
+  '/goleadores',
+  [
+    query('temporada_id').optional().isUUID(),
+    query('fase_id').optional().isUUID(),
+    query('limit').optional().isInt({ min: 1, max: 100 })
+  ],
+  StatController.getGoleadores
+)
 
-// GET /api/stats/goleadores?temporada_id=xxx
-router.get('/goleadores', async (req, res) => {
-  const { temporada_id } = req.query
-  if (!temporada_id) return res.status(400).json({ error: 'temporada_id requerido' })
+// Ranking de tarjetas
+router.get(
+  '/tarjetas',
+  [
+    query('temporada_id').optional().isUUID(),
+    query('fase_id').optional().isUUID(),
+    query('limit').optional().isInt({ min: 1, max: 100 })
+  ],
+  StatController.getTarjetas
+)
 
-  const { data, error } = await supabaseAdmin
-    .from('vista_goleadores')
-    .select('*')
-    .eq('temporada_id', temporada_id)
-    .gt('goles', 0)
-    .limit(20)
+// Fixture de una jornada
+router.get(
+  '/fixture/:jornadaId',
+  [param('jornadaId').isUUID().withMessage('ID de jornada inválido')],
+  StatController.getFixture
+)
 
-  if (error) return res.status(500).json({ error: error.message })
-  res.json(data)
-})
+// Detalle de un equipo
+router.get(
+  '/equipo/:id/detalle',
+  [param('id').isUUID().withMessage('ID de equipo inválido')],
+  StatController.getEquipoDetalle
+)
 
-// GET /api/stats/tarjetas?temporada_id=xxx
-router.get('/tarjetas', async (req, res) => {
-  const { temporada_id } = req.query
-  if (!temporada_id) return res.status(400).json({ error: 'temporada_id requerido' })
-
-  const { data, error } = await supabaseAdmin
-    .from('vista_tarjetas')
-    .select('*')
-    .eq('temporada_id', temporada_id)
-
-  if (error) return res.status(500).json({ error: error.message })
-  res.json(data)
-})
+// Premios publicados de una temporada (solo publicados=true)
+router.get(
+  '/premios',
+  [query('temporada_id').isUUID().withMessage('temporada_id requerido')],
+  StatController.getPremiosPublicados
+)
 
 export default router
