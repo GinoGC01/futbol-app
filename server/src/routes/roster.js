@@ -108,4 +108,12 @@ router.get(
   InscripcionController.getByTemporada
 )
 
+router.get(
+  '/inscripciones/equipo/:equipo_id',
+  [
+    param('equipo_id').isUUID().withMessage('ID de equipo inválido')
+  ],
+  InscripcionController.getByEquipo
+)
+
 export default router

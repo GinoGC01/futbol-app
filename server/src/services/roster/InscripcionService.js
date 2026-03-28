@@ -260,6 +260,63 @@ class InscripcionService {
 
     return data || []
   }
+
+  /**
+   * Lista las inscripciones y planteles de un equipo específico en todas las temporadas.
+   */
+  async getInscripcionesByEquipo(equipoId, organizadorId) {
+    // 1. Obtener equipo para verificar ownership
+    const { data: equipo, error: eqError } = await supabaseAdmin
+      .from('equipo')
+      .select('liga_id')
+      .eq('id', equipoId)
+      .maybeSingle()
+
+    if (eqError || !equipo) throw new AppError('Equipo no encontrado', 404)
+    // 2. Aislamiento
+    await LigaService.verifyOwnership(equipo.liga_id, organizadorId)
+
+    // 3. Obtener planteles con sus inscripciones de jugadores
+    const { data: planteles, error: pError } = await supabaseAdmin
+      .from('plantel')
+      .select(`
+        id, limite_jugadores, equipo_id, temporada_id, created_at,
+        temporada:temporada(id, nombre, estado),
+        inscripciones:inscripcion_jugador(
+          id, dorsal, posicion, estado,
+          jugador:jugador(id, nombre, apellido, foto_url)
+        )
+      `)
+      .eq('equipo_id', equipoId)
+      .order('created_at', { ascending: false })
+
+    if (pError) throw new AppError(`Error listando planteles: ${pError.message}`, 500)
+
+    // 4. Obtener datos de pago (inscripcion_equipo) para cruzarlos
+    const { data: inscripciones, error: iError } = await supabaseAdmin
+      .from('inscripcion_equipo')
+      .select('temporada_id, estado_pago, monto_total, monto_abonado, fecha_inscripcion')
+      .eq('equipo_id', equipoId)
+
+    if (iError) throw new AppError(`Error listando pagos: ${iError.message}`, 500)
+
+    // 5. Unificar datos
+    const resultado = planteles.map(p => {
+      const pago = inscripciones.find(i => i.temporada_id === p.temporada_id) || {}
+      return {
+        ...p,
+        ...pago,
+        // Mantener estructura esperada por el front (plantel: { ... })
+        plantel: {
+          id: p.id,
+          limite_jugadores: p.limite_jugadores,
+          inscripciones: p.inscripciones
+        }
+      }
+    })
+
+    return resultado
+  }
 }
 
 export default new InscripcionService()

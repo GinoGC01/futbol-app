@@ -19,6 +19,31 @@ class OrganizadorController {
   }
 
   /**
+   * POST /api/identity/organizador
+   * Crea el perfil de organizador tras el signUp en frontend
+   */
+  async createOrganizador(req, res, next) {
+    try {
+      const { id: auth_id, email } = req.user
+      const { nombre, telefono } = req.body
+
+      const organizador = await OrganizadorService.getOrCreateOrganizador(
+        auth_id,
+        email,
+        nombre,
+        telefono
+      )
+
+      res.status(201).json({
+        status: 'success',
+        data: organizador
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
    * PUT /api/identity/me
    */
   async updateMe(req, res, next) {

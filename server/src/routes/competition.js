@@ -15,7 +15,7 @@ router.post(
   '/temporadas',
   [
     body('liga_id').isUUID().withMessage('ID de liga requerido y válido'),
-    body('formato_id').isUUID().withMessage('ID de formato requerido y válido'),
+    body('formato_tipo').isString().notEmpty().withMessage('El tipo de formato es requerido'),
     body('nombre').isString().isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres'),
     body('fecha_inicio').optional().isISO8601().withMessage('La fecha inicio debe ser válida (YYYY-MM-DD)'),
     body('fecha_fin').optional().isISO8601().withMessage('La fecha fin debe ser válida (YYYY-MM-DD)')
@@ -32,14 +32,14 @@ router.get(
 )
 
 router.get(
-  '/temporadas/:id/completa',
+  '/temporadas/:id/tree',
   [
     param('id').isUUID().withMessage('ID de temporada inválido')
   ],
   CompetitionController.getTemporadaCompleta
 )
 
-router.put(
+router.patch(
   '/temporadas/:id/estado',
   [
     param('id').isUUID().withMessage('ID de temporada inválido'),
@@ -47,6 +47,19 @@ router.put(
   ],
   CompetitionController.updateEstadoTemporada
 )
+
+router.patch(
+  '/temporadas/:id',
+  [
+    param('id').isUUID().withMessage('ID de temporada inválido'),
+    body('nombre').optional().isString().isLength({ min: 3, max: 100 }),
+    body('fecha_inicio').optional().isISO8601(),
+    body('fecha_fin').optional().isISO8601()
+  ],
+  CompetitionController.updateTemporada
+)
+
+router.get('/formatos', CompetitionController.getFormatos)
 
 // ============================================
 // FASES
@@ -68,9 +81,9 @@ router.post(
 // JORNADAS (Batch)
 // ============================================
 router.post(
-  '/fases/:id/jornadas-batch',
+  '/jornadas/batch',
   [
-    param('id').isUUID().withMessage('ID de fase inválido'),
+    body('fase_id').isUUID().withMessage('ID de fase inválido'),
     body('cantidad').isInt({ min: 1, max: 100 }).withMessage('La cantidad debe ser un entero entre 1 y 100')
   ],
   CompetitionController.createJornadasBatch

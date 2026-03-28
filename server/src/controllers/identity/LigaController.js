@@ -11,32 +11,42 @@ class LigaController {
    */
   async register(req, res, next) {
     try {
+      console.log('--- REGISTER DEBUG ---')
+      console.log('Body:', JSON.stringify(req.body, null, 2))
+      
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
+        console.log('Validation Errors:', JSON.stringify(errors.array(), null, 2))
         return res.status(400).json({ status: 'fail', errors: errors.array() })
       }
 
       const { email, password, nombre_organizador, telefono, nombre_liga, slug, zona, tipo_futbol } = req.body
 
       // 0. Validar slug antes de crear el usuario para fallar rápido
+      console.log('Step 0: Validating slug:', slug)
       await LigaService.validateSlug(slug)
+      console.log('Step 0: Slug is valid and free.')
 
       // 1. Crear usuario en Supabase Auth
+      console.log('Step 1: Creating Auth User...')
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
-        email_confirm: true // Como es admin, lo confirmamos para evadir flujo de emails en onboarding test
+        email_confirm: true 
       })
 
       if (authError) {
+        console.log('Step 1: Auth Error:', JSON.stringify(authError, null, 2))
         throw new AppError(`Error creando autenticación: ${authError.message}`, 400)
       }
 
+      console.log('Step 1: Auth User created:', authData.user.id)
       const userId = authData.user.id
       let organizadorId = null
 
       try {
         // 2. Crear Organizador vinculado al auth_id
+        console.log('Step 2: Creating Organizador Profile...')
         const organizador = await OrganizadorService.getOrCreateOrganizador(
           userId, 
           email, 
@@ -95,6 +105,28 @@ class LigaController {
         status: 'success',
         results: ligas.length,
         data: ligas
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * POST /api/identity/ligas
+   */
+  async createLiga(req, res, next) {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ status: 'fail', errors: errors.array() })
+      }
+
+      const organizadorId = req.organizador.id
+      const nuevaLiga = await LigaService.createLiga(organizadorId, req.body)
+
+      res.status(201).json({
+        status: 'success',
+        data: nuevaLiga
       })
     } catch (error) {
       next(error)

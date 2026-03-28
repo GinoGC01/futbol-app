@@ -68,6 +68,20 @@ class InscripcionController {
       res.status(200).json({ status: 'success', results: inscripciones.length, data: inscripciones })
     } catch (error) { next(error) }
   }
+
+  /**
+   * GET /api/roster/inscripciones/equipo/:equipo_id
+   */
+  async getByEquipo(req, res, next) {
+    try {
+      const { equipo_id } = req.params
+      const inscripciones = await InscripcionService.getInscripcionesByEquipo(
+        equipo_id, req.organizador.id
+      )
+
+      res.status(200).json({ status: 'success', results: inscripciones.length, data: inscripciones })
+    } catch (error) { next(error) }
+  }
 }
 
 export default new InscripcionController()
