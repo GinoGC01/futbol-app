@@ -9,22 +9,25 @@ export const adminService = {
   // Competition
   getTemporadas: (ligaId) => api.get(`/competition/temporadas?liga_id=${ligaId}`),
   createTemporada: (data) => api.post('/competition/temporadas', data),
+  updateTemporada: (id, data) => api.patch(`/competition/temporadas/${id}`, data),
   updateEstadoTemporada: (id, estado) => api.patch(`/competition/temporadas/${id}/estado`, { estado }),
   getTemporadaTree: (id) => api.get(`/competition/temporadas/${id}/tree`),
+  getFormatos: () => api.get('/competition/formatos'),
   createFase: (data) => api.post('/competition/fases', data),
   createJornadas: (data) => api.post('/competition/jornadas/batch', data),
 
-  // Roster
+  // Roster Management (Elite System)
   getEquipos: (ligaId) => api.get(`/roster/equipos?liga_id=${ligaId}`),
   createEquipo: (data) => api.post('/roster/equipos', data),
-  inscribirEquipo: (data) => api.post('/roster/inscripciones', data),
-  getPlantel: (inscripcionId) => api.get(`/roster/inscripciones/${inscripcionId}/plantel`),
-  addJugadorAPlantel: (inscripcionId, data) => api.post(`/roster/inscripciones/${inscripcionId}/jugadores`, data),
+  updateEquipo: (id, data) => api.put(`/roster/equipos/${id}`, data),
+  inscribirEquipo: (data) => api.post('/roster/inscripciones/equipo', data),
+  getInscripcionesByEquipo: (ligaId, equipoId) => api.get(`/roster/inscripciones/equipo/${equipoId}?liga_id=${ligaId}`),
+  addJugadorAPlantel: (data) => api.post('/roster/inscripciones/jugador', data),
   searchJugadores: (query) => api.get(`/roster/jugadores/search?q=${encodeURIComponent(query)}`),
   createJugador: (data) => api.post('/roster/jugadores', data),
-  updatePago: (inscripcionId, data) => api.patch(`/roster/inscripciones/${inscripcionId}/pago`, data),
+  updatePago: (inscripcionId, data) => api.patch(`/roster/inscripciones/pago/${inscripcionId}`, data),
 
-  // Match
+  // Match Management
   createPartido: (data) => api.post('/match/partidos', data),
   cambiarEstadoPartido: (id, estado) => api.patch(`/match/partidos/${id}/estado`, { estado }),
   registrarResultado: (id, data) => api.patch(`/match/partidos/${id}/resultado`, data),

@@ -6,7 +6,8 @@ import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import EmptyState from '../../components/ui/EmptyState'
-import { Users, Plus, Search, UserPlus, Shield } from 'lucide-react'
+import { Users, Plus, Search, UserPlus, Shield, ExternalLink, Settings } from 'lucide-react'
+import TeamDetailView from './TeamDetailView'
 
 export default function RosterManager() {
   const { data: ligas } = useLigas()
@@ -14,6 +15,7 @@ export default function RosterManager() {
   const { data: equipos, isLoading } = useEquipos(liga?.id)
   const [showNewEquipo, setShowNewEquipo] = useState(false)
   const [showSearchPlayer, setShowSearchPlayer] = useState(false)
+  const [selectedEquipo, setSelectedEquipo] = useState(null)
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
 
@@ -31,24 +33,31 @@ export default function RosterManager() {
         </div>
       </div>
 
-      {equipos?.length > 0 ? (
+      {selectedEquipo ? (
+        <TeamDetailView 
+          equipo={selectedEquipo} 
+          onBack={() => setSelectedEquipo(null)} 
+          ligaId={liga?.id} 
+        />
+      ) : equipos?.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {equipos.map(eq => (
-            <GlassCard key={eq.id}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: eq.color_principal ? `${eq.color_principal}20` : 'rgba(0,237,100,0.1)' }}>
-                  <Shield className="w-5 h-5" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{eq.nombre}</p>
-                  {eq.color_principal && (
+            <GlassCard key={eq.id} className="group hover:border-primary/50 cursor-pointer transition-all" onClick={() => setSelectedEquipo(eq)}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: eq.color_principal ? `${eq.color_principal}20` : 'rgba(0,237,100,0.1)' }}>
+                    <Shield className="w-5 h-5" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold truncate">{eq.nombre}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: eq.color_principal }} />
-                      <span className="text-[11px] text-text-dim">{eq.color_principal}</span>
+                      <span className="w-2 rounded-full h-2" style={{ backgroundColor: eq.color_principal || 'var(--color-primary)' }} />
+                      <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Ver Plantel</span>
                     </div>
-                  )}
+                  </div>
                 </div>
+                <ExternalLink className="w-4 h-4 text-text-dim group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
               </div>
             </GlassCard>
           ))}

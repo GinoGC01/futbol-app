@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLigas, useTemporadas, useTemporadaTree, useCreateTemporada, useCreateFase, useCreateJornadas } from '../../hooks/useAdmin'
+import { useLigas, useTemporadas, useTemporadaTree, useCreateTemporada, useCreateFase, useCreateJornadas, useFormatos, useUpdateTemporada } from '../../hooks/useAdmin'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
@@ -11,10 +11,12 @@ export default function TournamentArchitect() {
   const { data: ligas } = useLigas()
   const liga = ligas?.[0]
   const { data: temporadas, isLoading } = useTemporadas(liga?.id)
+  const { data: formatos } = useFormatos()
   const [selectedTemp, setSelectedTemp] = useState(null)
   const { data: tree } = useTemporadaTree(selectedTemp)
 
   const [showNewTemp, setShowNewTemp] = useState(false)
+  const [showEditTemp, setShowEditTemp] = useState(false)
   const [showNewFase, setShowNewFase] = useState(false)
   const [showNewJornadas, setShowNewJornadas] = useState(false)
   const [selectedFase, setSelectedFase] = useState(null)
@@ -52,15 +54,33 @@ export default function TournamentArchitect() {
       {tree && (
         <GlassCard hover={false}>
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-heading font-semibold text-lg">{tree.nombre}</h2>
-              <p className="text-xs text-text-dim">Estado: <Badge status={tree.estado} /></p>
-            </div>
-            {isVault && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-dim text-danger text-xs font-semibold">
-                <Lock className="w-3.5 h-3.5" /> MODO BÓVEDA
+            <div className="flex items-center gap-4">
+              <div>
+                <h2 className="font-heading font-semibold text-lg">{tree.nombre}</h2>
+                <div className="flex items-center gap-2 text-xs text-text-dim">
+                  <span>Estado: <Badge status={tree.estado} /></span>
+                  {tree.fecha_inicio && <span>• {new Date(tree.fecha_inicio).toLocaleDateString()}</span>}
+                  {tree.fecha_fin && <span>al {new Date(tree.fecha_fin).toLocaleDateString()}</span>}
+                </div>
               </div>
-            )}
+              {!isVault && (
+                <Button variant="ghost" size="xs" onClick={() => setShowEditTemp(true)} className="text-text-dim hover:text-primary absolute right-4">
+                  Editar
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {tree.estado === 'borrador' && (
+                <Button variant="primary" size="xs" onClick={() => setShowEditTemp(true)} className="bg-primary hover:bg-primary/90 text-secondary font-bold px-4">
+                  Abrir Temporada
+                </Button>
+              )}
+              {isVault && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-dim text-danger text-xs font-semibold">
+                  <Lock className="w-3.5 h-3.5" /> MODO BÓVEDA
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Fases */}
@@ -105,41 +125,121 @@ export default function TournamentArchitect() {
       )}
 
       {/* Modals */}
-      <NewTemporadaModal open={showNewTemp} onClose={() => setShowNewTemp(false)} ligaId={liga?.id} />
+      <NewTemporadaModal open={showNewTemp} onClose={() => setShowNewTemp(false)} ligaId={liga?.id} formatos={formatos} />
+      {tree && <EditTemporadaModal open={showEditTemp} onClose={() => setShowEditTemp(false)} temporada={tree} />}
       <NewFaseModal open={showNewFase} onClose={() => setShowNewFase(false)} temporadaId={selectedTemp} />
       <NewJornadasModal open={showNewJornadas} onClose={() => setShowNewJornadas(false)} faseId={selectedFase} />
     </div>
   )
 }
 
-function NewTemporadaModal({ open, onClose, ligaId }) {
-  const [form, setForm] = useState({ nombre: '', fecha_inicio: '', fecha_fin: '' })
+function NewTemporadaModal({ open, onClose, ligaId, formatos }) {
+  const [form, setForm] = useState({ nombre: '', formato_tipo: '', fecha_inicio: '', fecha_fin: '' })
   const mutation = useCreateTemporada()
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
   async function submit(e) {
     e.preventDefault()
-    await mutation.mutateAsync({ liga_id: ligaId, formato_id: '00000000-0000-0000-0000-000000000001', ...form })
+    let payload = { ...form, liga_id: ligaId }
+    
+    // Auto-seleccionar el primero si no hay uno seleccionado
+    if (!payload.formato_tipo && formatos?.length > 0) {
+      payload.formato_tipo = formatos[0].tipo
+    }
+
+    await mutation.mutateAsync(payload)
     onClose()
-    setForm({ nombre: '', fecha_inicio: '', fecha_fin: '' })
+    setForm({ nombre: '', formato_tipo: '', fecha_inicio: '', fecha_fin: '' })
   }
 
   return (
     <Modal open={open} onClose={onClose} title="Nueva Temporada">
       <form onSubmit={submit} className="flex flex-col gap-4">
-        <input type="text" value={form.nombre} onChange={set('nombre')} placeholder="Ej: Apertura 2025" required
-          className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+        <label className="text-xs font-medium text-text-dim">
+          Nombre de Temporada
+          <input type="text" value={form.nombre} onChange={set('nombre')} placeholder="Ej: Apertura 2025" required
+            className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+        </label>
+        
+        <label className="text-xs font-medium text-text-dim">
+          Formato de Competencia
+          <select value={form.formato_tipo} onChange={set('formato_tipo')} required
+            className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all appearance-none">
+            <option value="" disabled>Seleccionar formato...</option>
+            {formatos?.map(f => (
+              <option key={f.id} value={f.tipo}>{f.nombre} ({f.tipo.replace(/_/g, ' ')})</option>
+            ))}
+          </select>
+        </label>
+
         <div className="grid grid-cols-2 gap-3">
-          <input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} required
-            className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
-          <input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} required
-            className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+          <label className="text-xs font-medium text-text-dim">
+            Fecha Inicio
+            <input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} required
+              className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+          </label>
+          <label className="text-xs font-medium text-text-dim">
+            Fecha Fin (Est.)
+            <input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} required
+              className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+          </label>
         </div>
-        <Button type="submit" loading={mutation.isPending} className="w-full">Crear Temporada</Button>
+        <Button type="submit" loading={mutation.isPending} className="w-full mt-2">Crear Temporada</Button>
       </form>
     </Modal>
   )
 }
+
+function EditTemporadaModal({ open, onClose, temporada }) {
+  const [form, setForm] = useState({ 
+    nombre: temporada.nombre, 
+    fecha_inicio: temporada.fecha_inicio?.split('T')[0] || '', 
+    fecha_fin: temporada.fecha_fin?.split('T')[0] || '',
+    estado: temporada.estado || 'borrador'
+  })
+  const mutation = useUpdateTemporada()
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  async function submit(e) {
+    e.preventDefault()
+    await mutation.mutateAsync({ id: temporada.id, ...form })
+    onClose()
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Editar Temporada">
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <label className="text-xs font-medium text-text-dim">
+          Nombre de Temporada
+          <input type="text" value={form.nombre} onChange={set('nombre')} required
+            className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-xs font-medium text-text-dim">
+            Fecha Inicio
+            <input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} required
+              className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+          </label>
+          <label className="text-xs font-medium text-text-dim">
+            Estado de Temporada
+            <select value={form.estado} onChange={set('estado')} required
+              className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all appearance-none uppercase font-bold tracking-wider">
+              <option value="borrador">Borrador</option>
+              <option value="proximamente">Próximamente</option>
+              <option value="abierta">Abierta (Inscripciones)</option>
+              <option value="en_curso">En Curso</option>
+              <option value="finalizada">Finalizada</option>
+            </select>
+          </label>
+        </div>
+        <p className="text-[10px] text-text-dim italic">* La fecha de finalización puede modificarse en cualquier momento antes de finalizar la temporada.</p>
+        <Button type="submit" loading={mutation.isPending} className="w-full mt-2">Guardar Cambios</Button>
+      </form>
+    </Modal>
+  )
+}
+
 
 function NewFaseModal({ open, onClose, temporadaId }) {
   const [form, setForm] = useState({ nombre: '', tipo: 'todos_contra_todos' })

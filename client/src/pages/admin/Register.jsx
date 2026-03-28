@@ -17,17 +17,8 @@ export default function Register() {
 
   async function handleStep1(e) {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-    const { error: err } = await supabase.auth.signUp({ email: form.email, password: form.password })
-    if (err) { setLoading(false); return setError(err.message) }
-    // Create organizador profile via API
-    try {
-      await api.post('/identity/organizador', { nombre: form.nombre, telefono: form.telefono })
-    } catch {
-      // May fail if already exists, continue
-    }
-    setLoading(false)
+    // Ya no hacemos signUp aquí, solo avanzamos el wizard. 
+    // Los datos se enviarán todos juntos al final.
     setStep(2)
   }
 
@@ -36,15 +27,28 @@ export default function Register() {
     setError('')
     setLoading(true)
     try {
-      await api.post('/identity/ligas', {
-        nombre: form.ligaNombre,
-        slug: form.slug || form.ligaNombre.toLowerCase().replace(/\s+/g, '-'),
+      // Usamos el endpoint unificado de onboarding (Backend Admin SDK)
+      await api.post('/identity/register', {
+        email: form.email,
+        password: form.password,
+        nombre_organizador: form.nombre,
+        telefono: form.telefono,
+        nombre_liga: form.ligaNombre,
+        slug: form.slug || form.ligaNombre.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         tipo_futbol: form.tipoFutbol,
         zona: form.zona
       })
+      
       setStep(3)
     } catch (err) {
-      setError(err.message)
+      console.error('Registration Error:', err)
+      
+      // Extraer mensaje de error específico del backend
+      const backendError = err.response?.data?.error || err.response?.data?.message
+      const validationErrors = err.response?.data?.errors?.map(e => e.msg).join('. ')
+      
+      const msg = validationErrors || backendError || 'Error inesperado. Por favor, revisa los datos e intenta con otro email.'
+      setError(msg)
     }
     setLoading(false)
   }
@@ -93,6 +97,11 @@ export default function Register() {
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><Lock className="w-3.5 h-3.5" /> Contraseña</div>
               <input type="password" value={form.password} onChange={set('password')} required minLength={6}
+                className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
+            </label>
+            <label className="text-xs font-medium text-text-dim">
+              <div className="flex items-center gap-1.5 mb-1.5"><MapPin className="w-3.5 h-3.5" /> Teléfono</div>
+              <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="Ej: +54 9 11 1234-5678"
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
             {error && <p className="text-xs text-danger bg-danger-dim rounded-lg px-3 py-2">{error}</p>}

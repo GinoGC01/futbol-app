@@ -25,7 +25,7 @@ export default function Button({
         font-semibold font-heading tracking-wide
         transition-all duration-200
         disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none
-        active:scale-[0.97]
+        active:scale-[0.97] p-2 rounded-xs
         ${variants[variant]} ${sizes[size]} ${className}
       `}
       {...props}

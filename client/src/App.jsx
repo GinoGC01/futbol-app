@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from './hooks/useAuth'
+import { ToastProvider } from './components/ui/Toast'
 
 // Public Pages
 import Home from './pages/public/Home'
@@ -39,7 +40,8 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <ToastProvider> 
+        <BrowserRouter>
         <Omnisearch />
         <Routes>
           {/* Public Routes */}
@@ -69,6 +71,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }
