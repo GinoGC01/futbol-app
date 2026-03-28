@@ -302,29 +302,47 @@ function CardsTab({ data }) {
 }
 
 function AwardsTab({ data }) {
-  if (!data?.length) return <EmptyState icon={Award} title="Sin premios publicados" description="Los premios se mostrarán cuando el organizador los publique." />
+  if (!data?.length) return <EmptyState icon={Award} title="Salón de la Fama Vacío" description="Los premios y galardones confirmados se publicarán aquí." />
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-6 sm:grid-cols-2">
       {data.map(p => (
-        <GlassCard key={p.id} className="!border-accent-gold/20 hover:!border-accent-gold/40 hover:!shadow-glow-gold">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-accent-gold/10 flex items-center justify-center">
-              <Award className="w-5 h-5 text-accent-gold" />
+        <GlassCard key={p.id} className="!border-accent-gold/30 hover:!border-accent-gold/60 hover:!shadow-glow-gold transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent-gold/5 rounded-full blur-3xl group-hover:bg-accent-gold/10 transition-colors" />
+          
+          <div className="flex items-center gap-4 mb-4 relative z-10">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-gold/20 to-transparent flex items-center justify-center border border-accent-gold/20 shadow-inner">
+              <Award className="w-6 h-6 text-accent-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
             </div>
             <div>
-              <h3 className="font-heading font-semibold text-accent-gold">{p.nombre}</h3>
-              <p className="text-xs text-text-dim">{p.criterio?.replace('_', ' ')}</p>
+              <h3 className="font-heading font-bold text-lg text-white tracking-wide drop-shadow-sm">{p.nombre}</h3>
+              <p className="text-xs text-accent-gold uppercase tracking-widest">{p.criterio?.replace(/_/g, ' ')}</p>
             </div>
           </div>
-          {p.ganadores?.map(g => (
-            <div key={g.id} className="mt-2 p-3 rounded-lg bg-bg-deep/50">
-              <p className="font-medium text-sm">
-                {g.jugador ? `${g.jugador.nombre} ${g.jugador.apellido}` : g.equipo?.nombre}
-              </p>
-              {g.valor_record && <p className="text-xs text-accent-gold mt-0.5">{g.valor_record}</p>}
-              {g.nota_desempate && <p className="text-xs text-text-dim mt-0.5 italic">{g.nota_desempate}</p>}
-            </div>
-          ))}
+
+          <div className="space-y-3 relative z-10">
+            {p.ganadores?.map((g, i) => (
+              <div key={g.id} className="p-4 rounded-xl bg-bg-deep/80 border border-white/5 relative">
+                {i === 0 && <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-8 bg-accent-gold rounded-r-md" />}
+                
+                <p className="font-heading font-bold text-base text-white">
+                  {g.jugador ? `${g.jugador.nombre} ${g.jugador.apellido}` : g.equipo?.nombre}
+                </p>
+                
+                {g.valor_record && (
+                  <p className="text-sm font-semibold text-primary mt-1 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5" /> Récord: {g.valor_record}
+                  </p>
+                )}
+                
+                {g.nota_desempate && (
+                  <div className="mt-3 p-2.5 rounded-lg bg-white/5 border border-white/10 border-l-2 border-l-secondary">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-secondary mb-1">Criterio de Desempate</p>
+                    <p className="text-xs text-text-secondary leading-snug">{g.nota_desempate}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </GlassCard>
       ))}
     </div>

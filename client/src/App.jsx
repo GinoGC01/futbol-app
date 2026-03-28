@@ -5,6 +5,9 @@ import { useAuth } from './hooks/useAuth'
 // Public Pages
 import Home from './pages/public/Home'
 import LeagueArena from './pages/public/LeagueArena'
+import TeamProfile from './pages/public/TeamProfile'
+import PlayerProfile from './pages/public/PlayerProfile'
+import Omnisearch from './components/ui/Omnisearch'
 
 // Admin Pages
 import Login from './pages/admin/Login'
@@ -21,7 +24,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,
+      staleTime: 30 * 1000,
     }
   }
 })
@@ -37,10 +40,13 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <Omnisearch />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/liga/:slug" element={<LeagueArena />} />
+          <Route path="/equipo/:id" element={<TeamProfile />} />
+          <Route path="/jugador/:id" element={<PlayerProfile />} />
 
           {/* Auth Routes */}
           <Route path="/admin/login" element={<Login />} />
