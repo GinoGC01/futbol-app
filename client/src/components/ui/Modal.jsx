@@ -18,7 +18,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
                 className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
               />
             </Dialog.Overlay>
-            <Dialog.Content asChild>
+            <Dialog.Content asChild aria-describedby={undefined}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}

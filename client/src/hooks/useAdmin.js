@@ -40,6 +40,31 @@ export function useEquipos(ligaId) {
   })
 }
 
+export const useJugadoresLiga = (ligaId) => {
+  return useQuery({
+    queryKey: ['jugadores-liga', ligaId],
+    queryFn: () => adminService.getJugadoresByLiga(ligaId),
+    enabled: !!ligaId
+  })
+}
+
+export const useJugadoresOrganizador = (page = 1, limit = 20) => {
+  return useQuery({
+    queryKey: ['jugadores-organizador', page, limit],
+    queryFn: () => adminService.getJugadoresOrganizador(page, limit),
+    keepPreviousData: true
+  })
+}
+
+export const useSearchGlobalJugadores = (queryTexto) => {
+  return useQuery({
+    queryKey: ['search-jugadores', queryTexto],
+    queryFn: () => adminService.searchJugadores(queryTexto),
+    enabled: !!queryTexto && queryTexto.length >= 2,
+    keepPreviousData: true
+  })
+}
+
 // Match
 export function useFixtureAdmin(jornadaId) {
   return useQuery({
@@ -109,6 +134,44 @@ export function useCreateJornadas() {
   })
 }
 
+export function useUpdateFase() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }) => adminService.updateFase(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['temporada-tree'] })
+  })
+}
+
+export function useUpdateJornada() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }) => adminService.updateJornada(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['temporada-tree'] })
+  })
+}
+
+export function useCreatePartido() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminService.createPartido,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fixture-admin'] })
+      qc.invalidateQueries({ queryKey: ['temporada-tree'] })
+    }
+  })
+}
+
+export function useGenerateFixture() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ faseId, equipoIds }) => adminService.generateFixture(faseId, equipoIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fixture-admin'] })
+      qc.invalidateQueries({ queryKey: ['temporada-tree'] })
+    }
+  })
+}
+
 export function useCreateEquipo() {
   const qc = useQueryClient()
   return useMutation({
@@ -121,7 +184,10 @@ export function useInscribirEquipo() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: adminService.inscribirEquipo,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['equipos'] })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['equipos'] })
+      qc.invalidateQueries({ queryKey: ['inscripciones-equipo'] })
+    }
   })
 }
 
@@ -191,6 +257,9 @@ export function useAddJugador() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: adminService.addJugadorAPlantel,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['inscripciones-equipo'] })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inscripciones-equipo'] })
+      qc.invalidateQueries({ queryKey: ['equipos'] })
+    }
   })
 }

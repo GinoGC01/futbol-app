@@ -59,6 +59,19 @@ router.post(
 )
 
 router.get(
+  '/jugadores',
+  [
+    query('liga_id').isUUID().withMessage('ID de liga requerido')
+  ],
+  JugadorController.getByLiga
+)
+
+router.get(
+  '/jugadores/recientes',
+  JugadorController.getRecientes
+)
+
+router.get(
   '/jugadores/search',
   [
     query('q').isString().isLength({ min: 2 }).withMessage('La búsqueda debe tener al menos 2 caracteres')

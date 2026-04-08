@@ -77,6 +77,53 @@ class JornadaService {
       throw new AppError(`Error fatal generando batch: ${e.message}`, 500)
     }
   }
+
+  /**
+   * Actualiza una jornada (fecha_tentativa).
+   */
+  async updateJornada(jornadaId, organizadorId, updateData) {
+    // 1. Resolve: jornada → fase → temporada → liga
+    const { data: jornada, error: jErr } = await supabaseAdmin
+      .from('jornada')
+      .select(`
+        id, fase_id,
+        fase:fase(
+          temporada_id,
+          temporada:temporada(liga_id, estado)
+        )
+      `)
+      .eq('id', jornadaId)
+      .maybeSingle()
+
+    if (jErr || !jornada) throw new AppError('Jornada no encontrada', 404)
+
+    // 2. Aislamiento
+    await LigaService.verifyOwnership(jornada.fase.temporada.liga_id, organizadorId)
+
+    // 3. Vault
+    if (jornada.fase.temporada.estado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede editar la jornada (Modo Bóveda)', 403)
+    }
+
+    // 4. Update
+    const payload = {}
+    if (updateData.fecha_tentativa !== undefined) payload.fecha_tentativa = updateData.fecha_tentativa
+
+    if (Object.keys(payload).length === 0) {
+      throw new AppError('No hay datos para actualizar', 400)
+    }
+
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('jornada')
+      .update(payload)
+      .eq('id', jornadaId)
+      .select('id, numero, estado, fecha_tentativa')
+      .single()
+
+    if (updateError) throw new AppError(`Error al actualizar jornada: ${updateError.message}`, 500)
+
+    return updated
+  }
 }
 
 export default new JornadaService()

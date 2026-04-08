@@ -88,6 +88,62 @@ class FaseService {
 
     return fases || []
   }
+
+  /**
+   * Actualiza una fase existente (nombre, tipo, puntos, ida_y_vuelta).
+   * Solo si la temporada NO está finalizada.
+   */
+  async updateFase(faseId, organizadorId, updateData) {
+    // 1. Resolve ownership chain: fase → temporada → liga
+    const { data: fase, error: faseError } = await supabaseAdmin
+      .from('fase')
+      .select(`
+        id, temporada_id, nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta,
+        temporada:temporada(liga_id, estado)
+      `)
+      .eq('id', faseId)
+      .maybeSingle()
+
+    if (faseError || !fase) throw new AppError('Fase no encontrada', 404)
+
+    // 2. Aislamiento Total
+    await LigaService.verifyOwnership(fase.temporada.liga_id, organizadorId)
+
+    // 3. Hard Lock: Modo Bóveda
+    if (fase.temporada.estado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede editar la fase (Modo Bóveda)', 403)
+    }
+
+    // 4. Build payload — only allowed fields
+    const { nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta } = updateData
+    const payload = {}
+
+    if (nombre !== undefined) payload.nombre = nombre.trim()
+    if (tipo !== undefined) {
+      if (!TIPOS_FASE_VALIDOS.includes(tipo)) {
+        throw new AppError(`Tipo de fase no válido. Permitidos: ${TIPOS_FASE_VALIDOS.join(', ')}`, 400)
+      }
+      payload.tipo = tipo
+    }
+    if (puntos_victoria !== undefined) payload.puntos_victoria = Number(puntos_victoria)
+    if (puntos_empate !== undefined) payload.puntos_empate = Number(puntos_empate)
+    if (ida_y_vuelta !== undefined) payload.ida_y_vuelta = Boolean(ida_y_vuelta)
+
+    if (Object.keys(payload).length === 0) {
+      throw new AppError('No hay datos para actualizar', 400)
+    }
+
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('fase')
+      .update(payload)
+      .eq('id', faseId)
+      .select('id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta')
+      .single()
+
+    if (updateError) throw new AppError(`Error al actualizar fase: ${updateError.message}`, 500)
+
+    return updated
+  }
 }
 
 export default new FaseService()

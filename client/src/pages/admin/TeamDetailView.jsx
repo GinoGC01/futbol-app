@@ -251,6 +251,8 @@ function AddPlayerModal({ open, onClose, plantelId }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   
   const [enrollForm, setEnrollForm] = useState({ dorsal: '', posicion: 'mediocampista' })
+  const [isCreating, setIsCreating] = useState(false)
+  const [newPlayerForm, setNewPlayerForm] = useState({ nombre: '', apellido: '', dni: '' })
   const addMutation = useAddJugador()
 
   async function handleSearch() {
@@ -263,22 +265,60 @@ function AddPlayerModal({ open, onClose, plantelId }) {
     setSearching(false)
   }
 
+  async function handleCreateAndEnroll(e) {
+    e.preventDefault()
+    if (!plantelId) {
+      toast.error('No hay un plantel activo para este equipo. Primero inscríbelo en una temporada.')
+      return
+    }
+    setIsCreating(true)
+    try {
+      const { jugador } = await adminService.createJugador(newPlayerForm)
+      const payload = {
+        plantel_id: plantelId,
+        jugador_id: jugador.id,
+        posicion: enrollForm.posicion,
+        ...(enrollForm.dorsal ? { dorsal: parseInt(enrollForm.dorsal) } : {})
+      }
+      await addMutation.mutateAsync(payload)
+      toast.success('Jugador creado e inscrito')
+      onClose()
+      resetStates()
+    } catch (error) {
+      toast.error(error.message || 'Error al crear/inscribir jugador')
+    }
+    setIsCreating(false)
+  }
+
+  function resetStates() {
+    setSelectedPlayer(null)
+    setIsCreating(false)
+    setQuery('')
+    setResults([])
+    setNewPlayerForm({ nombre: '', apellido: '', dni: '' })
+  }
+
   async function handleEnroll(e) {
     e.preventDefault()
-    if (!selectedPlayer || !plantelId) return
+    if (!selectedPlayer) return
+    if (!plantelId) {
+      toast.error('No hay un plantel activo. Inscribí el equipo en una temporada primero.')
+      return
+    }
+
     try {
-      await addMutation.mutateAsync({
+      const payload = {
         plantel_id: plantelId,
         jugador_id: selectedPlayer.id,
-        ...enrollForm
-      })
-      toast.success('Incripción exitosa')
+        posicion: enrollForm.posicion,
+        ...(enrollForm.dorsal ? { dorsal: parseInt(enrollForm.dorsal) } : {})
+      }
+      await addMutation.mutateAsync(payload)
+      toast.success('Inscripción exitosa')
       onClose()
-      setSelectedPlayer(null)
-      setQuery('')
-      setResults([])
+      resetStates()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error en la inscripción')
+      toast.error(error.response?.data?.message || error.message || 'Error en la inscripción')
     }
   }
 
@@ -311,11 +351,58 @@ function AddPlayerModal({ open, onClose, plantelId }) {
               <div className="py-10 text-center space-y-3">
                  <AlertCircle className="w-10 h-10 text-text-dim mx-auto opacity-50" />
                  <p className="text-sm text-text-dim font-medium">No encontramos al jugador en la liga.</p>
-                 <Button variant="outline" size="sm">Registrar Nuevo Jugador</Button>
+                 <Button variant="outline" size="sm" onClick={() => {
+                   setNewPlayerForm({ ...newPlayerForm, nombre: query.split(' ')[0] || '', apellido: query.split(' ')[1] || '' })
+                   setIsCreating(true)
+                 }}>Registrar Nuevo Jugador</Button>
               </div>
             )}
           </div>
+          <p className="text-[10px] text-text-dim text-center px-6 italic">Tip: El jugador es un recurso global. Si ya jugó en otra liga, búscalo por su nombre completo o DNI.</p>
         </div>
+      ) : isCreating ? (
+        <form onSubmit={handleCreateAndEnroll} className="space-y-6 animate-fade-in">
+          <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20">
+             <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
+               <UserPlus className="w-4 h-4" /> Nuevo Jugador Global
+             </h3>
+             <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-text-dim uppercase">Nombre</label>
+                  <input type="text" required value={newPlayerForm.nombre} onChange={e => setNewPlayerForm({...newPlayerForm, nombre: e.target.value})} className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-lg text-sm outline-none focus:border-primary" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-text-dim uppercase">Apellido</label>
+                  <input type="text" required value={newPlayerForm.apellido} onChange={e => setNewPlayerForm({...newPlayerForm, apellido: e.target.value})} className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-lg text-sm outline-none focus:border-primary" />
+                </div>
+             </div>
+             <div className="space-y-1 mt-3">
+                <label className="text-[10px] font-bold text-text-dim uppercase">DNI / ID (Opcional)</label>
+                <input type="text" value={newPlayerForm.dni} onChange={e => setNewPlayerForm({...newPlayerForm, dni: e.target.value})} className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-lg text-sm outline-none focus:border-primary font-mono" />
+             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Número (Dorsal)</label>
+              <input type="number" required value={enrollForm.dorsal} onChange={e => setEnrollForm({...enrollForm, dorsal: e.target.value})} placeholder="Ej: 10" className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-mono" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Posición</label>
+              <select value={enrollForm.posicion} onChange={e => setEnrollForm({...enrollForm, posicion: e.target.value})} className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-medium appearance-none">
+                <option value="arquero">Arquero</option>
+                <option value="defensor">Defensor</option>
+                <option value="mediocampista">Mediocampista</option>
+                <option value="delantero">Delantero</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="ghost" className="flex-1" onClick={() => setIsCreating(false)}>Cancelar</Button>
+            <Button type="submit" loading={addMutation.isPending || isCreating} className="flex-[2] h-12 text-sm font-extrabold shadow-xl shadow-primary/20">Crear e Inscribir</Button>
+          </div>
+        </form>
       ) : (
         <form onSubmit={handleEnroll} className="space-y-6 animate-fade-in">
           <div className="p-5 bg-primary/5 rounded-2xl border border-primary/20 space-y-4">

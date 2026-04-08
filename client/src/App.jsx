@@ -19,6 +19,7 @@ import TournamentArchitect from './pages/admin/TournamentArchitect'
 import RosterManager from './pages/admin/RosterManager'
 import MatchEdgeBox from './pages/admin/MatchEdgeBox'
 import AwardScrutinyTool from './pages/admin/AwardScrutinyTool'
+import PlayerManager from './pages/admin/PlayerManager'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,7 @@ export default function App() {
             <Route index element={<DashboardHome />} />
             <Route path="torneo" element={<TournamentArchitect />} />
             <Route path="roster" element={<RosterManager />} />
+            <Route path="jugadores" element={<PlayerManager />} />
             <Route path="partidos" element={<MatchEdgeBox />} />
             <Route path="premios" element={<AwardScrutinyTool />} />
           </Route>

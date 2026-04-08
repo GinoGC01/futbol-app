@@ -22,7 +22,7 @@ export default function RosterManager() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-heading font-bold">Roster Manager</h1>
+        <h1 className="text-2xl font-heading font-bold">Gestión de Equipos</h1>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => setShowSearchPlayer(true)}>
             <Search className="w-4 h-4" /> Buscar Jugador

@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Trophy, Users, Swords, Award, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Trophy, Users, Swords, Award, ChevronLeft, ChevronRight, User } from 'lucide-react'
 import { useState } from 'react'
 
 const links = [
   { to: '/admin',         icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/torneo',  icon: Trophy,          label: 'Torneo' },
-  { to: '/admin/roster',  icon: Users,           label: 'Roster' },
+  { to: '/admin/roster',  icon: Users,           label: 'Equipos' },
+  { to: '/admin/jugadores', icon: User,           label: 'Jugadores' },
   { to: '/admin/partidos',icon: Swords,          label: 'Partidos' },
   { to: '/admin/premios', icon: Award,           label: 'Premios' },
 ]

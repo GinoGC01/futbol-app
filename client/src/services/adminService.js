@@ -22,13 +22,20 @@ export const adminService = {
   updateEquipo: (id, data) => api.put(`/roster/equipos/${id}`, data),
   inscribirEquipo: (data) => api.post('/roster/inscripciones/equipo', data),
   getInscripcionesByEquipo: (ligaId, equipoId) => api.get(`/roster/inscripciones/equipo/${equipoId}?liga_id=${ligaId}`),
+  getJugadoresByLiga: (ligaId) => api.get(`/roster/jugadores?liga_id=${ligaId}`),
+  getJugadoresOrganizador: (page = 1, limit = 20) => api.get(`/roster/jugadores/recientes?page=${page}&limit=${limit}`),
   addJugadorAPlantel: (data) => api.post('/roster/inscripciones/jugador', data),
   searchJugadores: (query) => api.get(`/roster/jugadores/search?q=${encodeURIComponent(query)}`),
   createJugador: (data) => api.post('/roster/jugadores', data),
   updatePago: (inscripcionId, data) => api.patch(`/roster/inscripciones/pago/${inscripcionId}`, data),
 
+  // Competition — Fases & Jornadas
+  updateFase: (id, data) => api.patch(`/competition/fases/${id}`, data),
+  updateJornada: (id, data) => api.patch(`/competition/jornadas/${id}`, data),
+
   // Match Management
   createPartido: (data) => api.post('/match/partidos', data),
+  generateFixture: (faseId, equipoIds) => api.post(`/match/partidos/generate/${faseId}`, { equipo_ids: equipoIds }),
   cambiarEstadoPartido: (id, estado) => api.patch(`/match/partidos/${id}/estado`, { estado }),
   registrarResultado: (id, data) => api.patch(`/match/partidos/${id}/resultado`, data),
   updateLogistica: (id, data) => api.patch(`/match/partidos/${id}/logistica`, data),

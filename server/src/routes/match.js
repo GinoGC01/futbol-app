@@ -62,6 +62,16 @@ router.get(
   MatchController.getFixture
 )
 
+router.post(
+  '/partidos/generate/:faseId',
+  [
+    param('faseId').isUUID().withMessage('ID de fase inválido'),
+    body('equipo_ids').isArray({ min: 2 }).withMessage('Se requieren al menos 2 equipos'),
+    body('equipo_ids.*').isUUID().withMessage('Cada equipo debe tener un UUID válido')
+  ],
+  MatchController.generateFixture
+)
+
 // ============================================
 // EVENTOS — Goles y Tarjetas (Minuto a Minuto)
 // ============================================

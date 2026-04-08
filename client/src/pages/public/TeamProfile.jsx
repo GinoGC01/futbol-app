@@ -82,7 +82,7 @@ export default function TeamProfile() {
           <GlassCard className="h-full flex flex-col">
             <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
               <h3 className="text-lg font-heading font-bold flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" /> Roster Oficial
+                <Users className="w-5 h-5 text-primary" /> Plantel Oficial
               </h3>
               <span className="text-xs text-text-dim px-2 bg-white/5 rounded-full">{plantel?.length || 0} inscritos</span>
             </div>

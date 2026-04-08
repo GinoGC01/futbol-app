@@ -1,6 +1,7 @@
 const styles = {
   live:        'bg-primary/15 text-primary border-primary/30 animate-pulse-live',
   finalizado:  'bg-bg-elevated text-text-secondary border-border-default',
+  finalizada:  'bg-bg-elevated text-text-secondary border-border-default',
   programado:  'bg-info-dim text-info border-info/30',
   en_juego:    'bg-primary/15 text-primary border-primary/30 animate-pulse-live',
   suspendido:  'bg-danger-dim text-danger border-danger/30',
@@ -14,7 +15,7 @@ const styles = {
 }
 
 const labels = {
-  live: 'EN VIVO', finalizado: 'FINALIZADO', programado: 'PROGRAMADO',
+  live: 'EN VIVO', finalizado: 'FINALIZADO', finalizada: 'FINALIZADA', programado: 'PROGRAMADO',
   en_juego: 'EN JUEGO', suspendido: 'SUSPENDIDO', postergado: 'POSTERGADO',
   activa: 'ACTIVA', borrador: 'BORRADOR', pagado: 'PAGADO',
   parcial: 'PARCIAL', pendiente: 'PENDIENTE', gold: 'GANADOR'

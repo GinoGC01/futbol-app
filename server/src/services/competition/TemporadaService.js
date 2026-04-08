@@ -35,48 +35,83 @@ class TemporadaService {
       // 1. Aislamiento Total
       await LigaService.verifyOwnership(ligaId, organizadorId);
 
-      const { formato_tipo, nombre, fecha_inicio, fecha_fin } = data;
+      const { formato_tipo, nombre, fecha_inicio, fecha_fin, modalidad } = data;
       if (!formato_tipo || !nombre) {
         throw new AppError("formato_tipo y nombre son requeridos", 400);
       }
 
-      // 2. Resolución de Formato: Buscar ID basado en el tipo (ej: 'todos_contra_todos')
-      const { data: formato, error: formatError } = await supabaseAdmin
+      // 2. Resolución de Formato: Buscar basado en el tipo (slug) o nombre
+      // Intentamos primero coincidencia exacta por tipo (slug)
+      let { data: formato, error: formatError } = await supabaseAdmin
         .from("formato_competencia")
-        .select("id")
-        .eq("tipo", formato_tipo)
+        .select("id, tipo, nombre")
+        .eq("tipo", formato_tipo.toLowerCase())
         .maybeSingle();
 
-      if (formatError || !formato) {
+      // Si no lo encuentra por tipo, intentamos por nombre (case-insensitive)
+      if (!formato) {
+        const { data: fallback, error: fbError } = await supabaseAdmin
+          .from("formato_competencia")
+          .select("id, tipo, nombre")
+          .ilike("nombre", `%${formato_tipo}%`)
+          .maybeSingle();
+        formato = fallback;
+      }
+
+      if (!formato) {
         throw new AppError(
           `Formato de competencia '${formato_tipo}' no reconocido o no disponible.`,
           400,
         );
       }
 
-      // 3. Insert en BD. El estado por defecto es 'borrador' desde el schema
+      // 3. Extraer modalidad por defecto de la liga
+      const { data: liga, error: ligaErr } = await supabaseAdmin
+        .from("liga")
+        .select("tipo_futbol")
+        .eq("id", ligaId)
+        .single();
+      
+      const modalidadDefault = liga.tipo_futbol ? parseInt(liga.tipo_futbol.replace(/\D/g, "")) : 5;
+
+      // 4. Insert en BD (Resiliencia ante esquema desactualizado)
       const payload = {
         liga_id: ligaId,
         formato_id: formato.id,
         nombre: nombre.trim(),
+        modalidad: Number(modalidad) || modalidadDefault
       };
       if (fecha_inicio) payload.fecha_inicio = fecha_inicio;
       if (fecha_fin) payload.fecha_fin = fecha_fin;
 
-      const { data: nuevaTemporada, error } = await supabaseAdmin
+      let result = await supabaseAdmin
         .from("temporada")
         .insert([payload])
-        .select("id, nombre, estado, fecha_inicio, fecha_fin, formato_id")
-        .single();
+        .select("id, nombre, estado, fecha_inicio, fecha_fin, formato_id, modalidad, liga:liga_id(id, tipo_futbol)")
+        .maybeSingle();
 
-      if (error) {
-        // 23503: foreign_key_violation (ej: formato_id no existe)
-        if (error.code === "23503")
-          throw new AppError("El Formato especificado no es válido", 400);
-        throw new AppError(`Error al crear temporada: ${error.message}`, 500);
+      // Si falla porque no existe la columna 'modalidad', reintentamos sin ella
+      if (result.error && (result.error.message.includes("modalidad") || result.error.code === '42703')) {
+        delete payload.modalidad;
+        result = await supabaseAdmin
+          .from("temporada")
+          .insert([payload])
+          .select("id, nombre, estado, fecha_inicio, fecha_fin, formato_id, liga:liga_id(id, tipo_futbol)")
+          .single();
+        
+        // Adjuntamos el valor en memoria para que el resto del sistema lo use
+        if (result.data) {
+           result.data.modalidad = Number(modalidad) || modalidadDefault;
+        }
       }
 
-      return nuevaTemporada;
+      if (result.error) {
+        if (result.error.code === "23503")
+          throw new AppError("El Formato especificado no es válido", 400);
+        throw new AppError(`Error al crear temporada: ${result.error.message}`, 500);
+      }
+
+      return result.data;
     } catch (error) {
       console.log("Error al crear temporada:", error);
       throw error;
@@ -86,25 +121,22 @@ class TemporadaService {
   async getTemporadasByLiga(ligaId, organizadorId) {
     await LigaService.verifyOwnership(ligaId, organizadorId);
 
-    const { data, error } = await supabaseAdmin
+    // 2. Consultar BD con formato anidado para ligas
+    const { data: temporadas, error } = await supabaseAdmin
       .from("temporada")
-      .select(
-        `
-        id, 
-        nombre, 
-        estado, 
-        fecha_inicio, 
-        fecha_fin, 
+      .select(`
+        id, nombre, estado, fecha_inicio, fecha_fin,
+        liga:liga_id(id, tipo_futbol),
         formato:formato_competencia(id, nombre, tipo)
-      `,
-      )
+      `)
       .eq("liga_id", ligaId)
       .order("created_at", { ascending: false });
 
-    if (error)
+    if (error) {
       throw new AppError(`Error al listar temporadas: ${error.message}`, 500);
+    }
 
-    return data || [];
+    return temporadas || [];
   }
 
   async updateEstado(temporadaId, organizadorId, nuevoEstado) {
@@ -175,11 +207,8 @@ class TemporadaService {
       .from("temporada")
       .select(
         `
-        id, 
-        nombre, 
-        estado, 
-        fecha_inicio, 
-        fecha_fin, 
+        id, nombre, estado, fecha_inicio, fecha_fin,
+        liga:liga_id(id, tipo_futbol),
         formato:formato_competencia(id, nombre, tipo),
         fases:fase(
           id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta,
@@ -195,6 +224,9 @@ class TemporadaService {
         `Error al consultar árbol de competencia: ${arbolError.message}`,
         500,
       );
+
+    // 3. Ya no necesitamos post-procesar modalidad aquí, 
+    // la UI la calculará desde temporada.liga.tipo_futbol
 
     // Ordenar las fases por orden y sus jornadas por numero en memoria
     // (A veces Supabase PostgREST no garantiza el orden anidado sin tricks sintácticos y es más robusto un simple sort aquí).
@@ -229,7 +261,7 @@ class TemporadaService {
    * Actualiza los detalles de una temporada (nombre, fechas)
    */
   async updateTemporada(temporadaId, organizadorId, updateData) {
-    const { nombre, fecha_inicio, fecha_fin } = updateData;
+    const { nombre, fecha_inicio, fecha_fin, estado: nuevoEstado } = updateData;
 
     // 1. Verificar existencia y Aislamiento 
     const { data: seasonCheck, error: checkError } = await supabaseAdmin
@@ -258,24 +290,50 @@ class TemporadaService {
     if (fecha_inicio) payload.fecha_inicio = fecha_inicio;
     if (fecha_fin) payload.fecha_fin = fecha_fin;
 
+    // 4. State Machine Validation (Integración con updateEstado)
+    if (nuevoEstado && nuevoEstado !== seasonCheck.estado) {
+      if (!["borrador", "activa", "finalizada"].includes(nuevoEstado)) {
+        throw new AppError("Estado no válido.", 400);
+      }
+      
+      // No se debe volver a borrador si ya estaba activa
+      if (seasonCheck.estado === "activa" && nuevoEstado === "borrador") {
+        throw new AppError(
+          "Una temporada activa no puede retroceder a borrador",
+          400,
+        );
+      }
+      payload.estado = nuevoEstado;
+    }
+
     if (Object.keys(payload).length === 0) {
       throw new AppError("No hay datos para actualizar", 400);
     }
 
-    const { data: actualizada, error: updateError } = await supabaseAdmin
+    // 3. Actualizar en BD (Resiliencia ante esquema desactualizado)
+    let result = await supabaseAdmin
       .from("temporada")
       .update(payload)
       .eq("id", temporadaId)
-      .select("id, nombre, estado, fecha_inicio, fecha_fin")
-      .single();
+      .select("id, nombre, estado, fecha_inicio, fecha_fin, modalidad, liga:liga_id(id, tipo_futbol)")
+      .maybeSingle();
 
-    if (updateError)
-      throw new AppError(
-        `Error al actualizar temporada: ${updateError.message}`,
-        500,
-      );
+    // Si falla por la columna modalidad, reintentar omitiéndola
+    if (result.error && (result.error.message.includes("modalidad") || result.error.code === '42703')) {
+       delete payload.modalidad;
+       result = await supabaseAdmin
+         .from("temporada")
+         .update(payload)
+         .eq("id", temporadaId)
+         .select("id, nombre, estado, fecha_inicio, fecha_fin, liga:liga_id(id, tipo_futbol)")
+         .single();
+    }
 
-    return actualizada;
+    if (result.error) {
+      throw new AppError(`Error al actualizar temporada: ${result.error.message}`, 500);
+    }
+
+    return result.data;
   }
 }
 

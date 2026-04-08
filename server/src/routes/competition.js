@@ -54,7 +54,8 @@ router.patch(
     param('id').isUUID().withMessage('ID de temporada inválido'),
     body('nombre').optional().isString().isLength({ min: 3, max: 100 }),
     body('fecha_inicio').optional().isISO8601(),
-    body('fecha_fin').optional().isISO8601()
+    body('fecha_fin').optional().isISO8601(),
+    body('estado').optional().isIn(['borrador', 'activa', 'finalizada']).withMessage('Estado inválido')
   ],
   CompetitionController.updateTemporada
 )
@@ -87,6 +88,34 @@ router.post(
     body('cantidad').isInt({ min: 1, max: 100 }).withMessage('La cantidad debe ser un entero entre 1 y 100')
   ],
   CompetitionController.createJornadasBatch
+)
+
+// ============================================
+// EDICIÓN DE FASES
+// ============================================
+router.patch(
+  '/fases/:id',
+  [
+    param('id').isUUID().withMessage('ID de fase inválido'),
+    body('nombre').optional().isString().isLength({ min: 2, max: 100 }),
+    body('tipo').optional().isIn(['todos_contra_todos', 'eliminacion_directa']),
+    body('puntos_victoria').optional().isInt({ min: 0 }),
+    body('puntos_empate').optional().isInt({ min: 0 }),
+    body('ida_y_vuelta').optional().isBoolean()
+  ],
+  CompetitionController.updateFase
+)
+
+// ============================================
+// EDICIÓN DE JORNADAS
+// ============================================
+router.patch(
+  '/jornadas/:id',
+  [
+    param('id').isUUID().withMessage('ID de jornada inválido'),
+    body('fecha_tentativa').optional().isISO8601().withMessage('Fecha inválida')
+  ],
+  CompetitionController.updateJornada
 )
 
 export default router

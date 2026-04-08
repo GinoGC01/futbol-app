@@ -259,6 +259,167 @@ class PartidoService {
 
     return updated
   }
+
+  /**
+   * Genera fixture automático usando el algoritmo Round Robin.
+   * - Borra todos los partidos existentes de las jornadas de la fase antes de regenerar.
+   * - Requiere que la fase tenga suficientes jornadas creadas.
+   * - equipoIds: array de UUIDs de equipos seleccionados por el organizador.
+   */
+  async generateRoundRobin(faseId, organizadorId, equipoIds) {
+    // 1. Obtener datos de la fase y liga asociada
+    const { data: fase, error: faseErr } = await supabaseAdmin
+      .from('fase')
+      .select(`
+        id, nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta,
+        temporada:temporada_id(
+          id, liga_id, estado,
+          liga:liga_id(id, tipo_futbol)
+        ),
+        jornadas:jornada(id, numero)
+      `)
+      .eq('id', faseId)
+      .single()
+
+    if (faseErr || !fase) throw new AppError('Fase no encontrada', 404)
+
+    await LigaService.verifyOwnership(fase.temporada.liga_id, organizadorId)
+
+    if (fase.temporada.estado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede generar fixture (Modo Bóveda)', 403)
+    }
+
+    if (!equipoIds || equipoIds.length < 2) {
+      throw new AppError('Se necesitan al menos 2 equipos para generar el fixture', 400)
+    }
+
+    // Validar que todos los equipos pertenecen a la liga
+    const { data: equiposValidos, error: eqErr } = await supabaseAdmin
+      .from('equipo')
+      .select('id')
+      .eq('liga_id', fase.temporada.liga_id)
+      .in('id', equipoIds)
+
+    if (eqErr) throw new AppError(`Error validando equipos: ${eqErr.message}`, 500)
+    if (equiposValidos.length !== equipoIds.length) {
+      throw new AppError('Uno o más equipos no pertenecen a esta liga', 400)
+    }
+
+    // 2. Nueva Validación: Conteo de Jugadores Activos por Equipo
+    // Obtenemos todos los planteles de la temporada para estos equipos
+    const { data: planteles, error: pError } = await supabaseAdmin
+      .from('plantel')
+      .select(`
+        equipo_id,
+        inscripciones:inscripcion_jugador(id, estado)
+      `)
+      .eq('temporada_id', fase.temporada.id)
+      .in('equipo_id', equipoIds)
+
+    if (pError) throw new AppError(`Error al validar planteles: ${pError.message}`, 500)
+
+    const warnings = []
+    // Derivar modalidad del tipo de fútbol de la liga (F5 -> 5, F11 -> 11)
+    const tipoFutbol = fase.temporada.liga?.tipo_futbol || 'f5'
+    const modalidad = parseInt(tipoFutbol.replace(/\D/g, '')) || 5
+
+    equipoIds.forEach(eid => {
+      const p = planteles.find(plt => plt.equipo_id === eid)
+      const activos = p?.inscripciones?.filter(i => i.estado === 'activo')?.length || 0
+      
+      if (activos < modalidad) {
+        warnings.push({
+          equipo_id: eid,
+          mensaje: `El equipo tiene solo ${activos} de ${modalidad} jugadores activos requeridos.`
+        })
+      }
+    })
+
+    // 3. Calcular jornadas necesarias
+    const teams = [...equipoIds]
+    const n = teams.length
+    const roundsNeeded = n % 2 === 0 ? n - 1 : n
+    const totalRounds = fase.ida_y_vuelta ? roundsNeeded * 2 : roundsNeeded
+
+    // Sort jornadas by number
+    const jornadas = (fase.jornadas || []).sort((a, b) => a.numero - b.numero)
+
+    if (jornadas.length < totalRounds) {
+      throw new AppError(
+        `Se necesitan al menos ${totalRounds} jornadas para ${n} equipos${fase.ida_y_vuelta ? ' (ida y vuelta)' : ''}. Actualmente hay ${jornadas.length}.`,
+        400
+      )
+    }
+
+    // 3. Borrar partidos existentes de TODAS las jornadas de esta fase
+    const jornadaIds = jornadas.map(j => j.id)
+    const { error: deleteErr } = await supabaseAdmin
+      .from('partido')
+      .delete()
+      .in('jornada_id', jornadaIds)
+
+    if (deleteErr) throw new AppError(`Error eliminando partidos existentes: ${deleteErr.message}`, 500)
+
+    // 4. Generar cruces con Round Robin clásico
+    // Si es impar, agregar "BYE" virtual
+    if (n % 2 !== 0) teams.push('BYE')
+    const teamCount = teams.length
+
+    const rounds = []
+    for (let round = 0; round < teamCount - 1; round++) {
+      const matches = []
+      for (let i = 0; i < teamCount / 2; i++) {
+        const home = teams[i]
+        const away = teams[teamCount - 1 - i]
+        if (home !== 'BYE' && away !== 'BYE') {
+          matches.push({ equipo_local_id: home, equipo_visitante_id: away })
+        }
+      }
+      rounds.push(matches)
+
+      // Rotar: fijo el primero, rotar el resto
+      const last = teams.pop()
+      teams.splice(1, 0, last)
+    }
+
+    // Si ida y vuelta, duplicar rounds invirtiendo local/visitante
+    if (fase.ida_y_vuelta) {
+      const returnRounds = rounds.map(round =>
+        round.map(m => ({
+          equipo_local_id: m.equipo_visitante_id,
+          equipo_visitante_id: m.equipo_local_id
+        }))
+      )
+      rounds.push(...returnRounds)
+    }
+
+    // 5. Insertar partidos distribuyendo en jornadas
+    const allPartidos = []
+    for (let r = 0; r < rounds.length; r++) {
+      const jornadaId = jornadas[r].id
+      for (const match of rounds[r]) {
+        allPartidos.push({
+          jornada_id: jornadaId,
+          equipo_local_id: match.equipo_local_id,
+          equipo_visitante_id: match.equipo_visitante_id,
+          estado: 'programado'
+        })
+      }
+    }
+
+    const { data: insertados, error: insErr } = await supabaseAdmin
+      .from('partido')
+      .insert(allPartidos)
+      .select('id, jornada_id, equipo_local_id, equipo_visitante_id')
+
+    if (insErr) throw new AppError(`Error insertando partidos: ${insErr.message}`, 500)
+
+    return {
+      message: `Fixture generado: ${insertados.length} partidos en ${rounds.length} jornadas`,
+      partidos_creados: insertados.length,
+      jornadas_usadas: rounds.length
+    }
+  }
 }
 
 export default new PartidoService()
