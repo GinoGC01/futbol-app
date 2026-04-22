@@ -11,15 +11,9 @@ import PlayerProfile from './pages/public/PlayerProfile'
 import Omnisearch from './components/ui/Omnisearch'
 
 // Admin Pages
-import Login from './pages/admin/Login'
-import Register from './pages/admin/Register'
-import AdminLayout from './layouts/AdminLayout'
-import DashboardHome from './pages/admin/DashboardHome'
-import TournamentArchitect from './pages/admin/TournamentArchitect'
-import RosterManager from './pages/admin/RosterManager'
-import MatchEdgeBox from './pages/admin/MatchEdgeBox'
-import AwardScrutinyTool from './pages/admin/AwardScrutinyTool'
 import PlayerManager from './pages/admin/PlayerManager'
+import ForgotPassword from './pages/admin/ForgotPassword'
+import ResetPassword from './pages/admin/ResetPassword'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +48,8 @@ export default function App() {
           {/* Auth Routes */}
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin/register" element={<Register />} />
+          <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+          <Route path="/admin/reset-password" element={<ResetPassword />} />
 
           {/* Admin Protected Routes */}
           <Route path="/admin" element={

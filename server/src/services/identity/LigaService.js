@@ -23,12 +23,9 @@ class LigaService {
       slug: slug.toLowerCase()
     }
 
-    // Campos opcionales o con defaults
     if (zona) payload.zona = zona.trim()
     if (descripcion) payload.descripcion = descripcion.trim()
     if (logo_url) payload.logo_url = logo_url.trim()
-    // Si tipo_futbol no viene en onboarding, asumimos default 'f11' (o f5) según las reglas,
-    // pero idealmente se recibe en data.
     payload.tipo_futbol = tipo_futbol || 'f5' 
 
     const { data: newLiga, error } = await supabaseAdmin
@@ -38,11 +35,10 @@ class LigaService {
       .single()
 
     if (error) {
-      // Manejar constraint de slug único (23505 = unique violation)
-      if (error.code === '23505' && error.message.includes('slug')) {
+      if (error.code === '23505' && error.message?.includes('slug')) {
         throw new AppError('El identificador URL (slug) ya está en uso', 409)
       }
-      throw new AppError(`Error al crear la liga: ${error.message}`, 500)
+      throw new AppError('No se pudo crear la liga', 500, error)
     }
 
     return newLiga
@@ -63,14 +59,13 @@ class LigaService {
       throw new AppError('El slug solo puede contener letras minúsculas, números y guiones, y no debe terminar ni empezar con guión', 400)
     }
 
-    // Comprobar unicidad en Supabase
     const { count, error } = await supabaseAdmin
       .from('liga')
       .select('*', { count: 'exact', head: true })
       .eq('slug', cleanSlug)
 
     if (error) {
-      throw new AppError(`Error verificando el slug: ${error.message}`, 500)
+      throw new AppError('Error al validar el slug identicador', 500, error)
     }
 
     if (count > 0) {
@@ -95,7 +90,7 @@ class LigaService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      throw new AppError(`Error al listar ligas: ${error.message}`, 500)
+      throw new AppError('Error al obtener tus ligas', 500, error)
     }
 
     return ligas || []
@@ -118,18 +113,16 @@ class LigaService {
       throw new AppError('No hay campos válidos para actualizar', 400)
     }
 
-    // La política RLS de escritura no aplica aquí porque "supabaseAdmin" tiene rol service_role. 
-    // Por ende, debemos incluir el filtro organizador_id en el query explícitamente (Aislamiento Total en la capa de servicios).
     const { data: updatedLiga, error } = await supabaseAdmin
       .from('liga')
       .update(payload)
       .eq('id', ligaId)
-      .eq('organizador_id', organizadorId) // <- Aislamiento crítico
+      .eq('organizador_id', organizadorId)
       .select('id, nombre, slug, zona, descripcion, logo_url')
       .single()
 
     if (error) {
-      throw new AppError(`Error al actualizar liga: ${error.message}`, 500)
+      throw new AppError('Error al actualizar los datos de la liga', 500, error)
     }
 
     if (!updatedLiga) {
@@ -141,11 +134,10 @@ class LigaService {
 
   /**
    * Verifica que la liga pertenece estrictamente al organizador actual.
-   * Lanza un AppError(403) si falla (Aislamiento Total para toda la Fase 2 y ss.)
    */
   async verifyOwnership(ligaId, organizadorId) {
     if (!ligaId || !organizadorId) {
-      throw new AppError('ID de Liga u Organizador requeridos para verificar propiedad', 400)
+      throw new AppError('Faltan credenciales para verificar propiedad', 400)
     }
 
     const { data, error } = await supabaseAdmin
@@ -156,11 +148,11 @@ class LigaService {
       .maybeSingle()
 
     if (error) {
-      throw new AppError(`Error en validación de seguridad: ${error.message}`, 500)
+      throw new AppError('Error en validación de propiedad', 500, error)
     }
 
     if (!data) {
-      throw new AppError('Acceso denegado: La liga especificada no existe o no te pertenece', 403)
+      throw new AppError('Acceso denegado: La liga no te pertenece', 403)
     }
 
     return true

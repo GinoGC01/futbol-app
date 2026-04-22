@@ -3,12 +3,17 @@ import { body, param } from 'express-validator'
 import { requireAuth, requireOrganizador } from '../middleware/auth.js'
 import OrganizadorController from '../controllers/identity/OrganizadorController.js'
 import LigaController from '../controllers/identity/LigaController.js'
+import AuthController from '../controllers/identity/AuthController.js'
 
 const router = Router()
 
 // ============================================
-// ONBOARDING PUBLICO
+// AUTH & ONBOARDING PUBLICO
 // ============================================
+
+// Login con JWT propio
+router.post('/login', AuthController.login.bind(AuthController))
+router.post('/logout', AuthController.logout.bind(AuthController))
 router.post(
   '/register',
   [
@@ -24,9 +29,17 @@ router.post(
   LigaController.register
 )
 
+// Nuevas rutas de pass y email
+router.post('/verify-email', AuthController.verifyEmail.bind(AuthController))
+router.post('/resend-verification', AuthController.resendVerification.bind(AuthController))
+router.post('/forgot-password', AuthController.forgotPassword.bind(AuthController))
+router.post('/reset-password', AuthController.resetPassword.bind(AuthController))
+
 // ============================================
 // ENDPOINTS PROTEGIDOS (Requieren ser Organizador)
 // ============================================
+
+router.post('/change-password', requireAuth, requireOrganizador, AuthController.changePassword.bind(AuthController))
 
 // --- Perfil del Organizador ---
 router.get('/me', requireAuth, requireOrganizador, OrganizadorController.getMe)

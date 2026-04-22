@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Shield, Mail, Lock, User, MapPin, FileText } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'
 
@@ -12,13 +12,12 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { signIn } = useAuth()
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
   async function handleStep1(e) {
     e.preventDefault()
-    // Ya no hacemos signUp aquí, solo avanzamos el wizard. 
-    // Los datos se enviarán todos juntos al final.
     setStep(2)
   }
 
@@ -28,7 +27,7 @@ export default function Register() {
     setLoading(true)
     try {
       // Usamos el endpoint unificado de onboarding (Backend Admin SDK)
-      await api.post('/identity/register', {
+      const { token, user } = await api.post('/identity/register', {
         email: form.email,
         password: form.password,
         nombre_organizador: form.nombre,
@@ -39,6 +38,8 @@ export default function Register() {
         zona: form.zona
       })
       
+      // Auto-login
+      signIn(token, user)
       setStep(3)
     } catch (err) {
       console.error('Registration Error:', err)
@@ -82,44 +83,44 @@ export default function Register() {
         </div>
 
         {step === 1 && (
-          <form onSubmit={handleStep1} className="flex flex-col gap-4">
+          <form data-testid="step1-form" onSubmit={handleStep1} className="flex flex-col gap-4">
             <h2 className="text-lg font-heading font-bold text-center mb-2">Creá tu cuenta</h2>
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><User className="w-3.5 h-3.5" /> Nombre completo</div>
-              <input type="text" value={form.nombre} onChange={set('nombre')} required
+              <input data-testid="register-nombre" type="text" value={form.nombre} onChange={set('nombre')} required
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><Mail className="w-3.5 h-3.5" /> Email</div>
-              <input type="email" value={form.email} onChange={set('email')} required
+              <input data-testid="register-email" type="email" value={form.email} onChange={set('email')} required
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><Lock className="w-3.5 h-3.5" /> Contraseña</div>
-              <input type="password" value={form.password} onChange={set('password')} required minLength={6}
+              <input data-testid="register-password" type="password" value={form.password} onChange={set('password')} required minLength={6}
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><MapPin className="w-3.5 h-3.5" /> Teléfono</div>
-              <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="Ej: +54 9 11 1234-5678"
+              <input data-testid="register-telefono" type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="Ej: +54 9 11 1234-5678"
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
-            {error && <p className="text-xs text-danger bg-danger-dim rounded-lg px-3 py-2">{error}</p>}
-            <Button type="submit" loading={loading} className="w-full mt-2">Continuar</Button>
+            {error && <p data-testid="register-error" className="text-xs text-danger bg-danger-dim rounded-lg px-3 py-2">{error}</p>}
+            <Button data-testid="register-continuar" type="submit" loading={loading} className="w-full mt-2">Continuar</Button>
           </form>
         )}
 
         {step === 2 && (
-          <form onSubmit={handleStep2} className="flex flex-col gap-4">
+          <form data-testid="step2-form" onSubmit={handleStep2} className="flex flex-col gap-4">
             <h2 className="text-lg font-heading font-bold text-center mb-2">Configurá tu liga</h2>
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><Shield className="w-3.5 h-3.5" /> Nombre de la liga</div>
-              <input type="text" value={form.ligaNombre} onChange={set('ligaNombre')} required
+              <input data-testid="register-liga-nombre" type="text" value={form.ligaNombre} onChange={set('ligaNombre')} required
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><FileText className="w-3.5 h-3.5" /> Tipo de fútbol</div>
-              <select value={form.tipoFutbol} onChange={set('tipoFutbol')}
+              <select data-testid="register-tipo-futbol" value={form.tipoFutbol} onChange={set('tipoFutbol')}
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all appearance-none">
                 <option value="f5">Fútbol 5</option>
                 <option value="f7">Fútbol 7</option>
@@ -129,11 +130,25 @@ export default function Register() {
             </label>
             <label className="text-xs font-medium text-text-dim">
               <div className="flex items-center gap-1.5 mb-1.5"><MapPin className="w-3.5 h-3.5" /> Zona</div>
-              <input type="text" value={form.zona} onChange={set('zona')} placeholder="Ej: Palermo, CABA"
+              <input data-testid="register-zona" type="text" value={form.zona} onChange={set('zona')} placeholder="Ej: Palermo, CABA"
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
-            {error && <p className="text-xs text-danger bg-danger-dim rounded-lg px-3 py-2">{error}</p>}
-            <Button type="submit" loading={loading} className="w-full mt-2">Crear liga</Button>
+            {error && <p data-testid="register-error" className="text-xs text-danger bg-danger-dim rounded-lg px-3 py-2">{error}</p>}
+            <div className="flex gap-3 mt-2">
+              <Button 
+                data-testid="register-volver"
+                type="button" 
+                variant="ghost" 
+                onClick={() => {
+                  setError('')
+                  setStep(1)
+                }} 
+                className="flex-1"
+              >
+                Volver
+              </Button>
+              <Button data-testid="register-submit" type="submit" loading={loading} className="flex-[2]">Crear liga</Button>
+            </div>
           </form>
         )}
 

@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
+import cookieParser from 'cookie-parser'
 
 import identityRouter from './routes/identity.js'
 import competitionRouter from './routes/competition.js'
@@ -12,8 +13,13 @@ import statsRouter from './routes/stats.js'
 import awardsRouter from './routes/awards.js'
 
 import { errorHandler } from './middleware/errorHandler.js'
+import { startCleanupJob } from './jobs/cleanupTokens.js'
 
 const app = express()
+
+// Iniciar cron jobs
+startCleanupJob()
+
 const PORT = process.env.PORT || 3001
 
 app.use(helmet())
@@ -27,6 +33,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 app.use(express.json())
+app.use(cookieParser())
 
 // Health check — usado por cron-job.org para mantener Render activo
 app.get('/health', (_req, res) => {

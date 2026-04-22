@@ -1,94 +1,75 @@
+import crypto from 'crypto'
+import bcrypt from 'bcryptjs'
+import { supabaseAdmin } from '../../lib/supabase.js'
+import { sendVerificationEmail } from '../../utils/mailer.js'
+import AuthController from './AuthController.js'
 import OrganizadorService from '../../services/identity/OrganizadorService.js'
 import LigaService from '../../services/identity/LigaService.js'
-import { supabaseAdmin } from '../../lib/supabase.js'
 import AppError from '../../utils/AppError.js'
 import { validationResult } from 'express-validator'
 
 class LigaController {
   /**
    * POST /api/identity/register
-   * Onboarding completo: Auth User -> Organizador -> Liga
+   * Onboarding completo: Organizador -> Liga -> Email de Verificación
    */
   async register(req, res, next) {
     try {
-      console.log('--- REGISTER DEBUG ---')
-      console.log('Body:', JSON.stringify(req.body, null, 2))
+      console.log('--- REGISTER DEBUG (Custom Auth) ---')
       
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
-        console.log('Validation Errors:', JSON.stringify(errors.array(), null, 2))
         return res.status(400).json({ status: 'fail', errors: errors.array() })
       }
 
       const { email, password, nombre_organizador, telefono, nombre_liga, slug, zona, tipo_futbol } = req.body
 
-      // 0. Validar slug antes de crear el usuario para fallar rápido
-      console.log('Step 0: Validating slug:', slug)
+      // 0. Validar slug antes de crear nada
       await LigaService.validateSlug(slug)
-      console.log('Step 0: Slug is valid and free.')
 
-      // 1. Crear usuario en Supabase Auth
-      console.log('Step 1: Creating Auth User...')
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      // 1. Hashear contraseña
+      const password_hash = await bcrypt.hash(password, 10)
+
+      // 2. Crear Organizador en la tabla interna
+      const organizador = await OrganizadorService.create({
+        nombre: nombre_organizador,
         email,
-        password,
-        email_confirm: true 
+        password_hash,
+        telefono
       })
 
-      if (authError) {
-        console.log('Step 1: Auth Error:', JSON.stringify(authError, null, 2))
-        throw new AppError(`Error creando autenticación: ${authError.message}`, 400)
+      // 3. Crear primera Liga
+      const nuevaLiga = await LigaService.createLiga(organizador.id, {
+        nombre: nombre_liga,
+        slug,
+        zona,
+        tipo_futbol
+      })
+
+      // 4. Generar Token de Verificación
+      const token = crypto.randomBytes(32).toString('hex')
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
+
+      const { error: tokenError } = await supabaseAdmin
+        .from('email_verification_tokens')
+        .insert([{
+          user_id: organizador.id,
+          token: token,
+          expires_at: expiresAt
+        }])
+
+      if (tokenError) {
+        console.error('Error insertando token de verificación:', tokenError)
+        // No bloqueamos el registro por esto, pero el usuario tendrá que pedir reenvío.
+      } else {
+        await sendVerificationEmail(organizador.email, token)
       }
 
-      console.log('Step 1: Auth User created:', authData.user.id)
-      const userId = authData.user.id
-      let organizadorId = null
-
-      try {
-        // 2. Crear Organizador vinculado al auth_id
-        console.log('Step 2: Creating Organizador Profile...')
-        const organizador = await OrganizadorService.getOrCreateOrganizador(
-          userId, 
-          email, 
-          nombre_organizador, 
-          telefono
-        )
-        
-        organizadorId = organizador.id
-
-        // 3. Crear primera Liga
-        const nuevaLiga = await LigaService.createLiga(organizadorId, {
-          nombre: nombre_liga,
-          slug,
-          zona,
-          tipo_futbol
-        })
-
-        // Onboarding exitoso
-        res.status(201).json({
-          status: 'success',
-          message: 'Registro exitoso',
-          data: {
-            organizador,
-            liga: nuevaLiga
-          }
-        })
-      } catch (error) {
-        // Rollback manual (Compensación) si algo falla tras crear el usuario en Auth
-        if (userId) {
-          console.warn(`[Rollback] Eliminando usuario auth ${userId} por fallo en onboarding: ${error.message}`)
-          await supabaseAdmin.auth.admin.deleteUser(userId)
-          
-          // Si el organizador llegó a crearse, el CASCADE on DELETE de auth.users (si lo hay) limpia organizador.
-          // Pero en nuestro schema (migración 002) pusimos ON DELETE SET NULL. Así que deberíamos
-          // borrar el organizador manualmente también si ya lo creamos.
-          if (organizadorId) {
-             await supabaseAdmin.from('organizador').delete().eq('id', organizadorId)
-          }
-        }
-        throw error // Re-throw the AppError to be handled
-      }
-
+      res.status(201).json({
+        status: 'success',
+        message: 'Revisá tu email para verificar tu cuenta',
+        data: null // Ya no enviamos JWT ni info sensible
+      })
     } catch (error) {
       next(error)
     }

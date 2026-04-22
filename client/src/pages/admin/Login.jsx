@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Shield, Mail, Lock } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
+import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'
 
 export default function Login() {
@@ -11,15 +12,22 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { signIn } = useAuth()
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (err) return setError(err.message)
-    navigate('/admin')
+    
+    try {
+      const { token, user } = await api.post('/identity/login', { email, password })
+      signIn(token, user)
+      navigate('/admin')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -65,6 +73,12 @@ export default function Login() {
             Iniciar Sesión
           </Button>
         </form>
+
+        <div className="mt-4 text-center">
+          <Link to="/admin/forgot-password" size="sm" className="text-xs text-text-dim hover:text-primary transition-colors">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
 
         <p className="text-center text-sm text-text-dim mt-6">
           ¿No tenés cuenta?{' '}

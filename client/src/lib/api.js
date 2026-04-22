@@ -1,28 +1,47 @@
-import { supabase } from './supabase'
-
-const BASE = import.meta.env.VITE_API_URL
-
 async function request(path, options = {}) {
-  const { data: { session } } = await supabase.auth.getSession()
+  const BASE = import.meta.env.VITE_API_URL
 
   const res = await fetch(`${BASE}${path}`, {
     ...options,
+    credentials: 'include', // Importante para enviar cookies
     headers: {
       'Content-Type': 'application/json',
-      ...(session?.access_token
-        ? { Authorization: `Bearer ${session.access_token}` }
-        : {}),
       ...options.headers
     }
   })
 
-  const json = await res.json()
+  // 1. Sliding Session: El servidor ya refresca la cookie automáticamente.
+  // Mantenemos esto si queremos detectar el cambio explícitamente en el cliente.
+  const newToken = res.headers.get('X-New-Token')
+  if (newToken) {
+    localStorage.setItem('token', newToken) // Opcional si el server maneja la cookie
+  }
+
+  // 2. Parse response
+  const contentType = res.headers.get('content-type')
+  let json = {}
+  if (contentType && contentType.includes('application/json')) {
+    json = await res.json()
+  }
+
   if (!res.ok) {
-    const err = new Error(json.message || json.error || `Error ${res.status}`)
+    if (res.status === 401) {
+      localStorage.removeItem('user')
+      const isAuthPage = window.location.pathname.includes('/login') || window.location.pathname.includes('/register')
+      const isAdminArea = window.location.pathname.startsWith('/admin')
+      
+      if (isAdminArea && !isAuthPage) {
+        window.location.href = '/admin/login'
+      }
+    }
+
+    const err = new Error(json.message || json.error || `Error ${res.status}: ${res.statusText}`)
     err.status = res.status
     err.data = json
+    err.response = { data: json }
     throw err
   }
+
   return json.data !== undefined ? json.data : json
 }
 
