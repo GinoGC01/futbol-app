@@ -89,11 +89,12 @@ export default function ForgotPassword() {
             <p className="text-sm text-text-dim mb-8">
               Si el email está registrado, recibirás instrucciones en unos instantes. No olvides revisar tu carpeta de spam.
             </p>
-            <Button variant="ghost" className="w-full" asChild>
-              <Link to="/admin/login" className="flex items-center justify-center gap-2">
-                <ArrowLeft className="w-4 h-4" /> Volver al Login
-              </Link>
-            </Button>
+            <Link 
+              to="/admin/login" 
+              className="inline-flex items-center justify-center gap-2 font-semibold font-heading tracking-wide transition-all duration-200 active:scale-[0.97] p-2 rounded-xl bg-transparent text-text-secondary border border-border-default hover:bg-bg-hover hover:text-text-primary w-full px-5 py-2.5 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" /> Volver al Login
+            </Link>
           </motion.div>
         )}
 

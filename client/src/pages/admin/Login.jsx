@@ -75,7 +75,7 @@ export default function Login() {
         </form>
 
         <div className="mt-4 text-center">
-          <Link to="/admin/forgot-password" size="sm" className="text-xs text-text-dim hover:text-primary transition-colors">
+          <Link to="/admin/forgot-password" className="text-xs text-text-dim hover:text-primary transition-colors">
             ¿Olvidaste tu contraseña?
           </Link>
         </div>

@@ -63,9 +63,12 @@ export default function ResetPassword() {
           <AlertCircle className="w-12 h-12 text-danger mx-auto mb-4" />
           <h1 className="text-xl font-heading font-bold mb-2">Link invàlido</h1>
           <p className="text-sm text-text-dim mb-6">{error}</p>
-          <Button asChild className="w-full">
-            <Link to="/admin/forgot-password">Solicitar nuevo link</Link>
-          </Button>
+          <Link 
+            to="/admin/forgot-password"
+            className="inline-flex items-center justify-center gap-2 font-semibold font-heading tracking-wide transition-all duration-200 active:scale-[0.97] p-2 rounded-xl bg-primary text-text-on-primary hover:bg-primary-dim shadow-glow-primary w-full px-5 py-2.5 text-sm"
+          >
+            Solicitar nuevo link
+          </Link>
         </motion.div>
       </div>
     )
