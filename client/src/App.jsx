@@ -22,6 +22,7 @@ import AwardScrutinyTool from './pages/admin/AwardScrutinyTool'
 import PlayerManager from './pages/admin/PlayerManager'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import ResetPassword from './pages/admin/ResetPassword'
+import VerifyEmail from './pages/admin/VerifyEmail'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/admin/register" element={<Register />} />
           <Route path="/admin/forgot-password" element={<ForgotPassword />} />
           <Route path="/admin/reset-password" element={<ResetPassword />} />
+          <Route path="/admin/verify" element={<VerifyEmail />} />
 
           {/* Admin Protected Routes */}
           <Route path="/admin" element={

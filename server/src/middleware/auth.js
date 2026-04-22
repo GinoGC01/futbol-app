@@ -58,7 +58,7 @@ export async function requireOrganizador(req, res, next) {
 
     const { data, error } = await supabaseAdmin
       .from('organizador')
-      .select('id, nombre, email')
+      .select('id, nombre, email, email_verified')
       .eq('id', req.user.sub)
       .single()
 
@@ -72,3 +72,28 @@ export async function requireOrganizador(req, res, next) {
     next(error)
   }
 }
+
+/**
+ * Middleware para proteger rutas que requieren email verificado.
+ * Usar DESPUÉS de requireOrganizador.
+ */
+export async function requireVerified(req, res, next) {
+  try {
+    if (!req.organizador) {
+      throw new AppError('Se requiere perfil de organizador', 403)
+    }
+
+    if (!req.organizador.email_verified) {
+      return res.status(403).json({
+        status: 'fail',
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Debés verificar tu email para acceder a esta función.'
+      })
+    }
+
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
+

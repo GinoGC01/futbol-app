@@ -2,14 +2,20 @@ export const errorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
 
-  // LOG INTERNO: Aquí siempre mostramos todo en la terminal para el developer
-  console.error(`[INTERNAL ERROR] [${new Date().toISOString()}]`);
-  console.error(`Message: ${err.message}`);
-  if (err.internalError) {
-    console.error('Raw DB/System Error:', err.internalError);
+  // LOG INTERNO: Diferenciamos errores esperados (4xx) de errores graves (5xx)
+  if (err.statusCode >= 400 && err.statusCode < 500) {
+    // Log minimalista para errores de cliente (Auth, Not Found, etc)
+    console.log(`[CLIENT ERROR] ${req.method} ${req.originalUrl} - Status: ${err.statusCode} - ${err.message}`);
+  } else {
+    // Log completo para errores internos graves
+    console.error(`[INTERNAL ERROR] [${new Date().toISOString()}]`);
+    console.error(`Message: ${err.message}`);
+    if (err.internalError) {
+      console.error('Raw DB/System Error:', err.internalError);
+    }
+    console.error(`Path: ${req.originalUrl}`);
+    console.error(`Stack: ${err.stack}`);
   }
-  console.error(`Path: ${req.originalUrl}`);
-  console.error(`Stack: ${err.stack}`);
 
   // Redacción de seguridad: Palabras prohibidas que nunca deben ir al frontend
   const forbiddenKeywords = ['column', 'table', 'relation', 'syntax', 'supabase', 'postgres', 'uuid', 'constraint', 'fkey', 'pkey'];

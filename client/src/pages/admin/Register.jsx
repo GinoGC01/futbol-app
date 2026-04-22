@@ -26,8 +26,8 @@ export default function Register() {
     setError('')
     setLoading(true)
     try {
-      // Usamos el endpoint unificado de onboarding (Backend Admin SDK)
-      const { token, user } = await api.post('/identity/register', {
+      // Usamos el endpoint unificado de onboarding
+      await api.post('/identity/register', {
         email: form.email,
         password: form.password,
         nombre_organizador: form.nombre,
@@ -38,14 +38,14 @@ export default function Register() {
         zona: form.zona
       })
       
-      // Auto-login
-      signIn(token, user)
+      // Ya no hacemos auto-login (signIn) porque el backend requiere verificación de email.
+      // Simplemente pasamos al paso 3 (Éxito/Revisar email).
       setStep(3)
     } catch (err) {
       console.error('Registration Error:', err)
       
-      // Extraer mensaje de error específico del backend
-      const backendError = err.response?.data?.error || err.response?.data?.message
+      // Extraer mensaje de error del backend
+      const backendError = err.response?.data?.message || err.response?.data?.error || err.message
       const validationErrors = err.response?.data?.errors?.map(e => e.msg).join('. ')
       
       const msg = validationErrors || backendError || 'Error inesperado. Por favor, revisa los datos e intenta con otro email.'
@@ -53,6 +53,7 @@ export default function Register() {
     }
     setLoading(false)
   }
+
 
   const steps = [
     { num: 1, label: 'Cuenta' },
@@ -155,11 +156,11 @@ export default function Register() {
         {step === 3 && (
           <div className="text-center py-6">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-primary" />
+              <Mail className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="text-xl font-heading font-bold mb-2">¡Todo listo!</h2>
-            <p className="text-sm text-text-dim mb-6">Tu liga fue creada con éxito. Ahora podés configurar temporadas, equipos y más.</p>
-            <Button onClick={() => navigate('/admin')} className="w-full">Ir al Dashboard</Button>
+            <h2 className="text-xl font-heading font-bold mb-2">¡Casi listo!</h2>
+            <p className="text-sm text-text-dim mb-6">Hemos enviado un enlace de verificación a tu correo. Por favor, verifícalo para activar tu cuenta y poder ingresar.</p>
+            <Button onClick={() => navigate('/admin/login')} className="w-full">Ir al Login</Button>
           </div>
         )}
 

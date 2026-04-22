@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { body, param } from 'express-validator'
-import { requireAuth, requireOrganizador } from '../middleware/auth.js'
+import { requireAuth, requireOrganizador, requireVerified } from '../middleware/auth.js'
 import OrganizadorController from '../controllers/identity/OrganizadorController.js'
 import LigaController from '../controllers/identity/LigaController.js'
 import AuthController from '../controllers/identity/AuthController.js'
@@ -65,12 +65,13 @@ router.put(
 )
 
 // --- Ligas del Organizador ---
-router.get('/ligas', requireAuth, requireOrganizador, LigaController.getMyLigas)
+router.get('/ligas', requireAuth, requireOrganizador, requireVerified, LigaController.getMyLigas)
 
 router.post(
   '/ligas',
   requireAuth,
   requireOrganizador,
+  requireVerified,
   [
     body('nombre').isLength({ min: 3, max: 100 }).withMessage('Nombre de liga inválido'),
     body('slug').matches(/^[a-z0-9-]+$/).withMessage('Slug solo acepta letras minúsculas, números y guiones'),
@@ -84,6 +85,7 @@ router.put(
   '/ligas/:id',
   requireAuth,
   requireOrganizador,
+  requireVerified,
   [
     param('id').isUUID().withMessage('ID de liga no válido'),
     body('nombre').optional().isLength({ min: 3, max: 100 }),
