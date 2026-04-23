@@ -15,7 +15,7 @@ class LigaController {
    */
   async register(req, res, next) {
     try {
-      console.log('--- REGISTER DEBUG (Custom Auth) ---')
+      console.log('--- REGISTER DEBUG (Deferred Registration) ---')
       
       const errors = validationResult(req)
       if (!errors.isEmpty()) {
@@ -24,51 +24,56 @@ class LigaController {
 
       const { email, password, nombre_organizador, telefono, nombre_liga, slug, zona, tipo_futbol } = req.body
 
-      // 0. Validar slug antes de crear nada
+      // 1. Validar que el email no esté ya verificado en organizador
+      const existingUser = await OrganizadorService.findByEmail(email)
+      if (existingUser && existingUser.email_verified) {
+        throw new AppError('El email ya está registrado y verificado', 409)
+      }
+
+      // 2. Validar slug antes de crear nada
       await LigaService.validateSlug(slug)
 
-      // 1. Hashear contraseña
+      // 3. Hashear contraseña
       const password_hash = await bcrypt.hash(password, 10)
 
-      // 2. Crear Organizador en la tabla interna
-      const organizador = await OrganizadorService.create({
-        nombre: nombre_organizador,
-        email,
-        password_hash,
-        telefono
-      })
+      // 4. Inhabilitar registros pendientes previos del mismo email
+      await supabaseAdmin
+        .from('pending_registrations')
+        .update({ used: true })
+        .eq('email', email)
+        .eq('used', false)
 
-      // 3. Crear primera Liga
-      const nuevaLiga = await LigaService.createLiga(organizador.id, {
-        nombre: nombre_liga,
-        slug,
-        zona,
-        tipo_futbol
-      })
-
-      // 4. Generar Token de Verificación
+      // 5. Crear registro pendiente
       const token = crypto.randomBytes(32).toString('hex')
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
-      const { error: tokenError } = await supabaseAdmin
-        .from('email_verification_tokens')
+      const { error: prError } = await supabaseAdmin
+        .from('pending_registrations')
         .insert([{
-          user_id: organizador.id,
-          token: token,
+          email,
+          password_hash,
+          nombre_organizador,
+          telefono,
+          nombre_liga,
+          slug,
+          zona,
+          tipo_futbol,
+          token,
           expires_at: expiresAt
         }])
 
-      if (tokenError) {
-        console.error('Error insertando token de verificación:', tokenError)
-        // No bloqueamos el registro por esto, pero el usuario tendrá que pedir reenvío.
-      } else {
-        await sendVerificationEmail(organizador.email, token)
+      if (prError) {
+        console.error('Error insertando registro pendiente:', prError)
+        throw new AppError('No se pudo procesar el registro. Intentalo de nuevo.', 500)
       }
+
+      // 6. Enviar email
+      await sendVerificationEmail(email, token)
 
       res.status(201).json({
         status: 'success',
-        message: 'Revisá tu email para verificar tu cuenta',
-        data: null // Ya no enviamos JWT ni info sensible
+        message: 'Revisá tu email para confirmar tu cuenta y crear tu liga',
+        data: null
       })
     } catch (error) {
       next(error)

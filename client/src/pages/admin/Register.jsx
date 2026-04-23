@@ -1,8 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { Shield, Mail, Lock, User, MapPin, FileText } from 'lucide-react'
-import { useAuth } from '../../hooks/useAuth'
+import { Shield, Mail, Lock, User, MapPin, FileText, RefreshCw } from 'lucide-react'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'
 
@@ -11,10 +10,37 @@ export default function Register() {
   const [form, setForm] = useState({ email: '', password: '', nombre: '', telefono: '', ligaNombre: '', slug: '', tipoFutbol: 'f7', zona: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const navigate = useNavigate()
-  const { signIn } = useAuth()
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  useEffect(() => {
+    let timer
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [countdown])
+
+  async function handleResend(e) {
+    e.preventDefault()
+    if (countdown > 0) return
+    
+    setResending(true)
+    setError('')
+    try {
+      await api.post('/identity/resend-verification', { email: form.email })
+      setCountdown(60)
+    } catch (err) {
+      setError('No se pudo reenviar el email. Intentalo más tarde.')
+    } finally {
+      setResending(false)
+    }
+  }
 
   async function handleStep1(e) {
     e.preventDefault()
@@ -160,7 +186,22 @@ export default function Register() {
             </div>
             <h2 className="text-xl font-heading font-bold mb-2">¡Casi listo!</h2>
             <p className="text-sm text-text-dim mb-6">Hemos enviado un enlace de verificación a tu correo. Por favor, verifícalo para activar tu cuenta y poder ingresar.</p>
-            <Button onClick={() => navigate('/admin/login')} className="w-full">Ir al Login</Button>
+            
+            <div className="flex flex-col gap-3">
+              <Button onClick={() => navigate('/admin/login')} className="w-full">Ir al Login</Button>
+              <button 
+                onClick={handleResend} 
+                disabled={resending || countdown > 0}
+                className="text-xs text-text-dim hover:text-primary transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`w-3 h-3 ${resending ? 'animate-spin' : ''}`} />
+                {resending 
+                  ? 'Reenviando...' 
+                  : countdown > 0 
+                    ? `Podrás reenviar en ${countdown}s` 
+                    : '¿No recibiste el email? Reenviar'}
+              </button>
+            </div>
           </div>
         )}
 

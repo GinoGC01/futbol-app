@@ -40,27 +40,48 @@ class TemporadaService {
         throw new AppError("formato_tipo y nombre son requeridos", 400);
       }
 
-      // 2. Resolución de Formato: Buscar basado en el tipo (slug) o nombre
-      // Intentamos primero coincidencia exacta por tipo (slug)
-      let { data: formato, error: formatError } = await supabaseAdmin
-        .from("formato_competencia")
-        .select("id, tipo, nombre")
-        .eq("tipo", formato_tipo.toLowerCase())
-        .maybeSingle();
+      // 2. Resolución de Formato: Buscar basado en ID, Tipo (slug) o Nombre
+      let formato = null;
 
-      // Si no lo encuentra por tipo, intentamos por nombre (case-insensitive)
-      if (!formato) {
-        const { data: fallback, error: fbError } = await supabaseAdmin
+      // A. Intentar por ID si se proporciona (máxima consistencia)
+      if (data.formato_id) {
+        const { data: f } = await supabaseAdmin
+          .from("formato_competencia")
+          .select("id, tipo, nombre")
+          .eq("id", data.formato_id)
+          .maybeSingle();
+        formato = f;
+      }
+
+      // B. Intentar coincidencia exacta por tipo (slug)
+      if (!formato && formato_tipo) {
+        const { data: formats, error: formatError } = await supabaseAdmin
+          .from("formato_competencia")
+          .select("id, tipo, nombre")
+          .eq("tipo", formato_tipo.toLowerCase())
+          .limit(1); // Tomamos el primero si hay varios del mismo tipo (ej: copa)
+        
+        if (formats && formats.length > 0) {
+          formato = formats[0];
+        }
+      }
+
+      // C. Si aún no lo encuentra, intentar por nombre (case-insensitive)
+      if (!formato && formato_tipo) {
+        const { data: fallbacks } = await supabaseAdmin
           .from("formato_competencia")
           .select("id, tipo, nombre")
           .ilike("nombre", `%${formato_tipo}%`)
-          .maybeSingle();
-        formato = fallback;
+          .limit(1);
+        
+        if (fallbacks && fallbacks.length > 0) {
+          formato = fallbacks[0];
+        }
       }
 
       if (!formato) {
         throw new AppError(
-          `Formato de competencia '${formato_tipo}' no reconocido o no disponible.`,
+          `Formato de competencia '${formato_tipo || data.formato_id}' no reconocido o no disponible.`,
           400,
         );
       }

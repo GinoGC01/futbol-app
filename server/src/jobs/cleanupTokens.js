@@ -6,16 +6,16 @@ export function startCleanupJob() {
   cron.schedule('0 3 * * *', async () => {
     console.log('[cleanup] Iniciando limpieza de tokens expirados o usados...');
     try {
-      // Limpiar tokens de verificación de email
-      const { error: errorEmail } = await supabaseAdmin
-        .from('email_verification_tokens')
+      // Limpiar registros pendientes de registro expirados o usados
+      const { error: errorPending } = await supabaseAdmin
+        .from('pending_registrations')
         .delete()
         .or(`used.eq.true,expires_at.lt.${new Date().toISOString()}`);
 
-      if (errorEmail) {
-        console.error('[cleanup] Error limpiando email_verification_tokens:', errorEmail);
+      if (errorPending) {
+        console.error('[cleanup] Error limpiando pending_registrations:', errorPending);
       } else {
-        console.log('[cleanup] email_verification_tokens limpios.');
+        console.log('[cleanup] pending_registrations limpios.');
       }
 
       // Limpiar tokens de recuperación de contraseña

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { supabaseAdmin } from '../../lib/supabase.js'
 import OrganizadorService from '../../services/identity/OrganizadorService.js'
+import LigaService from '../../services/identity/LigaService.js'
 import AppError from '../../utils/AppError.js'
 import { sendVerificationEmail, sendPasswordResetEmail } from '../../utils/mailer.js'
 
@@ -103,26 +104,65 @@ class AuthController {
       const { token } = req.body
       if (!token) throw new AppError('Token requerido', 400)
 
-      // Buscar el token
-      const { data: tokenData, error } = await supabaseAdmin
-        .from('email_verification_tokens')
+      // 1. Buscar el registro pendiente
+      const { data: pr, error } = await supabaseAdmin
+        .from('pending_registrations')
         .select('*')
         .eq('token', token)
         .eq('used', false)
         .gt('expires_at', new Date().toISOString())
         .single()
 
-      if (error || !tokenData) {
-        throw new AppError('Token inválido o expirado', 410)
+      if (error || !pr) {
+        throw new AppError('El link de verificación es inválido o ha expirado.', 410)
       }
 
-      // Marcar usuario como verificado
-      await supabaseAdmin.from('organizador').update({ email_verified: true }).eq('id', tokenData.user_id)
-      
-      // Marcar token como usado
-      await supabaseAdmin.from('email_verification_tokens').update({ used: true }).eq('id', tokenData.id)
+      // 2. Verificar que el email no se haya registrado entre medio (race condition)
+      const existingUser = await OrganizadorService.findByEmail(pr.email)
+      if (existingUser && existingUser.email_verified) {
+        await supabaseAdmin.from('pending_registrations').update({ used: true }).eq('id', pr.id)
+        throw new AppError('Este email ya fue verificado previamente.', 409)
+      }
 
-      res.json({ status: 'success', message: 'Email verificado exitosamente. Ya podés iniciar sesión.' })
+      // 3. CREACIÓN REAL: Organizador + Liga (Todo en una "transacción" lógica)
+      // Si el organizador ya existe (pero no estaba verificado), lo actualizamos.
+      let organizadorId;
+      if (existingUser) {
+        organizadorId = existingUser.id;
+        await supabaseAdmin.from('organizador').update({ 
+          nombre: pr.nombre_organizador,
+          password_hash: pr.password_hash,
+          telefono: pr.telefono,
+          email_verified: true 
+        }).eq('id', organizadorId)
+      } else {
+        const { data: newOrg, error: orgErr } = await supabaseAdmin.from('organizador').insert([{
+          nombre: pr.nombre_organizador,
+          email: pr.email,
+          password_hash: pr.password_hash,
+          telefono: pr.telefono,
+          email_verified: true
+        }]).select('id').single()
+        
+        if (orgErr) {
+          console.error('Error insertando organizador desde registro pendiente:', orgErr)
+          throw new AppError('Error al crear el perfil del organizador', 500)
+        }
+        organizadorId = newOrg.id
+      }
+
+      // Crear la liga
+      await LigaService.createLiga(organizadorId, {
+        nombre: pr.nombre_liga,
+        slug: pr.slug,
+        zona: pr.zona,
+        tipo_futbol: pr.tipo_futbol
+      })
+      
+      // 4. Marcar registro como usado
+      await supabaseAdmin.from('pending_registrations').update({ used: true }).eq('id', pr.id)
+
+      res.json({ status: 'success', message: '¡Cuenta creada y verificada exitosamente! Ya podés iniciar sesión.' })
     } catch (error) {
       next(error)
     }
@@ -136,34 +176,39 @@ class AuthController {
       const { email } = req.body
       if (!email) throw new AppError('Email requerido', 400)
 
-      const user = await OrganizadorService.findByEmail(email)
-      // Respondemos siempre OK para no revelar datos
-      if (!user || user.email_verified) {
-        return res.status(200).json({ status: 'success', message: 'Si el email existe, recibirás un nuevo link.' })
+      // Buscar si hay un registro pendiente activo para ese email
+      const { data: pr, error } = await supabaseAdmin
+        .from('pending_registrations')
+        .select('*')
+        .eq('email', email)
+        .eq('used', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      // Respondemos siempre OK para no revelar datos, igual que antes
+      if (!pr) {
+        return res.status(200).json({ status: 'success', message: 'Si el registro está pendiente, recibirás un nuevo link.' })
       }
 
       // Rate limit (1 minuto)
-      const { data: recentTokens } = await supabaseAdmin
-        .from('email_verification_tokens')
-        .select('id')
-        .eq('user_id', user.id)
-        .gt('created_at', new Date(Date.now() - 60000).toISOString())
-
-      if (recentTokens && recentTokens.length > 0) {
+      if (new Date(pr.created_at).getTime() > Date.now() - 60000) {
         throw new AppError('Por favor, esperá al menos 1 minuto antes de solicitar otro email.', 429)
       }
 
-      // Invalidar tokens previos
-      await supabaseAdmin.from('email_verification_tokens').update({ used: true }).eq('user_id', user.id)
-
-      // Crear nuevo
-      const token = crypto.randomBytes(32).toString('hex')
+      // Generar nuevo token para el mismo registro (o uno nuevo)
+      const newToken = crypto.randomBytes(32).toString('hex')
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       
-      await supabaseAdmin.from('email_verification_tokens').insert([{ user_id: user.id, token, expires_at: expiresAt }])
-      await sendVerificationEmail(user.email, token)
+      await supabaseAdmin.from('pending_registrations').update({ 
+        token: newToken, 
+        expires_at: expiresAt,
+        created_at: new Date().toISOString() // Actualizamos created_at para el rate limit
+      }).eq('id', pr.id)
 
-      res.status(200).json({ status: 'success', message: 'Si el email existe, recibirás un nuevo link.' })
+      await sendVerificationEmail(email, newToken)
+
+      res.status(200).json({ status: 'success', message: 'Si el registro está pendiente, recibirás un nuevo link.' })
     } catch (error) {
       next(error)
     }

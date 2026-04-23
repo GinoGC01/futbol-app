@@ -57,7 +57,7 @@ export default function VerifyEmail() {
             <div className="w-20 h-20 bg-success/10 rounded-2xl flex items-center justify-center mb-6">
               <CheckCircle2 className="w-10 h-10 text-success" />
             </div>
-            <h2 className="text-2xl font-heading font-bold mb-2 text-text-primary">¡Cuenta Verificada!</h2>
+            <h2 className="text-2xl font-heading font-bold mb-2 text-text-primary">¡Cuenta Creada!</h2>
             <p className="text-text-dim mb-8">{message}</p>
             <Button 
               onClick={() => navigate('/admin/login')} 
