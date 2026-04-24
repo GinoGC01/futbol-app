@@ -75,4 +75,3 @@
 La plataforma consume estrictamente la **arquitectura de backend de 3 capas**, lo que garantiza una separación limpia de responsabilidades y una estabilidad lista para producción. Todas las rutas heredadas han sido purgadas para cumplir con el **Estándar de Élite**.
 
 ---
-*Desarrollado con ❤️ para el deporte más hermoso del mundo.*
