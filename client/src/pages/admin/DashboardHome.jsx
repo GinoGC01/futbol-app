@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLigas, useTemporadas, useCreateLiga } from '../../hooks/useAdmin'
+import { useLigas, useTemporadas, useCreateLiga, useDashboardStats } from '../../hooks/useAdmin'
 import { useAuth } from '../../hooks/useAuth'
 import StatCard from '../../components/ui/StatCard'
 import GlassCard from '../../components/ui/GlassCard'
@@ -8,13 +8,15 @@ import Modal from '../../components/ui/Modal'
 import { Shield, Users, Swords, DollarSign, Plus, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { useLigaActiva } from '../../context/LigaContext'
+
 export default function DashboardHome() {
   const { user } = useAuth()
-  const { data: ligas, isLoading } = useLigas()
+  const { liga, isLoading } = useLigaActiva()
   const [showNewLiga, setShowNewLiga] = useState(false)
   
-  const liga = ligas?.[0]
   const { data: temporadas } = useTemporadas(liga?.id)
+  const { data: dashStats } = useDashboardStats(liga?.id)
   const temporadaActiva = temporadas?.find(t => t.estado === 'activa')
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
@@ -31,11 +33,9 @@ export default function DashboardHome() {
             {liga ? `Administrando: ${liga.nombre}` : 'Bienvenido a la plataforma'}
           </p>
         </div>
-        {!liga && (
-          <Button onClick={() => setShowNewLiga(true)} size="sm">
-            <Plus className="w-4 h-4 mr-2" /> Crear mi primera Liga
-          </Button>
-        )}
+        <Button onClick={() => setShowNewLiga(true)} size="sm">
+          <Plus className="w-4 h-4 mr-2" /> {liga ? 'Crear otra Liga' : 'Crear mi primera Liga'}
+        </Button>
       </div>
 
       {!liga ? (
@@ -57,8 +57,8 @@ export default function DashboardHome() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatCard icon={Shield} value={liga?.nombre || '—'} label="Liga activa" />
             <StatCard icon={Users} value={temporadaActiva?.nombre || 'Sin temporada'} label="Temporada" />
-            <StatCard icon={Swords} value="—" label="Partidos jugados" />
-            <StatCard icon={DollarSign} value="—" label="Cobros pendientes" />
+            <StatCard icon={Swords} value={dashStats?.partidos_finalizados ?? '—'} label="Partidos jugados" />
+            <StatCard icon={DollarSign} value={dashStats?.cobros_pendientes ?? '—'} label="Cobros pendientes" />
           </div>
 
           {/* Quick actions */}
@@ -89,7 +89,7 @@ export default function DashboardHome() {
 }
 
 function NewLigaModal({ open, onClose }) {
-  const [form, setForm] = useState({ nombre: '', slug: '', tipo_futbol: 'f7', zona: '' })
+  const [form, setForm] = useState({ nombre: '', slug: '', tipo_futbol: 'f7', zona: '', monto_inscripcion: 0 })
   const mutation = useCreateLiga()
   
   const generateSlug = (val) => val.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
@@ -98,7 +98,7 @@ function NewLigaModal({ open, onClose }) {
     e.preventDefault()
     await mutation.mutateAsync(form)
     onClose()
-    setForm({ nombre: '', slug: '', tipo_futbol: 'f7', zona: '' })
+    setForm({ nombre: '', slug: '', tipo_futbol: 'f7', zona: '', monto_inscripcion: 0 })
   }
 
   return (
@@ -138,6 +138,12 @@ function NewLigaModal({ open, onClose }) {
             <input type="text" value={form.zona} onChange={e => setForm({ ...form, zona: e.target.value })}
               placeholder="Ej: Buenos Aires"
               className="w-full mt-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all" />
+          </label>
+          <label className="block text-xs font-medium text-text-dim">
+            Valor Inscripción ($)
+            <input type="number" value={form.monto_inscripcion} onChange={e => setForm({ ...form, monto_inscripcion: e.target.value })}
+              placeholder="Ej: 5000"
+              className="w-full mt-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all font-mono" />
           </label>
         </div>
 

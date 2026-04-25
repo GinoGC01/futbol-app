@@ -42,7 +42,7 @@ class InscripcionService {
       .insert([{
         equipo_id: equipoId,
         temporada_id: temporadaId,
-        monto_total: Number(monto_total),
+        monto_total: Number(temporada.liga?.monto_inscripcion || 0),
         monto_abonado: 0,
         estado_pago: 'pendiente'
       }])

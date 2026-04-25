@@ -49,11 +49,12 @@ class PartidoService {
     const ligaId = partido.jornada.fase.temporada.liga_id
     const temporadaId = partido.jornada.fase.temporada.id
     const temporadaEstado = partido.jornada.fase.temporada.estado
+    const jornadaEstado = partido.jornada.estado
 
     // Aislamiento Total
     await LigaService.verifyOwnership(ligaId, organizadorId)
 
-    return { partido, temporadaId, ligaId, temporadaEstado }
+    return { partido, temporadaId, ligaId, temporadaEstado, jornadaEstado }
   }
 
   /**
@@ -83,6 +84,10 @@ class PartidoService {
     // 2. Hard Lock
     if (jornada.fase.temporada.estado === 'finalizada') {
       throw new AppError('Temporada finalizada: no se pueden agregar partidos (Modo Bóveda)', 403)
+    }
+
+    if (jornada.estado === 'cerrada') {
+      throw new AppError('La jornada está cerrada: no se pueden agregar partidos', 403)
     }
 
     // 3. Validar que ambos equipos pertenezcan a la misma liga
@@ -137,6 +142,10 @@ class PartidoService {
       throw new AppError('Temporada finalizada: no se puede modificar el estado del partido (Modo Bóveda)', 403)
     }
 
+    if (partido.jornada.estado === 'cerrada') {
+      throw new AppError('La jornada está cerrada: no se puede modificar el estado del partido', 403)
+    }
+
     const transicionesPermitidas = TRANSICIONES_VALIDAS[partido.estado]
     if (!transicionesPermitidas || !transicionesPermitidas.includes(nuevoEstado)) {
       throw new AppError(
@@ -166,6 +175,10 @@ class PartidoService {
 
     if (temporadaEstado === 'finalizada') {
       throw new AppError('Temporada finalizada: no se pueden editar resultados (Modo Bóveda)', 403)
+    }
+
+    if (partido.jornada.estado === 'cerrada') {
+      throw new AppError('La jornada está cerrada: no se pueden editar resultados', 403)
     }
 
     if (!['en_juego', 'finalizado'].includes(partido.estado)) {
@@ -236,6 +249,10 @@ class PartidoService {
 
     if (temporadaEstado === 'finalizada') {
       throw new AppError('Temporada finalizada: no se puede modificar la logística (Modo Bóveda)', 403)
+    }
+
+    if (partido.jornada.estado === 'cerrada') {
+      throw new AppError('La jornada está cerrada: no se puede modificar la logística', 403)
     }
 
     const permitidos = ['fecha_hora', 'cancha']

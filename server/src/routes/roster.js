@@ -43,6 +43,14 @@ router.put(
   EquipoController.update
 )
 
+router.delete(
+  '/equipos/:id',
+  [
+    param('id').isUUID().withMessage('ID de equipo inválido')
+  ],
+  EquipoController.delete
+)
+
 // ============================================
 // JUGADORES (recurso global)
 // ============================================

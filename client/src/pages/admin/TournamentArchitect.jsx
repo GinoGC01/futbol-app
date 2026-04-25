@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLigas, useEquipos, useTemporadas, useTemporadaTree, useCreateTemporada, useCreateFase, useCreateJornadas, useFormatos, useUpdateTemporada, useUpdateFase, useUpdateJornada, useFixtureAdmin, useCreatePartido, useGenerateFixture } from '../../hooks/useAdmin'
+import { useLigas, useEquipos, useTemporadas, useTemporadaTree, useCreateTemporada, useCreateFase, useCreateJornadas, useFormatos, useUpdateTemporada, useUpdateFase, useUpdateJornada, useFixtureAdmin, useCreatePartido, useGenerateFixture, useInscripcionesEquipo, useCerrarJornada } from '../../hooks/useAdmin'
 import { useToast } from '../../components/ui/Toast'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
@@ -8,9 +8,10 @@ import Modal from '../../components/ui/Modal'
 import EmptyState from '../../components/ui/EmptyState'
 import { Trophy, Plus, ChevronRight, ChevronDown, Layers, Calendar, Lock, Pencil, Swords, Zap, Check, X, Shield } from 'lucide-react'
 
+import { useLigaActiva } from '../../context/LigaContext'
+
 export default function TournamentArchitect() {
-  const { data: ligas } = useLigas()
-  const liga = ligas?.[0]
+  const { liga } = useLigaActiva()
   const { data: temporadas, isLoading } = useTemporadas(liga?.id)
   const { data: formatos } = useFormatos()
   const { data: equipos } = useEquipos(liga?.id)
@@ -178,6 +179,7 @@ export default function TournamentArchitect() {
 // ====================================================
 function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, ligaId, currentTemporada }) {
   const updateJornada = useUpdateJornada()
+  const cerrarJornada = useCerrarJornada()
   const { data: fixtureData } = useFixtureAdmin(isExpanded ? jornada.id : null)
   const partidos = fixtureData?.partidos || []
   const [editingDate, setEditingDate] = useState(false)
@@ -230,10 +232,42 @@ function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, l
                   <Button size="xs" variant="ghost" onClick={() => setEditingDate(false)}><X className="w-3 h-3" /></Button>
                 </div>
               ) : (
-                <button onClick={() => setEditingDate(true)} className="text-xs text-primary hover:underline">
-                  {jornada.fecha_tentativa ? 'Cambiar fecha' : 'Asignar fecha'}
-                </button>
+                <div className="flex items-center justify-between w-full">
+                  <button onClick={() => setEditingDate(true)} className="text-xs text-primary hover:underline">
+                    {jornada.fecha_tentativa ? 'Cambiar fecha' : 'Asignar fecha'}
+                  </button>
+
+                  {jornada.estado !== 'cerrada' && (
+                    <Button 
+                      size="xs" 
+                      variant="outline" 
+                      className="text-danger hover:bg-danger/10 border-danger/20 gap-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('¿Estás seguro de cerrar esta fecha? Todos los partidos programados se marcarán como postergados y no se permitirán más cambios.')) {
+                          cerrarJornada.mutate(jornada.id, {
+                            onSuccess: () => toast.success('Jornada cerrada'),
+                            onError: (err) => toast.error(err.message)
+                          });
+                        }
+                      }}
+                      loading={cerrarJornada.isPending}
+                    >
+                      <Lock className="w-3 h-3" /> Cerrar Fecha
+                    </Button>
+                  )}
+                </div>
               )}
+            </div>
+          )}
+
+          {jornada.estado === 'cerrada' && (
+            <div className="p-3 rounded-lg bg-danger/5 border border-danger/10 flex items-center gap-3">
+              <Lock className="w-4 h-4 text-danger" />
+              <div>
+                <p className="text-xs font-bold text-danger uppercase tracking-tight">Fecha Cerrada</p>
+                <p className="text-[10px] text-text-dim italic">No se permiten más cambios ni registro de eventos.</p>
+              </div>
             </div>
           )}
 
@@ -343,8 +377,8 @@ function MatchCreator({ jornadaId, equipos }) {
 // ====================================================
 // GENERATE FIXTURE MODAL — Team checklist + confirmation
 // ====================================================
-function TeamInscriptionsBadge({ teamId, temporadaId, required }) {
-  const { data: seasons } = useInscripcionesEquipo(null, teamId)
+function TeamInscriptionsBadge({ teamId, temporadaId, required, ligaId }) {
+  const { data: seasons } = useInscripcionesEquipo(ligaId, teamId)
   const plantel = seasons?.find(s => s.temporada_id === temporadaId)
   const activos = plantel?.plantel?.inscripciones?.filter(i => i.estado === 'activo')?.length || 0
 
@@ -361,7 +395,7 @@ function FixtureAutoSelector({ open, onClose, faseId, equipos, ligaId, currentTe
   const [selectedTeams, setSelectedTeams] = useState([])
   const [confirming, setConfirming] = useState(false)
   const generateFixture = useGenerateFixture()
-  const { toast } = useToast()
+  const toast = useToast()
 
   useEffect(() => {
     if (open) {
@@ -437,7 +471,7 @@ function FixtureAutoSelector({ open, onClose, faseId, equipos, ligaId, currentTe
                       </div>
                       <Shield className="w-4 h-4 shrink-0" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
                       <span className="text-sm font-medium">{eq.nombre}</span>
-                      <TeamInscriptionsBadge teamId={eq.id} temporadaId={currentTemporada?.id} required={modalidadReq} />
+                      <TeamInscriptionsBadge teamId={eq.id} temporadaId={currentTemporada?.id} required={modalidadReq} ligaId={ligaId} />
                     </button>
                   )
                 })
@@ -593,17 +627,13 @@ function EditTemporadaModal({ open, onClose, temporada }) {
               <option value="finalizada">Finalizada</option>
             </select>
           </label>
-          <label className="text-xs font-medium text-text-dim">
-            Modalidad
-            <select value={form.modalidad} onChange={set('modalidad')} required
-              className="w-full mt-1.5 px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all appearance-none font-bold">
-              <option value={5}>Fútbol 5</option>
-              <option value={7}>Fútbol 7</option>
-              <option value={8}>Fútbol 8</option>
-              <option value={9}>Fútbol 9</option>
-              <option value={11}>Fútbol 11</option>
-            </select>
-          </label>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-text-dim">Modalidad (Fija)</span>
+            <div className="mt-1.5 px-3 py-2.5 bg-bg-surface/50 border border-border-subtle rounded-xl text-sm text-text-dim flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" />
+              Fútbol {temporada.liga?.tipo_futbol?.replace(/\D/g, '') || '—'}
+            </div>
+          </div>
         </div>
         <p className="text-[10px] text-text-dim italic">* La fecha de finalización puede modificarse en cualquier momento antes de finalizar la temporada.</p>
         <Button type="submit" loading={mutation.isPending} className="w-full mt-2">Guardar Cambios</Button>

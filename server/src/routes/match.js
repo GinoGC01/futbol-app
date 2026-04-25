@@ -80,7 +80,7 @@ router.post(
   [
     param('id').isUUID().withMessage('ID de partido inválido'),
     body('inscripcion_jugador_id').isUUID().withMessage('ID de inscripción de jugador requerido'),
-    body('minuto').optional().isInt({ min: 0, max: 130 }).withMessage('Minuto entre 0 y 130'),
+    body('minuto').optional({ nullable: true }).isInt({ min: 0, max: 130 }).withMessage('Minuto entre 0 y 130'),
     body('es_penal').optional().isBoolean(),
     body('es_contra').optional().isBoolean()
   ],
@@ -93,7 +93,7 @@ router.post(
     param('id').isUUID().withMessage('ID de partido inválido'),
     body('inscripcion_jugador_id').isUUID().withMessage('ID de inscripción de jugador requerido'),
     body('tipo').isIn(['amarilla', 'roja', 'doble_amarilla']).withMessage('Tipo de tarjeta no válido'),
-    body('minuto').optional().isInt({ min: 0, max: 130 }).withMessage('Minuto entre 0 y 130')
+    body('minuto').optional({ nullable: true }).isInt({ min: 0, max: 130 }).withMessage('Minuto entre 0 y 130')
   ],
   IncidentController.registrarTarjeta
 )

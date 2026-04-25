@@ -12,7 +12,7 @@ class TemporadaService {
 
     const { data, error } = await supabaseAdmin
       .from("temporada")
-      .select("estado, liga_id")
+      .select("estado, liga_id, liga:liga_id(monto_inscripcion)")
       .eq("id", temporadaId)
       .maybeSingle();
 

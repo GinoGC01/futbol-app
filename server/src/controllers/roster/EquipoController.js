@@ -33,6 +33,15 @@ class EquipoController {
       res.status(200).json({ status: 'success', data: updated })
     } catch (error) { next(error) }
   }
+
+  async delete(req, res, next) {
+    try {
+      const { id } = req.params
+      const result = await EquipoService.deleteEquipo(id, req.organizador.id)
+
+      res.status(200).json({ status: 'success', data: result })
+    } catch (error) { next(error) }
+  }
 }
 
 export default new EquipoController()

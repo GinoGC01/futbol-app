@@ -21,7 +21,8 @@ import {
   useUpdateEquipo, 
   useAddJugador,
   useTemporadas,
-  useInscribirEquipo
+  useInscribirEquipo,
+  useDeleteEquipo
 } from '../../hooks/useAdmin'
 import { adminService } from '../../services/adminService'
 import { useToast } from '../../components/ui/Toast'
@@ -32,6 +33,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
   const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [showEditTeam, setShowEditTeam] = useState(false)
   const [showInscribeTeam, setShowInscribeTeam] = useState(false)
+  const deleteEquipo = useDeleteEquipo()
   const toast = useToast()
 
   const latestInscripcion = useMemo(() => {
@@ -73,6 +75,27 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
         </div>
 
         <div className="flex gap-2">
+          {!latestInscripcion && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-danger hover:bg-danger/10 border-danger/20 h-10"
+              onClick={() => {
+                if (confirm(`¿Estás seguro de eliminar definitivamente el equipo "${equipo.nombre}"?`)) {
+                  deleteEquipo.mutate(equipo.id, {
+                    onSuccess: () => {
+                      toast.success('Equipo eliminado')
+                      onBack()
+                    },
+                    onError: (err) => toast.error(err.message)
+                  })
+                }
+              }}
+              loading={deleteEquipo.isPending}
+            >
+              <Trash2 className="w-4 h-4" /> Eliminar
+            </Button>
+          )}
           {!latestInscripcion ? (
             <Button variant="primary" size="sm" onClick={() => setShowInscribeTeam(true)} className="h-10 bg-purple-600 hover:bg-purple-700">
               <Calendar className="w-4 h-4" /> Inscribir en Temporada
@@ -175,7 +198,12 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
       )}
 
       <EditTeamModal open={showEditTeam} onClose={() => setShowEditTeam(false)} equipo={equipo} />
-      <AddPlayerModal open={showAddPlayer} onClose={() => setShowAddPlayer(false)} plantelId={latestInscripcion?.plantel?.id} />
+      <AddPlayerModal 
+        open={showAddPlayer} 
+        onClose={() => setShowAddPlayer(false)} 
+        plantelId={latestInscripcion?.plantel?.id} 
+        ligaId={ligaId}
+      />
       <InscribeTeamModal open={showInscribeTeam} onClose={() => setShowInscribeTeam(false)} equipoId={equipo.id} ligaId={ligaId} />
     </div>
   )
@@ -244,7 +272,7 @@ function EditTeamModal({ open, onClose, equipo }) {
   )
 }
 
-function AddPlayerModal({ open, onClose, plantelId }) {
+function AddPlayerModal({ open, onClose, plantelId, ligaId }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
@@ -254,12 +282,13 @@ function AddPlayerModal({ open, onClose, plantelId }) {
   const [isCreating, setIsCreating] = useState(false)
   const [newPlayerForm, setNewPlayerForm] = useState({ nombre: '', apellido: '', dni: '' })
   const addMutation = useAddJugador()
+  const toast = useToast()
 
   async function handleSearch() {
     if (!query.trim()) return
     setSearching(true)
     try {
-      const data = await adminService.searchJugadores(query)
+      const data = await adminService.searchJugadores(query, ligaId)
       setResults(data || [])
     } catch { toast.error('Error al buscar jugadores') }
     setSearching(false)
@@ -336,15 +365,29 @@ function AddPlayerModal({ open, onClose, plantelId }) {
 
           <div className="max-h-80 overflow-y-auto space-y-2 px-1 custom-scrollbar">
             {results.map(j => (
-              <button key={j.id} onClick={() => setSelectedPlayer(j)} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/5 transition-all text-left group">
+              <button 
+                key={j.id} 
+                onClick={() => !j.inscripcion_activa && setSelectedPlayer(j)} 
+                disabled={!!j.inscripcion_activa}
+                className={`w-full flex items-center justify-between p-4 rounded-xl border border-transparent transition-all text-left group ${
+                  j.inscripcion_activa ? 'opacity-60 cursor-not-allowed bg-white/2' : 'hover:bg-white/5 hover:border-white/5'
+                }`}
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary group-hover:scale-110 transition-transform">{j.nombre[0]}{j.apellido[0]}</div>
                   <div>
                     <p className="text-sm font-bold">{j.nombre} {j.apellido}</p>
-                    <p className="text-[10px] text-text-dim font-bold tracking-widest uppercase">ID: {j.id.split('-')[0]}</p>
+                    {j.inscripcion_activa ? (
+                      <p className="text-[10px] text-warning font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> Inscrito en: {j.inscripcion_activa.equipo_nombre}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-text-dim font-bold tracking-widest uppercase">ID: {j.id.split('-')[0]}</p>
+                    )}
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-text-dim group-hover:text-primary transition-colors" />
+                {!j.inscripcion_activa && <ChevronRight className="w-5 h-5 text-text-dim group-hover:text-primary transition-colors" />}
+                {j.inscripcion_activa && <Lock className="w-4 h-4 text-text-dim" />}
               </button>
             ))}
             {query && results.length === 0 && !searching && (
@@ -442,7 +485,7 @@ function AddPlayerModal({ open, onClose, plantelId }) {
 function InscribeTeamModal({ open, onClose, equipoId, ligaId }) {
   const { data: temporadas } = useTemporadas(ligaId)
   const activeTemporadas = (temporadas || []).filter(t => t.estado === 'abierta' || t.estado === 'proximamente' || t.estado === 'borrador')
-  const [form, setForm] = useState({ temporada_id: '', monto_total: 0, limite_jugadores: 20 })
+  const [form, setForm] = useState({ temporada_id: '', limite_jugadores: 20 })
   const inscribeMutation = useInscribirEquipo()
   const toast = useToast()
 
@@ -470,15 +513,9 @@ function InscribeTeamModal({ open, onClose, equipoId, ligaId }) {
             ))}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Monto Total ($)</label>
-            <input type="number" value={form.monto_total} onChange={e => setForm({...form, monto_total: e.target.value})} className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-mono" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Límite Jugadores</label>
-            <input type="number" value={form.limite_jugadores} onChange={e => setForm({...form, limite_jugadores: e.target.value})} className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-mono" />
-          </div>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Límite Jugadores</label>
+          <input type="number" value={form.limite_jugadores} onChange={e => setForm({...form, limite_jugadores: e.target.value})} className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-mono" />
         </div>
         <Button type="submit" loading={inscribeMutation.isPending} className="w-full h-12 text-sm font-bold bg-purple-600 hover:bg-purple-700">Confirmar Inscripción</Button>
       </form>

@@ -8,11 +8,11 @@ import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import { useToast } from '../../components/ui/Toast'
 import { User, Search, UserPlus, Shield, Trophy, ChevronRight, ChevronLeft, AlertCircle, Trash2, UserCheck, Calendar } from 'lucide-react'
+import { useLigaActiva } from '../../context/LigaContext'
 
 export default function PlayerManager() {
-  const { data: ligas } = useLigas()
+  const { liga } = useLigaActiva()
   const [globalPage, setGlobalPage] = useState(1)
-  const liga = ligas?.[0]
   const { data: jugadores, isLoading } = useJugadoresLiga(liga?.id)
   const { data: allJugadoresRaw } = useJugadoresOrganizador(globalPage, 12)
   const allJugadores = allJugadoresRaw?.list || []

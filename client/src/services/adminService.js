@@ -5,6 +5,7 @@ export const adminService = {
   getMe: () => api.get('/identity/me'),
   getLigas: () => api.get('/identity/ligas'),
   createLiga: (data) => api.post('/identity/ligas', data),
+  getDashboardStats: (ligaId) => api.get(`/identity/ligas/${ligaId}/stats`),
 
   // Competition
   getTemporadas: (ligaId) => api.get(`/competition/temporadas?liga_id=${ligaId}`),
@@ -20,18 +21,20 @@ export const adminService = {
   getEquipos: (ligaId) => api.get(`/roster/equipos?liga_id=${ligaId}`),
   createEquipo: (data) => api.post('/roster/equipos', data),
   updateEquipo: (id, data) => api.put(`/roster/equipos/${id}`, data),
+  deleteEquipo: (id) => api.delete(`/roster/equipos/${id}`),
   inscribirEquipo: (data) => api.post('/roster/inscripciones/equipo', data),
   getInscripcionesByEquipo: (ligaId, equipoId) => api.get(`/roster/inscripciones/equipo/${equipoId}?liga_id=${ligaId}`),
   getJugadoresByLiga: (ligaId) => api.get(`/roster/jugadores?liga_id=${ligaId}`),
   getJugadoresOrganizador: (page = 1, limit = 20) => api.get(`/roster/jugadores/recientes?page=${page}&limit=${limit}`),
   addJugadorAPlantel: (data) => api.post('/roster/inscripciones/jugador', data),
-  searchJugadores: (query) => api.get(`/roster/jugadores/search?q=${encodeURIComponent(query)}`),
+  searchJugadores: (query, ligaId) => api.get(`/roster/jugadores/search?q=${encodeURIComponent(query)}${ligaId ? `&liga_id=${ligaId}` : ''}`),
   createJugador: (data) => api.post('/roster/jugadores', data),
   updatePago: (inscripcionId, data) => api.patch(`/roster/inscripciones/pago/${inscripcionId}`, data),
 
   // Competition — Fases & Jornadas
   updateFase: (id, data) => api.patch(`/competition/fases/${id}`, data),
   updateJornada: (id, data) => api.patch(`/competition/jornadas/${id}`, data),
+  cerrarJornada: (id) => api.patch(`/competition/jornadas/${id}/cerrar`),
 
   // Match Management
   createPartido: (data) => api.post('/match/partidos', data),

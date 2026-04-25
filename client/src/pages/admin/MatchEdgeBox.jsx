@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   useTemporadas, useLigas, useTemporadaTree, useFixtureAdmin, 
   useEventos, useCambiarEstadoPartido, useRegistrarGol, 
@@ -9,12 +9,13 @@ import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
-import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User } from 'lucide-react'
+import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock } from 'lucide-react'
+
+import { useLigaActiva } from '../../context/LigaContext'
 
 export default function MatchEdgeBox() {
-  const { toast } = useToast()
-  const { data: ligas } = useLigas()
-  const liga = ligas?.[0]
+  const toast = useToast()
+  const { liga } = useLigaActiva()
   const { data: temporadas } = useTemporadas(liga?.id)
   const temporadaActiva = temporadas?.find(t => t.estado === 'activa')
   const { data: tree } = useTemporadaTree(temporadaActiva?.id)
@@ -23,6 +24,12 @@ export default function MatchEdgeBox() {
   const [selectedJornada, setSelectedJornada] = useState(null)
   const [selectedPartido, setSelectedPartido] = useState(null)
   const [entryMode, setEntryMode] = useState(null) // { type: 'GOL' | 'AMARILLA' | 'ROJA' }
+
+  const jornadaActual = allJornadas.find(j => j.id === (selectedJornada || allJornadas[0]?.id))
+
+  // Stopwatch State
+  const [timer, setTimer] = useState(0)
+  const [isRunning, setIsRunning] = useState(false)
 
   const jornadaId = selectedJornada || allJornadas[0]?.id
   const { data: fixtureData, isLoading: loadingFixture } = useFixtureAdmin(jornadaId)
@@ -39,26 +46,104 @@ export default function MatchEdgeBox() {
   const { data: playersLocal, isLoading: loadingLocal } = useInscripcionesEquipo(liga?.id, partido?.equipo_local?.id)
   const { data: playersVisit, isLoading: loadingVisit } = useInscripcionesEquipo(liga?.id, partido?.equipo_visitante?.id)
 
+  // Timer Logic
+  useEffect(() => {
+    if (!selectedPartido) {
+      setTimer(0)
+      setIsRunning(false)
+      return
+    }
+
+    const saved = localStorage.getItem(`match_timer_${selectedPartido}`)
+    const p = partidos.find(match => match.id === selectedPartido)
+
+    if (p?.estado === 'en_juego') {
+      if (saved) {
+        const { startTime } = JSON.parse(saved)
+        const elapsed = Math.floor((Date.now() - startTime) / 1000)
+        setTimer(elapsed > 0 ? elapsed : 0)
+        setIsRunning(true)
+      } else {
+        // Si está en juego pero no hay timer guardado, empezamos en 0
+        setTimer(0)
+        setIsRunning(true)
+      }
+    } else if (p?.estado === 'finalizado') {
+      setIsRunning(false)
+      if (saved) {
+        const { duration } = JSON.parse(saved)
+        setTimer(duration || 0)
+      }
+    } else {
+      setTimer(0)
+      setIsRunning(false)
+    }
+  }, [selectedPartido, partidos])
+
+  useEffect(() => {
+    let interval
+    if (isRunning) {
+      interval = setInterval(() => {
+        setTimer(prev => prev + 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isRunning])
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const handleStartMatch = () => {
+    const startTime = Date.now()
+    localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ startTime }))
+    cambiarEstado.mutate({ id: partido.id, estado: 'en_juego' }, {
+      onSuccess: () => {
+        setIsRunning(true)
+        toast.success('¡Partido Iniciado! Cronómetro en marcha.')
+      }
+    })
+  }
+
+  const handleEndMatch = () => {
+    cambiarEstado.mutate({ id: partido.id, estado: 'finalizado' }, {
+      onSuccess: () => {
+        setIsRunning(false)
+        const saved = JSON.parse(localStorage.getItem(`match_timer_${partido.id}`) || '{}')
+        localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ ...saved, duration: timer }))
+        toast.success('Partido Finalizado.')
+      }
+    })
+  }
+
   const handleIncident = (type) => {
     if (!partido) return
+    if (jornadaActual?.estado === 'cerrada') {
+      toast.error('La jornada está cerrada. No se pueden registrar eventos.')
+      return
+    }
     if (partido.estado === 'programado') {
-      toast({ title: 'Partido no iniciado', description: 'Inicia el partido para cargar eventos.', type: 'error' })
+      toast.error('Partido no iniciado. Inicia el partido para cargar eventos.')
       return
     }
     setEntryMode({ type })
   }
 
   const submitEvent = (player) => {
+    const currentMinute = Math.floor(timer / 60) + 1 // El minuto actual (ej: 0:45 -> min 1)
+    
     const common = { 
       partidoId: partido.id, 
       inscripcion_jugador_id: player.id,
-      minuto: null // Por ahora simple sin minuto exacto
+      minuto: currentMinute
     }
 
     if (entryMode.type === 'GOL') {
       registrarGol.mutate(common, {
         onSuccess: () => {
-          toast({ title: 'GOL Registrado', description: `${player.jugador?.nombre} marcó para su equipo.`, type: 'success' })
+          toast.success(`¡GOL! ${player.jugador?.nombre} (Min ${currentMinute})`)
           setEntryMode(null)
         }
       })
@@ -69,7 +154,7 @@ export default function MatchEdgeBox() {
       }, {
         onSuccess: () => {
           const t = entryMode.type === 'AMARILLA' ? 'AMARILLA' : 'ROJA'
-          toast({ title: `${t} Registrada`, description: `Tarjeta para ${player.jugador?.nombre}.`, type: 'warning' })
+          toast.info(`${t} para ${player.jugador?.nombre} (Min ${currentMinute})`)
           setEntryMode(null)
         }
       })
@@ -86,9 +171,10 @@ export default function MatchEdgeBox() {
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
           {allJornadas.map(j => (
             <button key={j.id} onClick={() => { setSelectedJornada(j.id); setSelectedPartido(null) }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all flex items-center gap-1.5 ${
                 jornadaId === j.id ? 'bg-primary/10 text-primary border-primary/20' : 'text-text-dim border-border-subtle'
               }`}>
+              {j.estado === 'cerrada' && <Lock className="w-3 h-3" />}
               Fecha {j.numero}
             </button>
           ))}
@@ -131,10 +217,10 @@ export default function MatchEdgeBox() {
               ← Volver
             </button>
             {partido.estado === 'programado' ? (
-              <Button size="xs" onClick={() => cambiarEstado.mutate({ id: partido.id, estado: 'en_juego' })}
+              <Button size="xs" onClick={handleStartMatch}
                 loading={cambiarEstado.isPending} variant="primary">Iniciar</Button>
             ) : partido.estado === 'en_juego' ? (
-              <Button size="xs" onClick={() => cambiarEstado.mutate({ id: partido.id, estado: 'finalizado' })}
+              <Button size="xs" onClick={handleEndMatch}
                 loading={cambiarEstado.isPending} variant="danger">Finalizar</Button>
             ) : null}
           </div>
@@ -148,8 +234,16 @@ export default function MatchEdgeBox() {
                     <div className="text-right flex-1 min-w-0">
                       <p className="font-heading font-bold text-sm truncate uppercase tracking-tighter">{partido.equipo_local?.nombre}</p>
                     </div>
-                    <div className="text-2xl font-heading font-bold text-primary px-3 py-1 bg-white/5 rounded-lg border border-white/5">
-                      {partido.goles_local ?? 0} - {partido.goles_visitante ?? 0}
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="text-2xl font-heading font-bold text-primary px-3 py-1 bg-white/5 rounded-lg border border-white/5">
+                        {partido.goles_local ?? 0} - {partido.goles_visitante ?? 0}
+                      </div>
+                      {partido.estado === 'en_juego' && (
+                        <div className="flex items-center gap-1 text-[10px] font-mono text-primary animate-pulse">
+                          <Clock className="w-3 h-3" />
+                          {formatTime(timer)}'
+                        </div>
+                      )}
                     </div>
                     <div className="text-left flex-1 min-w-0">
                       <p className="font-heading font-bold text-sm truncate uppercase tracking-tighter">{partido.equipo_visitante?.nombre}</p>
@@ -265,7 +359,7 @@ export default function MatchEdgeBox() {
                                </p>
                             </div>
                             <div className="text-[10px] font-mono text-text-dim px-2 bg-white/5 rounded">
-                              EVENTO #{idx + 1}
+                              {e.minuto}'
                             </div>
                           </div>
                         ))}

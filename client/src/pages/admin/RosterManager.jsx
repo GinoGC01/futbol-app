@@ -1,21 +1,25 @@
 import { useState } from 'react'
-import { useLigas, useEquipos, useCreateEquipo } from '../../hooks/useAdmin'
+import { useLigas, useEquipos, useCreateEquipo, useDeleteEquipo } from '../../hooks/useAdmin'
 import { adminService } from '../../services/adminService'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import EmptyState from '../../components/ui/EmptyState'
-import { Users, Plus, Search, UserPlus, Shield, ExternalLink, Settings } from 'lucide-react'
+import { useToast } from '../../components/ui/Toast'
+import { Users, Plus, Search, UserPlus, Shield, ExternalLink, Settings, Trash2 } from 'lucide-react'
 import TeamDetailView from './TeamDetailView'
 
+import { useLigaActiva } from '../../context/LigaContext'
+
 export default function RosterManager() {
-  const { data: ligas } = useLigas()
-  const liga = ligas?.[0]
+  const { liga } = useLigaActiva()
   const { data: equipos, isLoading } = useEquipos(liga?.id)
   const [showNewEquipo, setShowNewEquipo] = useState(false)
   const [showSearchPlayer, setShowSearchPlayer] = useState(false)
   const [selectedEquipo, setSelectedEquipo] = useState(null)
+  const deleteEquipo = useDeleteEquipo()
+  const toast = useToast()
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
 
@@ -57,7 +61,23 @@ export default function RosterManager() {
                     </div>
                   </div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-text-dim group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                 <div className="flex items-center gap-2">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`¿Estás seguro de eliminar el equipo "${eq.nombre}"?`)) {
+                        deleteEquipo.mutate(eq.id, {
+                          onSuccess: () => toast.success('Equipo eliminado')
+                        });
+                      }
+                    }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-text-dim hover:text-danger hover:bg-danger/10 transition-all"
+                    title="Eliminar Equipo"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <ExternalLink className="w-4 h-4 text-text-dim group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                </div>
               </div>
             </GlassCard>
           ))}

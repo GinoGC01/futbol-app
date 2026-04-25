@@ -76,7 +76,62 @@ class EventoService {
 
     if (error) throw new AppError(`Error al registrar gol: ${error.message}`, 500)
 
+    // 5. Sincronizar marcador del partido
+    await this._syncGolesPartido(partidoId)
+
     return gol
+  }
+
+  /**
+   * Recalcula los goles local/visitante basados en la tabla 'gol' 
+   * y actualiza el registro del partido.
+   */
+  async _syncGolesPartido(partidoId) {
+    // 1. Obtener datos del partido
+    const { data: partido, error: pError } = await supabaseAdmin
+      .from('partido')
+      .select('id, equipo_local_id, equipo_visitante_id')
+      .eq('id', partidoId)
+      .single()
+    
+    if (pError || !partido) return
+
+    // 2. Traer todos los goles del partido con el equipo del jugador
+    const { data: goles, error: gError } = await supabaseAdmin
+      .from('gol')
+      .select(`
+        id, es_contra,
+        inscripcion_jugador:inscripcion_jugador!inner(
+          plantel:plantel!inner(equipo_id)
+        )
+      `)
+      .eq('partido_id', partidoId)
+
+    if (gError) return
+
+    // 3. Contabilizar
+    let local = 0
+    let visitante = 0
+
+    goles.forEach(g => {
+      const equipoDelJugador = g.inscripcion_jugador.plantel.equipo_id
+      const esContra = g.es_contra
+
+      if (!esContra) {
+        if (equipoDelJugador === partido.equipo_local_id) local++
+        else if (equipoDelJugador === partido.equipo_visitante_id) visitante++
+      } else {
+        // Autogol: suma para el equipo contrario
+        if (equipoDelJugador === partido.equipo_local_id) visitante++
+        else if (equipoDelJugador === partido.equipo_visitante_id) local++
+      }
+    })
+
+    // 4. Update tabla partido
+    await supabaseAdmin
+      .from('partido')
+      .update({ goles_local: local, goles_visitante: visitante })
+      .eq('id', partidoId)
   }
 
   /**

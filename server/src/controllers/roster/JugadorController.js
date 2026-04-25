@@ -72,7 +72,8 @@ class JugadorController {
    */
   async search(req, res, next) {
     try {
-      const jugadores = await JugadorService.searchJugadores(req.query.q)
+      const { q, liga_id } = req.query
+      const jugadores = await JugadorService.searchJugadores(q, liga_id)
 
       res.status(200).json({ status: 'success', results: jugadores.length, data: jugadores })
     } catch (error) { next(error) }

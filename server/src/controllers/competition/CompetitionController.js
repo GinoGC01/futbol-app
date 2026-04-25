@@ -148,8 +148,14 @@ class CompetitionController {
 
       const { id } = req.params
       const organizadorId = req.organizador.id
+      
+      const updateData = { ...req.body }
+      // Si la ruta es /cerrar, forzamos el estado
+      if (req.path.endsWith('/cerrar')) {
+        updateData.estado = 'cerrada'
+      }
 
-      const updated = await JornadaService.updateJornada(id, organizadorId, req.body)
+      const updated = await JornadaService.updateJornada(id, organizadorId, updateData)
 
       res.status(200).json({ status: 'success', data: updated })
     } catch (error) { next(error) }

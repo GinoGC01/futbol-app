@@ -8,14 +8,16 @@ import Modal from '../../components/ui/Modal'
 import EmptyState from '../../components/ui/EmptyState'
 import { Award, Plus, Search, Trophy, BarChart3, Crown } from 'lucide-react'
 
+import { useLigaActiva } from '../../context/LigaContext'
+
 export default function AwardScrutinyTool() {
-  const { data: ligas } = useLigas()
-  const liga = ligas?.[0]
+  const { liga } = useLigaActiva()
   const { data: temporadas } = useTemporadas(liga?.id)
   const temporadaActiva = temporadas?.find(t => t.estado === 'activa' || t.estado === 'finalizada')
 
   const { data: premios, isLoading } = usePremiosAdmin(temporadaActiva?.id)
   const [showNewPremio, setShowNewPremio] = useState(false)
+  const { data: tree } = useTemporadaTree(temporadaActiva?.id)
   const [analisis, setAnalisis] = useState(null)
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [selectedPremio, setSelectedPremio] = useState(null)
@@ -126,21 +128,23 @@ export default function AwardScrutinyTool() {
         )}
       </Modal>
 
-      <NewPremioModal open={showNewPremio} onClose={() => setShowNewPremio(false)} temporadaId={temporadaActiva?.id} />
+      <NewPremioModal open={showNewPremio} onClose={() => setShowNewPremio(false)} temporadaId={temporadaActiva?.id} fases={tree?.fases} />
     </div>
   )
 }
 
-function NewPremioModal({ open, onClose, temporadaId }) {
-  const [form, setForm] = useState({ nombre: '', criterio: 'goleador', categoria: 'jugador', descripcion: '' })
+function NewPremioModal({ open, onClose, temporadaId, fases }) {
+  const [form, setForm] = useState({ nombre: '', criterio: 'goleador', categoria: 'jugador', descripcion: '', fase_id: '' })
   const mutation = useCrearPremio()
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
   async function submit(e) {
     e.preventDefault()
-    await mutation.mutateAsync({ temporada_id: temporadaId, ...form })
+    const payload = { temporada_id: temporadaId, ...form }
+    if (!payload.fase_id) delete payload.fase_id
+    await mutation.mutateAsync(payload)
     onClose()
-    setForm({ nombre: '', criterio: 'goleador', categoria: 'jugador', descripcion: '' })
+    setForm({ nombre: '', criterio: 'goleador', categoria: 'jugador', descripcion: '', fase_id: '' })
   }
 
   return (
@@ -161,6 +165,13 @@ function NewPremioModal({ open, onClose, temporadaId }) {
           className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all appearance-none">
           <option value="jugador">Jugador</option>
           <option value="equipo">Equipo</option>
+        </select>
+        <select value={form.fase_id} onChange={set('fase_id')}
+          className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all appearance-none">
+          <option value="">Toda la Temporada (Acumulado)</option>
+          {fases?.map(f => (
+            <option key={f.id} value={f.id}>Solo Fase: {f.nombre}</option>
+          ))}
         </select>
         <textarea value={form.descripcion} onChange={set('descripcion')} placeholder="Descripción (opcional)" rows={2}
           className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all resize-none" />

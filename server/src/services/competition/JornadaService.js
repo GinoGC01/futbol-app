@@ -108,9 +108,20 @@ class JornadaService {
     // 4. Update
     const payload = {}
     if (updateData.fecha_tentativa !== undefined) payload.fecha_tentativa = updateData.fecha_tentativa
+    if (updateData.estado !== undefined) payload.estado = updateData.estado
 
     if (Object.keys(payload).length === 0) {
       throw new AppError('No hay datos para actualizar', 400)
+    }
+
+    // 5. Si se está cerrando, podemos querer lógica adicional (ej: marcar partidos pendientes)
+    if (payload.estado === 'cerrada') {
+      // Opcional: Marcar partidos programados como postergados si se cierra la fecha sin jugarlos
+      await supabaseAdmin
+        .from('partido')
+        .update({ estado: 'postergado' })
+        .eq('jornada_id', jornadaId)
+        .eq('estado', 'programado')
     }
 
     const { data: updated, error: updateError } = await supabaseAdmin

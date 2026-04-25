@@ -96,4 +96,6 @@ router.put(
   LigaController.updateLiga
 )
 
+router.get('/ligas/:id/stats', requireAuth, requireOrganizador, requireVerified, LigaController.getDashboardStats)
+
 export default router

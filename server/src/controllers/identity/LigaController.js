@@ -142,6 +142,25 @@ class LigaController {
       next(error)
     }
   }
+
+  /**
+   * GET /api/identity/ligas/:id/stats
+   */
+  async getDashboardStats(req, res, next) {
+    try {
+      const { id } = req.params
+      const organizadorId = req.organizador.id
+
+      const stats = await LigaService.getDashboardStats(id, organizadorId)
+
+      res.status(200).json({
+        status: 'success',
+        data: stats
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 
 export default new LigaController()

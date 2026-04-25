@@ -26,12 +26,13 @@ class LigaService {
     if (zona) payload.zona = zona.trim()
     if (descripcion) payload.descripcion = descripcion.trim()
     if (logo_url) payload.logo_url = logo_url.trim()
+    if (data.monto_inscripcion) payload.monto_inscripcion = Number(data.monto_inscripcion)
     payload.tipo_futbol = tipo_futbol || 'f5' 
 
     const { data: newLiga, error } = await supabaseAdmin
       .from('liga')
       .insert([payload])
-      .select('id, nombre, slug, zona, logo_url, tipo_futbol, created_at')
+      .select('id, nombre, slug, zona, logo_url, tipo_futbol, monto_inscripcion, created_at')
       .single()
 
     if (error) {
@@ -85,7 +86,7 @@ class LigaService {
 
     const { data: ligas, error } = await supabaseAdmin
       .from('liga')
-      .select('id, nombre, slug, zona, logo_url, tipo_futbol, created_at')
+      .select('id, nombre, slug, zona, logo_url, tipo_futbol, monto_inscripcion, created_at')
       .eq('organizador_id', organizadorId)
       .order('created_at', { ascending: false })
 
@@ -100,7 +101,7 @@ class LigaService {
    * Actualiza los datos de la liga, validando que el organizador sea el dueño
    */
   async updateLiga(ligaId, organizadorId, updateData) {
-    const permitidos = ['nombre', 'zona', 'descripcion', 'logo_url']
+    const permitidos = ['nombre', 'zona', 'descripcion', 'logo_url', 'monto_inscripcion']
     const payload = {}
 
     for (const key of permitidos) {
@@ -118,7 +119,7 @@ class LigaService {
       .update(payload)
       .eq('id', ligaId)
       .eq('organizador_id', organizadorId)
-      .select('id, nombre, slug, zona, descripcion, logo_url')
+      .select('id, nombre, slug, zona, descripcion, logo_url, monto_inscripcion')
       .single()
 
     if (error) {
@@ -156,6 +157,45 @@ class LigaService {
     }
 
     return true
+  }
+  /**
+   * Obtiene estadísticas rápidas para el dashboard del organizador.
+   */
+  async getDashboardStats(ligaId, organizadorId) {
+    // 1. Verificar propiedad
+    await this.verifyOwnership(ligaId, organizadorId)
+
+    // 2. Ejecutar queries en paralelo para eficiencia
+    const [matchesResult, paymentsResult] = await Promise.all([
+      // Partidos finalizados en toda la liga (todas las temporadas)
+      supabaseAdmin
+        .from('partido')
+        .select(`
+          id,
+          jornada!inner(
+            fase!inner(
+              temporada!inner(liga_id)
+            )
+          )
+        `, { count: 'exact', head: true })
+        .eq('estado', 'finalizado')
+        .eq('jornada.fase.temporada.liga_id', ligaId),
+
+      // Cobros pendientes (inscripciones no pagadas)
+      supabaseAdmin
+        .from('inscripcion_equipo')
+        .select('id', { count: 'exact', head: true })
+        .eq('liga_id', ligaId)
+        .neq('estado_pago', 'pagado')
+    ])
+
+    if (matchesResult.error) throw new AppError(`Error al contar partidos: ${matchesResult.error.message}`, 500)
+    if (paymentsResult.error) throw new AppError(`Error al contar cobros: ${paymentsResult.error.message}`, 500)
+
+    return {
+      partidos_finalizados: matchesResult.count || 0,
+      cobros_pendientes: paymentsResult.count || 0
+    }
   }
 }
 

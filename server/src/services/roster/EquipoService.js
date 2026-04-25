@@ -50,11 +50,49 @@ class EquipoService {
       .from('equipo')
       .select('id, nombre, escudo_url, color_principal, created_at')
       .eq('liga_id', ligaId)
+      .eq('activo', true)
       .order('nombre', { ascending: true })
 
     if (error) throw new AppError(`Error al listar equipos: ${error.message}`, 500)
-
     return data || []
+  }
+
+  /**
+   * Borrado lógico de un equipo.
+   */
+  async deleteEquipo(equipoId, organizadorId) {
+    // 1. Verificar existencia y propiedad
+    const { data: equipo, error: eqError } = await supabaseAdmin
+      .from('equipo')
+      .select('id, liga_id, nombre')
+      .eq('id', equipoId)
+      .maybeSingle()
+
+    if (eqError || !equipo) throw new AppError('Equipo no encontrado', 404)
+    await LigaService.verifyOwnership(equipo.liga_id, organizadorId)
+
+    // 2. Verificar que no participe en temporadas activas
+    const { data: inscripciones, error: insError } = await supabaseAdmin
+      .from('inscripcion_equipo')
+      .select('id, temporada:temporada(estado)')
+      .eq('equipo_id', equipoId)
+
+    if (insError) throw new AppError(`Error verificando inscripciones: ${insError.message}`, 500)
+
+    const tieneActiva = inscripciones.some(i => i.temporada?.estado === 'activa')
+    if (tieneActiva) {
+      throw new AppError('No se puede eliminar un equipo que participa en una temporada activa', 400)
+    }
+
+    // 3. Soft Delete
+    const { error: delError } = await supabaseAdmin
+      .from('equipo')
+      .update({ activo: false })
+      .eq('id', equipoId)
+
+    if (delError) throw new AppError(`Error al eliminar equipo: ${delError.message}`, 500)
+
+    return { message: `Equipo "${equipo.nombre}" eliminado correctamente` }
   }
 
   /**

@@ -105,24 +105,51 @@ class StatService {
   async getEquipoDetalle(equipoId) {
     if (!equipoId) throw new AppError('equipo_id es requerido', 400)
 
-    const [equipoResult, pagosResult] = await Promise.all([
-      supabaseAdmin
-        .from('equipo')
-        .select('id, nombre, escudo_url, color_principal, liga_id, created_at')
-        .eq('id', equipoId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from('vista_pagos')
-        .select('*')
-        .eq('equipo_id', equipoId)
+    // 1. Datos básicos del equipo y liga
+    const { data: equipo, error: eqErr } = await supabaseAdmin
+      .from('equipo')
+      .select('*, liga:liga_id(*)')
+      .eq('id', equipoId)
+      .maybeSingle()
+
+    if (eqErr || !equipo) throw new AppError('Equipo no encontrado', 404)
+
+    // 2. Obtener la inscripción más reciente para saber la temporada actual del equipo
+    const { data: latestInscripcion } = await supabaseAdmin
+      .from('inscripcion_equipo')
+      .select('id, temporada_id, plantel_id')
+      .eq('equipo_id', equipoId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    // 3. Ejecutar queries de soporte en paralelo
+    const [statsResult, plantelResult, fixtureResult, pagosResult] = await Promise.all([
+      // Estadísticas en la tabla de posiciones
+      latestInscripcion 
+        ? supabaseAdmin.from('vista_tabla_posiciones').select('*').eq('equipo_id', equipoId).eq('temporada_id', latestInscripcion.temporada_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      
+      // Plantel actual
+      latestInscripcion?.plantel_id
+        ? supabaseAdmin.from('inscripcion_jugador').select('*, jugador(*)').eq('plantel_id', latestInscripcion.plantel_id)
+        : Promise.resolve({ data: [] }),
+
+      // Fixture del equipo (en la temporada actual)
+      latestInscripcion
+        ? supabaseAdmin.from('vista_fixture').select('*').eq('temporada_id', latestInscripcion.temporada_id).or(`local_id.eq.${equipoId},visitante_id.eq.${equipoId}`)
+        : Promise.resolve({ data: [] }),
+
+      // Historial de pagos (para admin/interno)
+      supabaseAdmin.from('vista_pagos').select('*').eq('equipo_id', equipoId)
     ])
 
-    if (equipoResult.error || !equipoResult.data) {
-      throw new AppError('Equipo no encontrado', 404)
-    }
-
     return {
-      equipo: equipoResult.data,
+      equipo,
+      liga: equipo.liga,
+      stats: statsResult.data,
+      plantel: plantelResult.data?.map(p => ({ ...p.jugador, ...p })) || [], // Flatten for easier UI consumption
+      fixture: fixtureResult.data?.map(p => ({ ...p, estado: p.partido_estado })) || [],
       historial_pagos: pagosResult.data || []
     }
   }

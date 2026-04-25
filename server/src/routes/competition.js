@@ -118,4 +118,12 @@ router.patch(
   CompetitionController.updateJornada
 )
 
+router.patch(
+  '/jornadas/:id/cerrar',
+  [
+    param('id').isUUID().withMessage('ID de jornada inválido')
+  ],
+  CompetitionController.updateJornada // Podemos usar el mismo controller si pasamos el estado en el payload
+)
+
 export default router
