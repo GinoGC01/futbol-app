@@ -58,7 +58,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
           </Button>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center relative overflow-hidden group shadow-lg"
-              style={{ backgroundColor: equipo.color_principal ? `${equipo.color_principal}20` : 'rgba(0,237,100,0.1)' }}>
+              style={{ backgroundColor: equipo.color_principal ? `${equipo.color_principal}20` : 'rgba(206, 222, 11, 0.1)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
               <Shield className="w-8 h-8 relative z-10" style={{ color: equipo.color_principal || 'var(--color-primary)' }} />
             </div>
@@ -104,7 +104,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
             </Button>
           )}
           {!latestInscripcion ? (
-            <Button variant="primary" size="sm" onClick={() => setShowInscribeTeam(true)} className="h-10 bg-purple-600 hover:bg-purple-700">
+            <Button variant="primary" size="sm" onClick={() => setShowInscribeTeam(true)} className="h-10 bg-secondary hover:bg-secondary-dim">
               <Calendar className="w-4 h-4" /> Inscribir en Temporada
             </Button>
           ) : (
@@ -123,8 +123,8 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatItem label="Jugadores Inscritos" value={plantel.length} subValue={`Límite: ${latestInscripcion?.plantel?.limite_jugadores || '--'}`} icon={Users} color="var(--color-primary)" />
-        <StatItem label="Estado Financiero" value={latestInscripcion?.estado_pago?.toUpperCase() || 'N/A'} subValue={`Abonado: $${latestInscripcion?.monto_abonado || 0}`} icon={Shield} color={latestInscripcion?.estado_pago === 'pagado' ? '#00ED64' : '#EAB308'} />
-        <StatItem label="Participaciones" value={inscripciones?.length || 0} subValue="Temporadas totales" icon={Calendar} color="#8B5CF6" />
+        <StatItem label="Estado Financiero" value={latestInscripcion?.estado_pago?.toUpperCase() || 'N/A'} subValue={`Abonado: $${latestInscripcion?.monto_abonado || 0}`} icon={Shield} color={latestInscripcion?.estado_pago === 'pagado' ? 'var(--color-primary)' : '#EAB308'} />
+        <StatItem label="Participaciones" value={inscripciones?.length || 0} subValue="Temporadas totales" icon={Calendar} color="var(--color-secondary)" />
       </div>
 
       <div className="flex gap-1 p-1 bg-white/5 rounded-xl w-fit border border-white/5">
@@ -266,7 +266,7 @@ function TabButton({ active, onClick, label }) {
 }
 
 function EditTeamModal({ open, onClose, equipo }) {
-  const [form, setForm] = useState({ nombre: equipo.nombre, color_principal: equipo.color_principal || '#00ED64' })
+  const [form, setForm] = useState({ nombre: equipo.nombre, color_principal: equipo.color_principal || '#CEDE0B' })
   const updateMutation = useUpdateEquipo()
 
   async function handleSubmit(e) {
@@ -545,7 +545,7 @@ function InscribeTeamModal({ open, onClose, equipoId, ligaId }) {
           <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Límite Jugadores</label>
           <input type="number" value={form.limite_jugadores} onChange={e => setForm({...form, limite_jugadores: e.target.value})} className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-mono" />
         </div>
-        <Button type="submit" loading={inscribeMutation.isPending} className="w-full h-12 text-sm font-bold bg-purple-600 hover:bg-purple-700">Confirmar Inscripción</Button>
+        <Button type="submit" loading={inscribeMutation.isPending} className="w-full h-12 text-sm font-bold bg-secondary hover:bg-secondary-dim">Confirmar Inscripción</Button>
       </form>
     </Modal>
   )

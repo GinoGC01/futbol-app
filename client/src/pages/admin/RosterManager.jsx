@@ -50,7 +50,7 @@ export default function RosterManager() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: eq.color_principal ? `${eq.color_principal}20` : 'rgba(0,237,100,0.1)' }}>
+                    style={{ backgroundColor: eq.color_principal ? `${eq.color_principal}20` : 'rgba(206, 222, 11, 0.1)' }}>
                     <Shield className="w-5 h-5" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
                   </div>
                   <div className="min-w-0">
@@ -94,7 +94,7 @@ export default function RosterManager() {
 }
 
 function NewEquipoModal({ open, onClose, ligaId }) {
-  const [form, setForm] = useState({ nombre: '', color_principal: '#00ED64' })
+  const [form, setForm] = useState({ nombre: '', color_principal: '#CEDE0B' })
   const mutation = useCreateEquipo()
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
@@ -102,7 +102,7 @@ function NewEquipoModal({ open, onClose, ligaId }) {
     e.preventDefault()
     await mutation.mutateAsync({ liga_id: ligaId, ...form })
     onClose()
-    setForm({ nombre: '', color_principal: '#00ED64' })
+    setForm({ nombre: '', color_principal: '#CEDE0B' })
   }
 
   return (

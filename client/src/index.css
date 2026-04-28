@@ -14,12 +14,12 @@
   --color-bg-hover: #2A2A2A;
 
   /* Brand Colors */
-  --color-primary: #00ED64;
-  --color-primary-dim: #00C854;
-  --color-primary-glow: rgba(0, 237, 100, 0.15);
-  --color-secondary: #8B5CF6;
-  --color-secondary-dim: #7C3AED;
-  --color-secondary-glow: rgba(139, 92, 246, 0.15);
+  --color-primary: #CEDE0B;
+  --color-primary-dim: #83990E;
+  --color-primary-glow: rgba(206, 222, 11, 0.15);
+  --color-secondary: #83990E;
+  --color-secondary-dim: #6B7D0B;
+  --color-secondary-glow: rgba(131, 153, 14, 0.15);
   --color-accent-gold: #D4AF37;
   --color-accent-gold-glow: rgba(212, 175, 55, 0.15);
   --color-vault: #475569;
@@ -33,7 +33,7 @@
   --color-info-dim: rgba(59, 130, 246, 0.15);
 
   /* Text */
-  --color-text-primary: #F5F5F5;
+  --color-text-primary: #EDEDED;
   --color-text-secondary: #A3A3A3;
   --color-text-dim: #6B6B6B;
   --color-text-on-primary: #0D0D0D;
@@ -41,7 +41,7 @@
   /* Borders */
   --color-border-subtle: rgba(255, 255, 255, 0.06);
   --color-border-default: rgba(255, 255, 255, 0.1);
-  --color-border-accent: rgba(0, 237, 100, 0.3);
+  --color-border-accent: rgba(206, 222, 11, 0.3);
 
   /* Typography */
   --font-heading: 'Space Grotesk', system-ui, sans-serif;
@@ -58,8 +58,8 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.6);
-  --shadow-glow-primary: 0 0 30px rgba(0, 237, 100, 0.12);
-  --shadow-glow-secondary: 0 0 30px rgba(139, 92, 246, 0.12);
+  --shadow-glow-primary: 0 0 30px rgba(206, 222, 11, 0.12);
+  --shadow-glow-secondary: 0 0 30px rgba(131, 153, 14, 0.12);
   --shadow-glow-gold: 0 0 30px rgba(212, 175, 55, 0.12);
 
   /* Animations */
