@@ -69,7 +69,7 @@ export default function LeagueExplorer() {
         </Link>
         <div className="flex items-center gap-4">
           <Link to="/admin/login" className="px-6 py-2 border border-white text-xs font-bold hover:bg-white hover:text-black transition-all">
-            LOGIN
+            INGRESAR
           </Link>
           <Link to="/admin/register" className="px-6 py-2 bg-primary text-black text-xs font-bold hover:bg-primary/90 transition-all">
             ORGANIZAR
@@ -232,14 +232,14 @@ export default function LeagueExplorer() {
           <div className="flex flex-col items-center md:items-start gap-4">
             <img src="/images/logotipo.png" alt="Cancha Libre" className="h-10" />
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
-              © 2024 CANCHA LIBRE. UNAPOLOGETIC PERFORMANCE.
+              © {new Date().getFullYear()} CANCHA LIBRE. RENDIMIENTO SIN COMPROMISO.
             </p>
           </div>
           
           <div className="flex gap-8 text-[10px] font-bold tracking-widest text-white/40 uppercase">
-            <button className="hover:text-white transition-all">PRIVACY</button>
-            <button className="hover:text-white transition-all">TERMS</button>
-            <button className="hover:text-white transition-all">SUPPORT</button>
+            <button className="hover:text-white transition-all">PRIVACIDAD</button>
+            <button className="hover:text-white transition-all">TÉRMINOS</button>
+            <button className="hover:text-white transition-all">SOPORTE</button>
             <button className="hover:text-white transition-all">API</button>
           </div>
 
