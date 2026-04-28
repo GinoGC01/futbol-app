@@ -21,13 +21,12 @@ export default function Home() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-12">
-          <Link to="/" className="text-primary font-heading font-black text-2xl italic tracking-tighter">
-            GRIDIRON PRO
+          <Link to="/" className="flex items-center gap-3">
+            <img src="/images/isotipo.png" alt="Cancha Libre" className="h-20" />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <NavLink to="/" active>LIGAS</NavLink>
-            <NavLink to="/">TORNEOS</NavLink>
-            <NavLink to="/">RESULTADOS</NavLink>
+            <NavLink to="/ligas">TORNEOS</NavLink>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -42,21 +41,23 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative pt-32 pb-48 px-6 text-center overflow-hidden">
-        {/* Background rays/glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(0,237,100,0.05)_0%,_transparent_70%)] pointer-events-none" />
-        
+        {/* Background Isotipo */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] opacity-[0.03] pointer-events-none z-0">
+          <img src="/images/isotipo.png" alt="" className="w-full h-full object-contain" />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="max-w-4xl mx-auto relative z-10"
         >
-          <h1 className="text-6xl md:text-8xl font-heading font-black mb-6 tracking-tighter leading-[0.9]">
+          <h1 className="text-6xl md:text-8xl font-heading font-black mb-6 tracking-tighter leading-[0.9] uppercase">
             TU TORNEO,<br />
             <span className="text-primary italic">NIVEL PROFESIONAL</span>
           </h1>
 
-          <p className="text-text-secondary text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12 max-w-2xl mx-auto opacity-80">
+          <p className="text-text-secondary text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-12 max-w-2xl mx-auto opacity-70">
             Tabla de posiciones, fixture, goleadores y premios en tiempo real. Organiza como un profesional.
           </p>
 
@@ -135,12 +136,10 @@ export default function Home() {
       {/* Footer */}
       <footer className="max-w-7xl mx-auto px-8 py-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <h3 className="text-primary font-heading font-black text-xl italic tracking-tighter mb-2">
-              GRIDIRON PRO
-            </h3>
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <img src="/images/logotipo.png" alt="Cancha Libre" className="h-12" />
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
-              © 2024 GRIDIRON PRO. UNAPOLOGETIC PERFORMANCE.
+              © 2024 CANCHA LIBRE. UNAPOLOGETIC PERFORMANCE.
             </p>
           </div>
           

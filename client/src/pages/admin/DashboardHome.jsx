@@ -224,7 +224,7 @@ function NewLigaModal({ open, onClose }) {
           Nombre de la Liga
           <input type="text" required value={form.nombre} 
             onChange={e => setForm({ ...form, nombre: e.target.value, slug: generateSlug(e.target.value) })}
-            placeholder="Ej: Liga Amateur Palermo"
+            placeholder="Ej: Cancha Libre Palermo"
             className="w-full mt-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all" />
         </label>
 

@@ -64,8 +64,8 @@ export default function LeagueExplorer() {
     <div className="min-h-screen bg-[#0D0D0D] text-white selection:bg-primary selection:text-black">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto border-b border-white/5">
-        <Link to="/" className="text-primary font-heading font-black text-2xl italic tracking-tighter">
-          GRIDIRON PRO
+        <Link to="/" className="flex items-center gap-3">
+          <img src="/images/isotipo.png" alt="Cancha Libre" className="h-8" />
         </Link>
         <div className="flex items-center gap-4">
           <Link to="/admin/login" className="px-6 py-2 border border-white text-xs font-bold hover:bg-white hover:text-black transition-all">
@@ -229,12 +229,10 @@ export default function LeagueExplorer() {
       {/* Footer */}
       <footer className="max-w-7xl mx-auto px-8 py-12 border-t border-white/5">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <h3 className="text-primary font-heading font-black text-xl italic tracking-tighter mb-2">
-              GRIDIRON PRO
-            </h3>
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <img src="/images/logotipo.png" alt="Cancha Libre" className="h-10" />
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
-              © 2024 GRIDIRON PRO. UNAPOLOGETIC PERFORMANCE.
+              © 2024 CANCHA LIBRE. UNAPOLOGETIC PERFORMANCE.
             </p>
           </div>
           

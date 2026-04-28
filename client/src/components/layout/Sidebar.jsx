@@ -25,10 +25,10 @@ export default function Sidebar() {
       <div className="h-16 flex items-center justify-center border-b border-border-subtle px-4">
         {!collapsed && (
           <span className="text-lg font-heading font-bold text-primary tracking-tight">
-            Liga<span className="text-text-primary">Admin</span>
+            Cancha<span className="text-text-primary">Libre</span>
           </span>
         )}
-        {collapsed && <span className="text-lg font-bold text-primary">L</span>}
+        {collapsed && <span className="text-lg font-bold text-primary">C</span>}
       </div>
 
       {/* Nav Links */}
