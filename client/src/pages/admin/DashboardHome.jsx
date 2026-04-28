@@ -1,22 +1,27 @@
 import { useState } from 'react'
-import { useLigas, useTemporadas, useCreateLiga, useDashboardStats } from '../../hooks/useAdmin'
+import { useLigas, useTemporadas, useCreateLiga, useDashboardStats, useAlertas, useResolverAlerta, useEvaluarAlertas } from '../../hooks/useAdmin'
 import { useAuth } from '../../hooks/useAuth'
 import StatCard from '../../components/ui/StatCard'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
-import { Shield, Users, Swords, DollarSign, Plus, Trophy } from 'lucide-react'
+import { Shield, Users, Swords, DollarSign, Plus, Trophy, Bell, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
-
+import { useToast } from '../../components/ui/Toast'
 import { useLigaActiva } from '../../context/LigaContext'
 
 export default function DashboardHome() {
   const { user } = useAuth()
   const { liga, isLoading } = useLigaActiva()
   const [showNewLiga, setShowNewLiga] = useState(false)
+  const toast = useToast()
   
   const { data: temporadas } = useTemporadas(liga?.id)
   const { data: dashStats } = useDashboardStats(liga?.id)
+  const { data: alerts } = useAlertas(liga?.id)
+  const resolverMutation = useResolverAlerta()
+  const evaluarMutation = useEvaluarAlertas()
+  
   const temporadaActiva = temporadas?.find(t => t.estado === 'activa')
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
@@ -95,6 +100,68 @@ export default function DashboardHome() {
               label="Cobros Pendientes" 
               className="bg-danger/5 border-danger/10"
             />
+          </div>
+
+          {/* Alerts Center */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-3">
+                <span className="w-8 h-px bg-border-default" /> 
+                Alertas Críticas
+                <span className="w-8 h-px bg-border-default" />
+              </h2>
+              <button 
+                onClick={async () => {
+                  try {
+                    await evaluarMutation.mutateAsync()
+                    toast.success('Evaluación de alertas completada')
+                  } catch (err) {
+                    toast.error('Error al evaluar alertas')
+                  }
+                }}
+                disabled={evaluarMutation.isPending}
+                className="flex items-center gap-2 text-[10px] font-black text-primary hover:text-white transition-all uppercase tracking-widest disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3 h-3 ${evaluarMutation.isPending ? 'animate-spin' : ''}`} />
+                Sincronizar
+              </button>
+            </div>
+
+            {alerts?.length > 0 ? (
+              <div className="grid gap-3">
+                {alerts.map(alert => (
+                  <GlassCard key={alert.id} className="!p-4 border-l-4 border-l-danger bg-danger/5 group hover:bg-danger/10 transition-all">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center shrink-0 border border-danger/20">
+                          <AlertCircle className="w-5 h-5 text-danger" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text-primary mb-1">{alert.mensaje}</p>
+                          <p className="text-[10px] text-text-dim font-bold uppercase tracking-wider">
+                            {alert.tipo.replace(/_/g, ' ')} • {new Date(alert.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => resolverMutation.mutate(alert.id)}
+                        className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-dim hover:text-primary transition-all shrink-0 border border-border-subtle"
+                        title="Marcar como resuelta"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center glass-heavy rounded-3xl border border-white/5">
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
+                  <Bell className="w-6 h-6 text-primary opacity-40" />
+                </div>
+                <p className="text-xs font-bold text-text-dim uppercase tracking-widest">No hay alertas activas</p>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions Header */}

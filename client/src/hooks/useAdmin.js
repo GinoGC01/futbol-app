@@ -308,3 +308,33 @@ export function useCerrarJornada() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['temporada-tree'] })
   })
 }
+
+// Alerts
+export function useAlertas(ligaId) {
+  return useQuery({
+    queryKey: ['alertas', ligaId],
+    queryFn: () => adminService.getAlertas(ligaId),
+    enabled: !!ligaId
+  })
+}
+
+export function useResolverAlerta() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminService.resolverAlerta,
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['alertas'] })
+    }
+  })
+}
+
+export function useEvaluarAlertas() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminService.evaluarAlertas,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['alertas'] })
+    }
+  })
+}
+

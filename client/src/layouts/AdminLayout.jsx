@@ -2,13 +2,46 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import BottomNav from '../components/layout/BottomNav'
 import { useAuth } from '../hooks/useAuth'
-import { LogOut, Globe, ChevronDown, Shield } from 'lucide-react'
+import { LogOut, Globe, ChevronDown, Shield, Bell } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { LigaProvider, useLigaActiva } from '../context/LigaContext'
+import { useAlertas } from '../hooks/useAdmin'
+import { supabase } from '../lib/supabase'
+import { useToast } from '../components/ui/Toast'
+import { useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 
 function AdminLayoutContent() {
   const { user, signOut } = useAuth()
   const { liga, setLiga, ligas } = useLigaActiva()
+  const { data: alerts } = useAlertas(liga?.id)
+  const toast = useToast()
+  const queryClient = useQueryClient()
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!liga?.id) return
+
+    const channel = supabase
+      .channel('public:alerta')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'alerta', filter: `liga_id=eq.${liga.id}` },
+        (payload) => {
+          // Toast notification
+          toast.info(`Nueva Alerta: ${payload.new.mensaje}`)
+          // Invalidate queries to refresh list
+          queryClient.invalidateQueries({ queryKey: ['alertas', liga.id] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [liga?.id])
+
+  const unreadCount = alerts?.length || 0
 
   return (
     <div className="flex min-h-screen bg-bg-deep">
@@ -59,6 +92,21 @@ function AdminLayoutContent() {
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <Link
+                to="/admin"
+                className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-dim hover:text-primary transition-colors"
+                title="Alertas"
+              >
+                <Bell className="w-4 h-4" />
+              </Link>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger text-[10px] font-bold text-white flex items-center justify-center rounded-full border-2 border-bg-surface animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+
             <Link
               to="/"
               className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-dim hover:text-primary transition-colors"

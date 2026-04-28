@@ -53,5 +53,10 @@ export const adminService = {
   crearPremio: (data) => api.post('/awards/premios', data),
   sugerirGanadores: (premioId) => api.get(`/awards/premios/${premioId}/analisis`),
   asignarGanador: (premioId, data) => api.post(`/awards/premios/${premioId}/ganadores`, data),
-  togglePublicacion: (premioId, publicado) => api.patch(`/awards/premios/${premioId}/publicar`, { publicado })
+  togglePublicacion: (premioId, publicado) => api.patch(`/awards/premios/${premioId}/publicar`, { publicado }),
+  
+  // Alerts
+  getAlertas: (ligaId) => api.get(`/alerts?liga_id=${ligaId}`),
+  resolverAlerta: (id) => api.patch(`/alerts/${id}/resolve`),
+  evaluarAlertas: () => api.post('/alerts/evaluate')
 }

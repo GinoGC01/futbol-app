@@ -11,6 +11,7 @@ import rosterRouter from './routes/roster.js'
 import matchRouter from './routes/match.js'
 import statsRouter from './routes/stats.js'
 import awardsRouter from './routes/awards.js'
+import alertsRouter from './routes/alerts.js'
 
 import { errorHandler } from './middleware/errorHandler.js'
 import { startCleanupJob } from './jobs/cleanupTokens.js'
@@ -46,6 +47,7 @@ app.use('/api/roster', rosterRouter)
 app.use('/api/match', matchRouter)
 app.use('/api/stats', statsRouter)     // Público — sin auth
 app.use('/api/awards', awardsRouter)   // Admin — requireAuth + requireOrganizador
+app.use('/api/alerts', alertsRouter)   // Admin — requireAuth + requireOrganizador
 
 // 404
 app.use((_req, res) => {
