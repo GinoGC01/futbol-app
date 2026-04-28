@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import EmptyState from '../../components/ui/EmptyState'
-import { Trophy, Plus, ChevronRight, ChevronDown, Layers, Calendar, Lock, Pencil, Swords, Zap, Check, X, Shield } from 'lucide-react'
+import { Trophy, Plus, ChevronRight, ChevronDown, Layers, Calendar, Lock as LockIcon, Pencil, Swords, Zap, Check, X, Shield } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
 
@@ -84,7 +84,7 @@ export default function TournamentArchitect() {
               )}
               {isVault && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-dim text-danger text-xs font-semibold">
-                  <Lock className="w-3.5 h-3.5" /> MODO BÓVEDA
+                  <LockIcon className="w-3.5 h-3.5" /> MODO BÓVEDA
                 </div>
               )}
             </div>
@@ -180,6 +180,7 @@ export default function TournamentArchitect() {
 function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, ligaId, currentTemporada }) {
   const updateJornada = useUpdateJornada()
   const cerrarJornada = useCerrarJornada()
+  const { data: tree } = useTemporadaTree(currentTemporada?.id)
   const { data: fixtureData } = useFixtureAdmin(isExpanded ? jornada.id : null)
   const partidos = fixtureData?.partidos || []
   const [editingDate, setEditingDate] = useState(false)
@@ -253,7 +254,7 @@ function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, l
                       }}
                       loading={cerrarJornada.isPending}
                     >
-                      <Lock className="w-3 h-3" /> Cerrar Fecha
+                      <LockIcon className="w-3.3 h-3" /> Cerrar Fecha
                     </Button>
                   )}
                 </div>
@@ -263,7 +264,7 @@ function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, l
 
           {jornada.estado === 'cerrada' && (
             <div className="p-3 rounded-lg bg-danger/5 border border-danger/10 flex items-center gap-3">
-              <Lock className="w-4 h-4 text-danger" />
+              <LockIcon className="w-4 h-4 text-danger" />
               <div>
                 <p className="text-xs font-bold text-danger uppercase tracking-tight">Fecha Cerrada</p>
                 <p className="text-[10px] text-text-dim italic">No se permiten más cambios ni registro de eventos.</p>

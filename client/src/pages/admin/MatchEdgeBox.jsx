@@ -9,7 +9,7 @@ import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
-import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock } from 'lucide-react'
+import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock as LockIcon } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
 
@@ -174,7 +174,7 @@ export default function MatchEdgeBox() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all flex items-center gap-1.5 ${
                 jornadaId === j.id ? 'bg-primary/10 text-primary border-primary/20' : 'text-text-dim border-border-subtle'
               }`}>
-              {j.estado === 'cerrada' && <Lock className="w-3 h-3" />}
+              {j.estado === 'cerrada' && <LockIcon className="w-3 h-3" />}
               Fecha {j.numero}
             </button>
           ))}

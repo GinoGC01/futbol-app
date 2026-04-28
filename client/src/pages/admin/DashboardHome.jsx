@@ -22,63 +22,112 @@ export default function DashboardHome() {
   if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-      {/* Welcome */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-heading font-bold mb-1">
-            Hola, <span className="text-primary">{user?.email?.split('@')[0]}</span>
+    <div className="max-w-6xl mx-auto space-y-8 sm:space-y-12 animate-fade-in pb-10">
+      {/* Welcome & Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Panel de Control
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight leading-none">
+            Hola, <span className="text-primary italic">{user?.email?.split('@')[0]}</span>
           </h1>
-          <p className="text-sm text-text-dim">
-            {liga ? `Administrando: ${liga.nombre}` : 'Bienvenido a la plataforma'}
+          <p className="text-base text-text-dim max-w-md">
+            {liga 
+              ? `Gestionando los destinos de ` 
+              : 'Bienvenido a la plataforma central de ligas. '}
+            {liga && <span className="text-text-primary font-bold">{liga.nombre}</span>}
           </p>
         </div>
-        <Button onClick={() => setShowNewLiga(true)} size="sm">
-          <Plus className="w-4 h-4 mr-2" /> {liga ? 'Crear otra Liga' : 'Crear mi primera Liga'}
-        </Button>
+        
+        <div className="flex shrink-0">
+          <Button 
+            onClick={() => setShowNewLiga(true)} 
+            className="w-full sm:w-auto h-12 px-6 bg-primary text-secondary font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+          >
+            <Plus className="w-5 h-5 mr-2 stroke-[3]" /> 
+            {liga ? 'Nueva Liga' : 'Crear mi primera Liga'}
+          </Button>
+        </div>
       </div>
 
       {!liga ? (
-        <div className="py-20 text-center glass rounded-3xl border border-white/5 space-y-6">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-            <Trophy className="w-10 h-10 text-primary" />
-          </div>
-          <div className="max-w-sm mx-auto">
-            <h2 className="text-xl font-heading font-bold mb-2">Comienza tu Legado</h2>
-            <p className="text-sm text-text-dim mb-8">No hemos encontrado ninguna liga asociada a tu cuenta. Crea tu primera liga para empezar a gestionar torneos y equipos.</p>
-            <Button onClick={() => setShowNewLiga(true)} size="lg" className="shadow-lg shadow-primary/20">
-              Crear mi primera Liga
-            </Button>
+        <div className="py-20 text-center glass-heavy rounded-[2rem] border border-white/5 space-y-6 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+          <div className="relative z-10">
+            <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3 group-hover:rotate-6 transition-transform duration-500 border border-primary/20 shadow-glow-primary">
+              <Trophy className="w-12 h-12 text-primary" />
+            </div>
+            <div className="max-w-sm mx-auto px-6">
+              <h2 className="text-2xl font-heading font-bold mb-3 tracking-tight">Comienza tu Legado</h2>
+              <p className="text-sm text-text-dim mb-8 leading-relaxed">No hemos encontrado ninguna liga asociada a tu cuenta. Crea tu primera liga para empezar a gestionar torneos, equipos y jugadores.</p>
+              <Button onClick={() => setShowNewLiga(true)} size="lg" className="w-full shadow-lg shadow-primary/20 h-14">
+                Crear mi primera Liga
+              </Button>
+            </div>
           </div>
         </div>
       ) : (
         <>
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard icon={Shield} value={liga?.nombre || '—'} label="Liga activa" />
-            <StatCard icon={Users} value={temporadaActiva?.nombre || 'Sin temporada'} label="Temporada" />
-            <StatCard icon={Swords} value={dashStats?.partidos_finalizados ?? '—'} label="Partidos jugados" />
-            <StatCard icon={DollarSign} value={dashStats?.cobros_pendientes ?? '—'} label="Cobros pendientes" />
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard 
+              icon={Shield} 
+              value={liga?.nombre || '—'} 
+              label="Liga Activa" 
+              className="bg-primary/5 border-primary/10"
+            />
+            <StatCard 
+              icon={Trophy} 
+              value={temporadaActiva?.nombre || 'Sin Temporada'} 
+              label="Edición Actual" 
+              className="bg-secondary/5 border-secondary/10"
+            />
+            <StatCard 
+              icon={Swords} 
+              value={dashStats?.partidos_finalizados ?? '0'} 
+              label="Partidos Jugados" 
+              className="bg-warning/5 border-warning/10"
+            />
+            <StatCard 
+              icon={DollarSign} 
+              value={dashStats?.cobros_pendientes ?? '0'} 
+              label="Cobros Pendientes" 
+              className="bg-danger/5 border-danger/10"
+            />
           </div>
 
-          {/* Quick actions */}
-          <GlassCard hover={false}>
-            <h2 className="font-heading font-semibold mb-4">Acciones rápidas</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Quick Actions Header */}
+          <div className="pt-4">
+            <h2 className="text-xs font-black text-text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+              <span className="w-8 h-px bg-border-default" /> 
+              Acciones Estratégicas
+              <span className="w-8 h-px bg-border-default flex-1" />
+            </h2>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { to: '/admin/torneo',  icon: Shield,      label: 'Configurar Torneo', color: 'text-primary' },
-                { to: '/admin/roster',  icon: Users,        label: 'Gestionar Equipos',  color: 'text-secondary' },
-                { to: '/admin/partidos',icon: Swords,       label: 'Cargar Partido',    color: 'text-warning' },
-                { to: '/admin/premios', icon: DollarSign,   label: 'Premios',           color: 'text-accent-gold' },
+                { to: '/admin/torneo',   icon: Shield,     label: 'Arquitectura', sub: 'Gestionar Torneo', color: 'text-primary',   bg: 'bg-primary/5',   border: 'hover:border-primary/40' },
+                { to: '/admin/roster',   icon: Users,      label: 'Equipos',      sub: 'Gestionar Roster', color: 'text-secondary', bg: 'bg-secondary/5', border: 'hover:border-secondary/40' },
+                { to: '/admin/partidos', icon: Swords,     label: 'Partidos',     sub: 'Cargar Resultados',color: 'text-warning',   bg: 'bg-warning/5',   border: 'hover:border-warning/40' },
+                { to: '/admin/premios',  icon: Trophy,     label: 'Premios',      sub: 'Escrutinio Final', color: 'text-accent-gold',bg: 'bg-accent-gold/5',border: 'hover:border-accent-gold/40' },
               ].map(a => (
                 <Link key={a.to} to={a.to}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-bg-surface border border-border-subtle hover:border-border-accent hover:-translate-y-0.5 transition-all text-center group">
-                  <a.icon className={`w-6 h-6 ${a.color} group-hover:scale-110 transition-transform`} />
-                  <span className="text-xs font-medium text-text-secondary">{a.label}</span>
+                  className={`flex flex-col items-center sm:items-start gap-4 p-6 rounded-[1.5rem] bg-bg-surface border border-border-subtle ${a.border} transition-all duration-300 group relative overflow-hidden shadow-sm hover:shadow-md`}>
+                  <div className={`absolute top-0 right-0 w-20 h-20 ${a.bg} blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity`} />
+                  
+                  <div className={`w-12 h-12 rounded-2xl ${a.bg} flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-110 transition-transform duration-500`}>
+                    <a.icon className={`w-6 h-6 ${a.color}`} />
+                  </div>
+                  
+                  <div className="text-center sm:text-left">
+                    <p className="text-sm font-heading font-black tracking-tight text-text-primary mb-0.5">{a.label}</p>
+                    <p className="text-[10px] text-text-dim font-bold uppercase tracking-wider">{a.sub}</p>
+                  </div>
                 </Link>
               ))}
             </div>
-          </GlassCard>
+          </div>
         </>
       )}
 

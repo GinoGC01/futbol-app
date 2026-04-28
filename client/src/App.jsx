@@ -5,6 +5,7 @@ import { ToastProvider } from './components/ui/Toast'
 
 // Public Pages
 import Home from './pages/public/Home'
+import LeagueExplorer from './pages/public/LeagueExplorer'
 import LeagueArena from './pages/public/LeagueArena'
 import TeamProfile from './pages/public/TeamProfile'
 import PlayerProfile from './pages/public/PlayerProfile'
@@ -50,6 +51,7 @@ export default function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/ligas" element={<LeagueExplorer />} />
           <Route path="/liga/:slug" element={<LeagueArena />} />
           <Route path="/equipo/:id" element={<TeamProfile />} />
           <Route path="/jugador/:id" element={<PlayerProfile />} />

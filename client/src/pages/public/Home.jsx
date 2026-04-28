@@ -1,122 +1,219 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { Search, ChevronRight, Trophy, Shield, ArrowRight } from 'lucide-react'
+import { Search, Trophy, ArrowRight, Share2, Rss, Users } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import Button from '../../components/ui/Button'
+import Badge from '../../components/ui/Badge'
 
 export default function Home() {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
   const navigate = useNavigate()
 
-  async function handleSearch(e) {
+  function handleSearch(e) {
     e.preventDefault()
     if (!query.trim()) return
-    setSearching(true)
-    const { data } = await supabase
-      .from('liga')
-      .select('id, nombre, slug, zona, tipo_futbol')
-      .ilike('nombre', `%${query.trim()}%`)
-      .limit(10)
-    setResults(data || [])
-    setSearching(false)
+    navigate(`/ligas?q=${encodeURIComponent(query.trim())}`)
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Hero */}
-      <section className="relative py-24 px-6 overflow-hidden">
-        {/* Gradient orbs */}
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-secondary/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#0D0D0D] text-white selection:bg-primary selection:text-black">
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-12">
+          <Link to="/" className="text-primary font-heading font-black text-2xl italic tracking-tighter">
+            GRIDIRON PRO
+          </Link>
+          <div className="hidden md:flex items-center gap-8">
+            <NavLink to="/" active>LIGAS</NavLink>
+            <NavLink to="/">TORNEOS</NavLink>
+            <NavLink to="/">RESULTADOS</NavLink>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link to="/admin/login" className="px-6 py-2 border border-white text-xs font-bold hover:bg-white hover:text-black transition-all">
+            LOGIN
+          </Link>
+          <Link to="/admin/register" className="px-6 py-2 bg-primary text-black text-xs font-bold hover:bg-primary/90 transition-all">
+            ORGANIZAR
+          </Link>
+        </div>
+      </nav>
 
+      {/* Hero */}
+      <section className="relative pt-32 pb-48 px-6 text-center overflow-hidden">
+        {/* Background rays/glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(0,237,100,0.05)_0%,_transparent_70%)] pointer-events-none" />
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-2xl mx-auto text-center relative z-10"
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl mx-auto relative z-10"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-6">
-            <Trophy className="w-3.5 h-3.5" />
-            PLATAFORMA DE TORNEOS AMATEUR
-          </div>
-
-          <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4 leading-tight">
-            Tu torneo,{' '}
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              nivel profesional
-            </span>
+          <h1 className="text-6xl md:text-8xl font-heading font-black mb-6 tracking-tighter leading-[0.9]">
+            TU TORNEO,<br />
+            <span className="text-primary italic">NIVEL PROFESIONAL</span>
           </h1>
 
-          <p className="text-text-secondary text-lg mb-10 max-w-lg mx-auto">
-            Tabla de posiciones, fixture, goleadores y premios en tiempo real.
-            Organiza como un profesional.
+          <p className="text-text-secondary text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-12 max-w-2xl mx-auto opacity-80">
+            Tabla de posiciones, fixture, goleadores y premios en tiempo real. Organiza como un profesional.
           </p>
 
-          {/* Search */}
-          <form onSubmit={handleSearch} className="flex gap-3 max-w-md mx-auto">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim pointer-events-none" />
+          {/* Search bar */}
+          <form onSubmit={handleSearch} className="flex max-w-2xl mx-auto border-2 border-white/10 bg-black/40 backdrop-blur-md overflow-hidden p-1 focus-within:border-primary/50 transition-all">
+            <div className="flex-1 flex items-center px-4">
+              <Search className="w-5 h-5 text-white/40 mr-4" />
               <input
                 type="text"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Buscar liga por nombre..."
-                className="w-full pl-10 pr-4 py-3 bg-bg-surface border border-border-default rounded-xl text-sm text-text-primary placeholder:text-text-dim outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                placeholder="BUSCAR LIGA, CLUB O CIUDAD..."
+                className="w-full bg-transparent border-none outline-none text-sm font-bold uppercase tracking-widest placeholder:text-white/20"
               />
             </div>
-            <Button type="submit" loading={searching}>
-              Buscar
-            </Button>
+            <button 
+              type="submit" 
+              disabled={searching}
+              className="bg-primary text-black px-10 py-3 text-sm font-black uppercase tracking-widest hover:bg-primary/90 transition-all"
+            >
+              {searching ? '...' : 'BUSCAR'}
+            </button>
           </form>
         </motion.div>
       </section>
 
-      {/* Results */}
-      {results.length > 0 && (
-        <section className="max-w-md mx-auto w-full px-6 pb-12">
-          <motion.ul
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col gap-2"
-          >
-            {results.map((liga, i) => (
-              <motion.li
-                key={liga.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <button
-                  onClick={() => navigate(`/liga/${liga.slug}`)}
-                  className="w-full flex items-center gap-4 p-4 glass rounded-xl text-left transition-all hover:border-border-accent hover:-translate-y-0.5 group"
-                >
-                  <div className="w-11 h-11 rounded-lg bg-bg-elevated flex items-center justify-center shrink-0">
-                    <Shield className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-text-primary truncate">{liga.nombre}</p>
-                    <p className="text-xs text-text-dim">{liga.zona} · {liga.tipo_futbol?.toUpperCase()}</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-text-dim group-hover:text-primary transition-colors" />
-                </button>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </section>
-      )}
+      {/* Featured Section */}
+      <section className="max-w-7xl mx-auto px-8 pb-32">
+        <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
+          <h2 className="text-3xl font-heading font-black italic text-primary tracking-tighter uppercase">
+            LIGAS DESTACADAS
+          </h2>
+          <Link to="/ligas" className="flex items-center gap-2 text-xs font-bold tracking-widest hover:text-primary transition-all uppercase group">
+            Ver todas las ligas <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <LeagueCard 
+            title="COPA DE CAMPEONES"
+            subtitle="32 EQUIPOS • PREMIO $500K"
+            badge="LIVE"
+            badgeColor="activa"
+            cta="VER TORNEO"
+          />
+          <LeagueCard 
+            title="METROPOLITAN ELITE"
+            subtitle="16 EQUIPOS • F8 AMATEUR"
+            badge="REGISTRO ABIERTO"
+            badgeColor="parcial"
+            cta="INSCRIBIRSE"
+          />
+          <LeagueCard 
+            title="LIGA NOCTURNA PRO"
+            subtitle="24 EQUIPOS • ESTADIO ÚNICO"
+            badge="FINAL DE TEMPORADA"
+            badgeColor="finalizada"
+            cta="VER POSICIONES"
+          />
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="border-y border-white/10 bg-white/[0.02]">
+        <div className="max-w-7xl mx-auto px-8 py-16 flex flex-wrap justify-between gap-12">
+          <StatItem label="PARTIDOS/MES" value="+2,400" />
+          <div className="hidden md:block w-px h-12 bg-white/10" />
+          <StatItem label="TORNEOS ACTIVOS" value="150" />
+          <div className="hidden md:block w-px h-12 bg-white/10" />
+          <StatItem label="ATLETAS REGISTRADOS" value="50K" />
+          <div className="hidden md:block w-px h-12 bg-white/10" />
+          <StatItem label="CIUDADES" value="12" />
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="mt-auto py-8 text-center border-t border-border-subtle">
-        <Link
-          to="/admin/login"
-          className="inline-flex items-center gap-2 text-sm text-text-dim hover:text-primary transition-colors"
-        >
-          Acceso para organizadores <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+      <footer className="max-w-7xl mx-auto px-8 py-12">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div>
+            <h3 className="text-primary font-heading font-black text-xl italic tracking-tighter mb-2">
+              GRIDIRON PRO
+            </h3>
+            <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
+              © 2024 GRIDIRON PRO. UNAPOLOGETIC PERFORMANCE.
+            </p>
+          </div>
+          
+          <div className="flex gap-8">
+            <FooterLink>PRIVACY</FooterLink>
+            <FooterLink>TERMS</FooterLink>
+            <FooterLink>SUPPORT</FooterLink>
+            <FooterLink>API</FooterLink>
+          </div>
+
+          <div className="flex gap-6">
+            <button className="text-white/60 hover:text-primary transition-all"><Share2 className="w-5 h-5" /></button>
+            <button className="text-white/60 hover:text-primary transition-all"><Rss className="w-5 h-5" /></button>
+            <button className="text-white/60 hover:text-primary transition-all"><Users className="w-5 h-5" /></button>
+          </div>
+        </div>
       </footer>
     </div>
+  )
+}
+
+function NavLink({ to, children, active }) {
+  return (
+    <Link to={to} className={`text-xs font-bold tracking-[0.2em] transition-all hover:text-primary ${active ? 'text-primary border-b-2 border-primary pb-1' : 'text-white'}`}>
+      {children}
+    </Link>
+  )
+}
+
+function LeagueCard({ title, subtitle, badge, badgeColor, cta }) {
+  return (
+    <div className="relative aspect-[4/5] bg-[#1A1A1A] overflow-hidden group cursor-pointer border border-white/5 hover:border-primary/50 transition-all">
+      {/* Background Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
+      <div className="absolute inset-0 bg-[#222] transition-transform duration-700 group-hover:scale-110" />
+      
+      {/* Content */}
+      <div className="absolute inset-0 z-20 p-8 flex flex-col justify-end">
+        <div className="mb-4">
+          <Badge status={badgeColor} label={badge} className="scale-90 origin-left" />
+        </div>
+        <h3 className="text-2xl font-heading font-black italic leading-tight mb-1 group-hover:text-primary transition-colors uppercase tracking-tight">
+          {title}
+        </h3>
+        <p className="text-[10px] font-bold text-white/40 tracking-widest mb-8 uppercase">
+          {subtitle}
+        </p>
+        
+        <button className="w-full py-4 border border-white text-[11px] font-black tracking-[0.3em] uppercase hover:bg-white hover:text-black transition-all">
+          {cta}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function StatItem({ label, value }) {
+  return (
+    <div className="text-center flex-1">
+      <p className="text-4xl font-heading font-black text-primary italic tracking-tighter mb-1">
+        {value}
+      </p>
+      <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase">
+        {label}
+      </p>
+    </div>
+  )
+}
+
+function FooterLink({ children }) {
+  return (
+    <button className="text-[10px] font-bold tracking-widest text-white/40 hover:text-white transition-all uppercase">
+      {children}
+    </button>
   )
 }

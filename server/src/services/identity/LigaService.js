@@ -184,8 +184,8 @@ class LigaService {
       // Cobros pendientes (inscripciones no pagadas)
       supabaseAdmin
         .from('inscripcion_equipo')
-        .select('id', { count: 'exact', head: true })
-        .eq('liga_id', ligaId)
+        .select('id, temporada!inner(liga_id)', { count: 'exact', head: true })
+        .eq('temporada.liga_id', ligaId)
         .neq('estado_pago', 'pagado')
     ])
 

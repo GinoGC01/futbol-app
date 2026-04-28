@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { Lock, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Lock as LockIcon, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
@@ -95,7 +95,7 @@ export default function ResetPassword() {
           <label className="text-xs font-medium text-text-dim">
             Nueva Contraseña
             <div className="relative mt-1.5">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" />
+              <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -116,7 +116,7 @@ export default function ResetPassword() {
           <label className="text-xs font-medium text-text-dim">
             Confirmar Contraseña
             <div className="relative mt-1.5">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" />
+              <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}

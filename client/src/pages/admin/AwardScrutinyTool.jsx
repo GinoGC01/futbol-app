@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLigas, useTemporadas, usePremiosAdmin, useCrearPremio } from '../../hooks/useAdmin'
+import { useLigas, useTemporadas, usePremiosAdmin, useCrearPremio, useTemporadaTree } from '../../hooks/useAdmin'
 import { adminService } from '../../services/adminService'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'

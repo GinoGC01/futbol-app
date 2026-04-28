@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { Shield, Mail, Lock, User, MapPin, FileText, RefreshCw } from 'lucide-react'
+import { Shield, Mail, Lock as LockIcon, User, MapPin, FileText, RefreshCw } from 'lucide-react'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'
 
@@ -123,7 +123,7 @@ export default function Register() {
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>
             <label className="text-xs font-medium text-text-dim">
-              <div className="flex items-center gap-1.5 mb-1.5"><Lock className="w-3.5 h-3.5" /> Contraseña</div>
+              <div className="flex items-center gap-1.5 mb-1.5"><LockIcon className="w-3.5 h-3.5" /> Contraseña</div>
               <input data-testid="register-password" type="password" value={form.password} onChange={set('password')} required minLength={6}
                 className="w-full px-3 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary transition-all" />
             </label>

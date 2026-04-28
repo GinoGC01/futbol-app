@@ -10,7 +10,8 @@ import {
   Search,
   CheckCircle2,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  Lock as LockIcon
 } from 'lucide-react'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
@@ -30,18 +31,21 @@ import { useToast } from '../../components/ui/Toast'
 export default function TeamDetailView({ equipo, onBack, ligaId }) {
   const [activeTab, setActiveTab] = useState('plantel')
   const { data: inscripciones, isLoading } = useInscripcionesEquipo(ligaId, equipo.id)
+  const [selectedInscripcionId, setSelectedInscripcionId] = useState(null)
   const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [showEditTeam, setShowEditTeam] = useState(false)
   const [showInscribeTeam, setShowInscribeTeam] = useState(false)
   const deleteEquipo = useDeleteEquipo()
   const toast = useToast()
 
-  const latestInscripcion = useMemo(() => {
+  const viewedInscripcion = useMemo(() => {
     if (!inscripciones?.length) return null
+    if (selectedInscripcionId) return inscripciones.find(i => i.id === selectedInscripcionId)
     return inscripciones[0] 
-  }, [inscripciones])
+  }, [inscripciones, selectedInscripcionId])
 
-  const plantel = latestInscripcion?.plantel?.inscripciones || []
+  const latestInscripcion = inscripciones?.[0]
+  const plantel = viewedInscripcion?.plantel?.inscripciones || []
 
   if (isLoading) return <div className="py-20 flex justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
 
@@ -66,7 +70,10 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                 </Button>
               </div>
               <div className="flex items-center gap-2 text-text-dim text-sm font-medium">
-                <Badge status={latestInscripcion ? 'activa' : 'cerrada'} label={latestInscripcion ? `Temporada: ${latestInscripcion.temporada.nombre}` : 'Sin participación activa'} />
+                <Badge 
+                  status={viewedInscripcion ? (viewedInscripcion.temporada.estado === 'activa' ? 'activa' : 'finalizada') : 'cerrada'} 
+                  label={viewedInscripcion ? `Temporada: ${viewedInscripcion.temporada.nombre}` : 'Sin participación activa'} 
+                />
                 <span>•</span>
                 <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {plantel.length} Jugadores</span>
               </div>
@@ -101,8 +108,14 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
               <Calendar className="w-4 h-4" /> Inscribir en Temporada
             </Button>
           ) : (
-            <Button variant="primary" size="sm" onClick={() => setShowAddPlayer(true)} className="h-10">
-              <UserPlus className="w-4 h-4" /> Inscribir Jugador
+            <Button 
+              variant="primary" 
+              size="sm" 
+              onClick={() => setShowAddPlayer(true)} 
+              className="h-10"
+              disabled={viewedInscripcion?.temporada?.estado === 'finalizada'}
+            >
+              <UserPlus className="w-4 h-4" /> {viewedInscripcion?.temporada?.estado === 'finalizada' ? 'Temporada Cerrada' : 'Inscribir Jugador'}
             </Button>
           )}
         </div>
@@ -115,7 +128,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
       </div>
 
       <div className="flex gap-1 p-1 bg-white/5 rounded-xl w-fit border border-white/5">
-        <TabButton active={activeTab === 'plantel'} onClick={() => setActiveTab('plantel')} label="Plantel Actual" />
+        <TabButton active={activeTab === 'plantel'} onClick={() => setActiveTab('plantel')} label={viewedInscripcion?.id !== latestInscripcion?.id ? `Plantel (${viewedInscripcion?.temporada.nombre})` : 'Plantel Actual'} />
         <TabButton active={activeTab === 'historia'} onClick={() => setActiveTab('historia')} label="Historia" />
       </div>
 
@@ -175,10 +188,21 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
       ) : (
         <div className="grid gap-3">
           {inscripciones?.map(ins => (
-            <GlassCard key={ins.id} className="flex items-center justify-between group hover:border-primary/30 transition-all p-4">
+            <GlassCard 
+              key={ins.id} 
+              onClick={() => {
+                setSelectedInscripcionId(ins.id)
+                setActiveTab('plantel')
+              }}
+              className={`flex items-center justify-between group hover:border-primary/30 transition-all p-4 cursor-pointer ${
+                viewedInscripcion?.id === ins.id ? 'border-primary/50 bg-primary/5' : ''
+              }`}
+            >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-text-dim" />
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                  viewedInscripcion?.id === ins.id ? 'bg-primary text-secondary' : 'bg-white/5 text-text-dim'
+                }`}>
+                  <Calendar className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="font-bold text-lg leading-tight">{ins.temporada.nombre}</p>
@@ -188,9 +212,13 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
               <div className="flex items-center gap-6">
                 <div className="text-right">
                   <p className="text-sm font-bold">{ins.plantel.inscripciones.length} Jugadores</p>
-                  <p className="text-[11px] text-text-dim">{ins.estado_pago.toUpperCase()}</p>
+                  <p className={`text-[11px] font-bold uppercase tracking-tighter ${ins.estado_pago === 'pagado' ? 'text-success' : 'text-warning'}`}>
+                    {ins.estado_pago}
+                  </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-text-dim group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className={`w-5 h-5 transition-transform ${
+                  viewedInscripcion?.id === ins.id ? 'text-primary translate-x-1' : 'text-text-dim group-hover:translate-x-1'
+                }`} />
               </div>
             </GlassCard>
           ))}
@@ -201,7 +229,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
       <AddPlayerModal 
         open={showAddPlayer} 
         onClose={() => setShowAddPlayer(false)} 
-        plantelId={latestInscripcion?.plantel?.id} 
+        plantelId={viewedInscripcion?.plantel?.id} 
         ligaId={ligaId}
       />
       <InscribeTeamModal open={showInscribeTeam} onClose={() => setShowInscribeTeam(false)} equipoId={equipo.id} ligaId={ligaId} />
@@ -387,7 +415,7 @@ function AddPlayerModal({ open, onClose, plantelId, ligaId }) {
                   </div>
                 </div>
                 {!j.inscripcion_activa && <ChevronRight className="w-5 h-5 text-text-dim group-hover:text-primary transition-colors" />}
-                {j.inscripcion_activa && <Lock className="w-4 h-4 text-text-dim" />}
+                {j.inscripcion_activa && <LockIcon className="w-4 h-4 text-text-dim" />}
               </button>
             ))}
             {query && results.length === 0 && !searching && (
@@ -484,7 +512,7 @@ function AddPlayerModal({ open, onClose, plantelId, ligaId }) {
 
 function InscribeTeamModal({ open, onClose, equipoId, ligaId }) {
   const { data: temporadas } = useTemporadas(ligaId)
-  const activeTemporadas = (temporadas || []).filter(t => t.estado === 'abierta' || t.estado === 'proximamente' || t.estado === 'borrador')
+  const activeTemporadas = (temporadas || []).filter(t => t.estado === 'activa' || t.estado === 'borrador')
   const [form, setForm] = useState({ temporada_id: '', limite_jugadores: 20 })
   const inscribeMutation = useInscribirEquipo()
   const toast = useToast()
