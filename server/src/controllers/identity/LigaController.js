@@ -161,6 +161,25 @@ class LigaController {
       next(error)
     }
   }
+
+  /**
+   * DELETE /api/identity/ligas/:id
+   */
+  async deleteLiga(req, res, next) {
+    try {
+      const { id } = req.params
+      const organizadorId = req.organizador.id
+
+      await LigaService.deleteLiga(id, organizadorId)
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Liga eliminada exitosamente junto con todos sus datos'
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 
 export default new LigaController()

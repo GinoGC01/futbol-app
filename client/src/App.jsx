@@ -21,6 +21,7 @@ import RosterManager from './pages/admin/RosterManager'
 import MatchEdgeBox from './pages/admin/MatchEdgeBox'
 import AwardScrutinyTool from './pages/admin/AwardScrutinyTool'
 import PlayerManager from './pages/admin/PlayerManager'
+import LeagueSettings from './pages/admin/LeagueSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import ResetPassword from './pages/admin/ResetPassword'
 import VerifyEmail from './pages/admin/VerifyEmail'
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="jugadores" element={<PlayerManager />} />
             <Route path="partidos" element={<MatchEdgeBox />} />
             <Route path="premios" element={<AwardScrutinyTool />} />
+            <Route path="settings" element={<LeagueSettings />} />
           </Route>
 
           {/* Fallback */}

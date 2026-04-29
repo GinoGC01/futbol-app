@@ -51,9 +51,12 @@ function AdminLayoutContent() {
         {/* Top Header */}
         <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-border-subtle bg-bg-surface/50 backdrop-blur-md sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <span className="lg:hidden text-lg font-heading font-bold text-primary tracking-tight mr-2">
-              C<span className="text-text-primary">L</span>
-            </span>
+            <div className="lg:hidden flex items-center gap-2 mr-2">
+              <img src="/images/isotipo.png" alt="" className="h-8 w-8 object-contain" />
+              <span className="text-lg font-heading font-bold text-primary tracking-tight">
+                C<span className="text-text-primary">L</span>
+              </span>
+            </div>
             
             {/* Liga Selector */}
             {ligas.length > 0 && (

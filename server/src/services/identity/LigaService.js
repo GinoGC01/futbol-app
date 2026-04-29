@@ -197,6 +197,27 @@ class LigaService {
       cobros_pendientes: paymentsResult.count || 0
     }
   }
+
+  /**
+   * Elimina una liga en cascada usando el RPC de Supabase.
+   */
+  async deleteLiga(ligaId, organizadorId) {
+    // 1. Verificar propiedad antes de llamar al RPC (Seguridad Nivel 2: Backend)
+    await this.verifyOwnership(ligaId, organizadorId)
+
+    // 2. Ejecutar RPC
+    const { error } = await supabaseAdmin.rpc('delete_liga_cascade', {
+      p_liga_id: ligaId,
+      p_organizador_id: organizadorId
+    })
+
+    if (error) {
+      console.error('Error al ejecutar delete_liga_cascade:', error)
+      throw new AppError('No se pudo eliminar la liga en cascada: ' + error.message, 500)
+    }
+
+    return true
+  }
 }
 
 export default new LigaService()

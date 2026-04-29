@@ -76,7 +76,8 @@ router.post(
     body('nombre').isLength({ min: 3, max: 100 }).withMessage('Nombre de liga inválido'),
     body('slug').matches(/^[a-z0-9-]+$/).withMessage('Slug solo acepta letras minúsculas, números y guiones'),
     body('zona').optional().isLength({ max: 100 }),
-    body('tipo_futbol').optional().isIn(['f5', 'f6', 'f7', 'f9', 'f11']).withMessage('Tipo de fútbol no válido')
+    body('tipo_futbol').optional().isIn(['f5', 'f6', 'f7', 'f9', 'f11']).withMessage('Tipo de fútbol no válido'),
+    body('monto_inscripcion').optional().isNumeric().withMessage('El monto debe ser un número')
   ],
   LigaController.createLiga
 )
@@ -91,11 +92,23 @@ router.put(
     body('nombre').optional().isLength({ min: 3, max: 100 }),
     body('zona').optional().isLength({ max: 100 }),
     body('descripcion').optional().isString(),
-    body('logo_url').optional().isURL().withMessage('URL de logo inválida')
+    body('logo_url').optional({ checkFalsy: true }).isURL().withMessage('URL de logo inválida'),
+    body('monto_inscripcion').optional().isNumeric().withMessage('El monto debe ser un número')
   ],
   LigaController.updateLiga
 )
 
 router.get('/ligas/:id/stats', requireAuth, requireOrganizador, requireVerified, LigaController.getDashboardStats)
+
+router.delete(
+  '/ligas/:id',
+  requireAuth,
+  requireOrganizador,
+  requireVerified,
+  [
+    param('id').isUUID().withMessage('ID de liga no válido')
+  ],
+  LigaController.deleteLiga
+)
 
 export default router

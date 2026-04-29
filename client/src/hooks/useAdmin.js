@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminService } from '../services/adminService'
+import { useLigaActiva } from '../context/LigaContext'
 
 // Identity
 export function useMe() {
@@ -103,6 +104,29 @@ export function useCreateLiga() {
   return useMutation({
     mutationFn: adminService.createLiga,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-ligas'] })
+  })
+}
+
+export function useUpdateLiga() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }) => adminService.updateLiga(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-ligas'] })
+  })
+}
+
+export function useDeleteLiga() {
+  const qc = useQueryClient()
+  const { setLiga } = useLigaActiva()
+  
+  return useMutation({
+    mutationFn: adminService.deleteLiga,
+    onSuccess: () => {
+      // 1. Limpiar el estado global (Context + LocalStorage)
+      setLiga(null)
+      // 2. Invalidar lista de ligas
+      qc.invalidateQueries({ queryKey: ['admin-ligas'] })
+    }
   })
 }
 

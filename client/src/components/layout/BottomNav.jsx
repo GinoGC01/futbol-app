@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Trophy, Users, Swords, Award, User } from 'lucide-react'
+import { LayoutDashboard, Trophy, Users, Swords, Award, User, Settings } from 'lucide-react'
 
 const tabs = [
   { to: '/admin',         icon: LayoutDashboard, label: 'Home' },
@@ -7,6 +7,7 @@ const tabs = [
   { to: '/admin/roster',  icon: Users,           label: 'Equipos' },
   { to: '/admin/jugadores', icon: User,           label: 'Players' },
   { to: '/admin/partidos',icon: Swords,          label: 'Live' },
+  { to: '/admin/settings', icon: Settings,        label: 'Config' },
 ]
 
 export default function BottomNav() {

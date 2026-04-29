@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Trophy, Users, Swords, Award, ChevronLeft, ChevronRight, User } from 'lucide-react'
+import { LayoutDashboard, Trophy, Users, Swords, Award, ChevronLeft, ChevronRight, User, Settings } from 'lucide-react'
 import { useState } from 'react'
 
 const links = [
@@ -9,6 +9,7 @@ const links = [
   { to: '/admin/jugadores', icon: User,           label: 'Jugadores' },
   { to: '/admin/partidos',icon: Swords,          label: 'Partidos' },
   { to: '/admin/premios', icon: Award,           label: 'Premios' },
+  { to: '/admin/settings', icon: Settings,        label: 'Configuración' },
 ]
 
 export default function Sidebar() {
@@ -24,11 +25,14 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center justify-center border-b border-border-subtle px-4">
         {!collapsed && (
-          <span className="text-lg font-heading font-bold text-primary tracking-tight">
-            Cancha<span className="text-text-primary">Libre</span>
-          </span>
+          <div className="flex items-center gap-2">
+            <img src="/images/isotipo.png" alt="" className="h-8 w-8 object-contain" />
+            <span className="text-lg font-heading font-bold text-primary tracking-tight">
+              Cancha<span className="text-text-primary">Libre</span>
+            </span>
+          </div>
         )}
-        {collapsed && <span className="text-lg font-bold text-primary">C</span>}
+        {collapsed && <img src="/images/isotipo.png" alt="C" className="h-8 w-8 object-contain" />}
       </div>
 
       {/* Nav Links */}
