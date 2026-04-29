@@ -63,8 +63,9 @@ export default function LeagueSettings() {
   }
 
   const handleDelete = async () => {
+    console.log(deleteConfirm.trim(), liga.nombre.trim())
     if (deleteConfirm.trim() !== liga.nombre.trim()) return
-    
+
     try {
       setIsDeleting(true)
       await deleteMutation.mutateAsync(liga.id)
@@ -101,10 +102,10 @@ export default function LeagueSettings() {
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-primary transition-colors">
                       <Trophy className="w-full h-full" />
                     </div>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={form.nombre}
-                      onChange={e => setForm({...form, nombre: e.target.value})}
+                      onChange={e => setForm({ ...form, nombre: e.target.value })}
                       className="w-full pl-12 pr-4 py-3.5 bg-bg-elevated border border-border-subtle rounded-2xl text-sm focus:border-primary transition-all outline-none font-bold shadow-sm"
                     />
                   </div>
@@ -117,10 +118,10 @@ export default function LeagueSettings() {
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-primary transition-colors">
                         <MapPin className="w-full h-full" />
                       </div>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={form.zona}
-                        onChange={e => setForm({...form, zona: e.target.value})}
+                        onChange={e => setForm({ ...form, zona: e.target.value })}
                         className="w-full pl-12 pr-4 py-3.5 bg-bg-elevated border border-border-subtle rounded-2xl text-sm focus:border-primary transition-all outline-none shadow-sm"
                       />
                     </div>
@@ -132,10 +133,10 @@ export default function LeagueSettings() {
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-primary transition-colors">
                         <DollarSign className="w-full h-full" />
                       </div>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         value={form.monto_inscripcion}
-                        onChange={e => setForm({...form, monto_inscripcion: Number(e.target.value)})}
+                        onChange={e => setForm({ ...form, monto_inscripcion: Number(e.target.value) })}
                         className="w-full pl-12 pr-4 py-3.5 bg-bg-elevated border border-border-subtle rounded-2xl text-sm focus:border-primary transition-all outline-none font-mono shadow-sm"
                       />
                     </div>
@@ -148,10 +149,10 @@ export default function LeagueSettings() {
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-primary transition-colors">
                       <ImageIcon className="w-full h-full" />
                     </div>
-                    <input 
-                      type="url" 
+                    <input
+                      type="url"
                       value={form.logo_url}
-                      onChange={e => setForm({...form, logo_url: e.target.value})}
+                      onChange={e => setForm({ ...form, logo_url: e.target.value })}
                       placeholder="https://ejemplo.com/logo.png"
                       className="w-full pl-12 pr-4 py-3.5 bg-bg-elevated border border-border-subtle rounded-2xl text-sm focus:border-primary transition-all outline-none shadow-sm"
                     />
@@ -160,9 +161,9 @@ export default function LeagueSettings() {
 
                 <label className="block">
                   <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] mb-2 block">Descripción</span>
-                  <textarea 
+                  <textarea
                     value={form.descripcion}
-                    onChange={e => setForm({...form, descripcion: e.target.value})}
+                    onChange={e => setForm({ ...form, descripcion: e.target.value })}
                     rows={4}
                     placeholder="Describe las reglas o información general de tu liga..."
                     className="w-full px-4 py-3.5 bg-bg-elevated border border-border-subtle rounded-2xl text-sm focus:border-primary transition-all outline-none resize-none shadow-sm leading-relaxed"
@@ -171,8 +172,8 @@ export default function LeagueSettings() {
               </div>
 
               <div className="pt-6 border-t border-border-subtle flex justify-end">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   loading={updateMutation.isPending}
                   className="px-8 h-12 bg-primary text-secondary font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                 >
@@ -203,19 +204,19 @@ export default function LeagueSettings() {
               <p className="text-[10px] text-text-dim italic text-center">Estos valores no pueden ser editados.</p>
             </div>
           </GlassCard>
-          
+
           <div className="p-6 rounded-[2rem] border border-border-subtle bg-bg-surface flex flex-col items-center text-center space-y-4">
-             <div className="w-16 h-16 rounded-2xl bg-bg-deep border border-border-subtle overflow-hidden flex items-center justify-center">
-                {form.logo_url ? (
-                  <img src={form.logo_url} alt="Logo Preview" className="w-full h-full object-contain p-2" />
-                ) : (
-                  <Trophy className="w-8 h-8 text-text-dim opacity-20" />
-                )}
-             </div>
-             <div>
-                <p className="text-xs font-black uppercase tracking-widest text-text-primary">{form.nombre || 'Nombre de Liga'}</p>
-                <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider">{form.zona || 'Ubicación no definida'}</p>
-             </div>
+            <div className="w-16 h-16 rounded-2xl bg-bg-deep border border-border-subtle overflow-hidden flex items-center justify-center">
+              {form.logo_url ? (
+                <img src={form.logo_url} alt="Logo Preview" className="w-full h-full object-contain p-2" />
+              ) : (
+                <Trophy className="w-8 h-8 text-text-dim opacity-20" />
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-text-primary">{form.nombre || 'Nombre de Liga'}</p>
+              <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider">{form.zona || 'Ubicación no definida'}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -230,7 +231,7 @@ export default function LeagueSettings() {
 
         <GlassCard className="border-danger/30 bg-danger/5 !p-8 sm:!p-10 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-danger/10 blur-[100px] pointer-events-none -mr-32 -mt-32 transition-all duration-700 group-hover:bg-danger/20" />
-          
+
           <div className="flex flex-col lg:flex-row gap-10 items-start relative z-10">
             <div className="flex-1 space-y-4">
               <div className="w-14 h-14 bg-danger/10 rounded-2xl flex items-center justify-center border border-danger/20">
@@ -250,22 +251,22 @@ export default function LeagueSettings() {
                 </ul>
               </div>
             </div>
-            
+
             <div className="w-full lg:w-[360px] space-y-6 bg-bg-surface/40 p-6 rounded-3xl border border-danger/10 backdrop-blur-sm">
               <div className="space-y-3">
-                <label className="text-[11px] font-black text-text-dim uppercase tracking-widest block">
-                  Confirma escribiendo: <span className="text-text-primary select-none">"{liga.nombre}"</span>
+                <label className="text-[11px] font-black text-text-dim tracking-widest block">
+                  <span className='uppercase'>Confirma escribiendo:</span>  <span className="text-text-primary select-none">"{liga.nombre}"</span>
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={deleteConfirm}
                   onChange={e => setDeleteConfirm(e.target.value)}
                   placeholder="Nombre de la liga"
                   className="w-full px-5 py-4 bg-bg-deep border border-danger/20 rounded-2xl text-sm focus:border-danger transition-all outline-none font-bold placeholder:text-danger/20 text-danger"
                 />
               </div>
-              
-              <Button 
+
+              <Button
                 onClick={handleDelete}
                 disabled={deleteConfirm.trim() !== liga.nombre.trim() || isDeleting}
                 loading={isDeleting}
