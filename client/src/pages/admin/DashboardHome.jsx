@@ -28,46 +28,50 @@ export default function DashboardHome() {
   if (isLoading) return <Loader text="Cargando panel de control..." className="py-20" />
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 sm:space-y-12 animate-fade-in pb-10">
+    <div className="max-w-6xl mx-auto space-y-10 sm:space-y-16 animate-fade-in pb-20 px-4 sm:px-0">
       {/* Welcome & Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Panel de Control
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 border-b border-white/5 pb-8">
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(206,222,11,0.5)]" /> 
+            Command Center
           </div>
-          <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight leading-none">
-            Hola, <span className="text-primary italic">{user?.email?.split('@')[0]}</span>
-          </h1>
-          <p className="text-base text-text-dim max-w-md">
+          <div className="relative pt-1">
+            <h1 className="text-5xl sm:text-7xl font-heading font-black tracking-tighter leading-[1.1] uppercase italic">
+              Hola, <span className="text-primary">{user?.email?.split('@')[0]}</span>
+            </h1>
+            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-full bg-primary/30 skew-x-[-15deg] hidden lg:block" />
+          </div>
+          <p className="text-lg text-text-dim max-w-lg font-medium leading-tight">
             {liga 
               ? `Gestionando los destinos de ` 
               : 'Bienvenido a la plataforma central de ligas. '}
-            {liga && <span className="text-text-primary font-bold">{liga.nombre}</span>}
+            {liga && <span className="text-text-primary font-black italic uppercase tracking-tight">{liga.nombre}</span>}
           </p>
         </div>
         
         <div className="flex shrink-0">
           <Button 
             onClick={() => setShowNewLiga(true)} 
-            className="w-full sm:w-auto h-12 px-6 bg-primary text-secondary font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+            className="w-full sm:w-auto h-14 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
           >
-            <Plus className="w-5 h-5 mr-2 stroke-[3]" /> 
+            <Plus className="w-6 h-6 mr-2 stroke-[4]" /> 
             {liga ? 'Nueva Liga' : 'Crear mi primera Liga'}
           </Button>
         </div>
       </div>
 
       {!liga ? (
-        <div className="py-20 text-center glass-heavy rounded-[2rem] border border-white/5 space-y-6 relative overflow-hidden group">
+        <div className="py-24 text-center bg-bg-surface rounded-[3rem] border border-white/5 space-y-8 relative overflow-hidden group shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
           <div className="relative z-10">
-            <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3 group-hover:rotate-6 transition-transform duration-500 border border-primary/20 shadow-glow-primary">
-              <Trophy className="w-12 h-12 text-primary" />
+            <div className="w-28 h-28 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 rotate-3 group-hover:rotate-6 transition-transform duration-500 border-2 border-primary/20 shadow-glow-primary">
+              <Trophy className="w-14 h-14 text-primary" />
             </div>
-            <div className="max-w-sm mx-auto px-6">
-              <h2 className="text-2xl font-heading font-bold mb-3 tracking-tight">Comienza tu Legado</h2>
-              <p className="text-sm text-text-dim mb-8 leading-relaxed">No hemos encontrado ninguna liga asociada a tu cuenta. Crea tu primera liga para empezar a gestionar torneos, equipos y jugadores.</p>
-              <Button onClick={() => setShowNewLiga(true)} size="lg" className="w-full shadow-lg shadow-primary/20 h-14">
+            <div className="max-w-md mx-auto px-6">
+              <h2 className="text-3xl font-heading font-black mb-4 tracking-tighter uppercase italic leading-[1.1] pt-1">Comienza tu Legado</h2>
+              <p className="text-base text-text-dim mb-10 leading-relaxed font-medium">No hemos encontrado ninguna liga asociada a tu cuenta. Crea tu primera liga para empezar a gestionar torneos, equipos y jugadores con estilo profesional.</p>
+              <Button onClick={() => setShowNewLiga(true)} size="lg" className="w-full shadow-2xl shadow-primary/30 h-16 text-lg font-black italic uppercase italic tracking-tighter">
                 Crear mi primera Liga
               </Button>
             </div>
@@ -76,41 +80,39 @@ export default function DashboardHome() {
       ) : (
         <>
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <StatCard 
               icon={Shield} 
               value={liga?.nombre || '—'} 
               label="Liga Activa" 
-              className="bg-primary/5 border-primary/10"
             />
             <StatCard 
               icon={Trophy} 
               value={temporadaActiva?.nombre || 'Sin Temporada'} 
               label="Edición Actual" 
-              className="bg-secondary/5 border-secondary/10"
             />
             <StatCard 
               icon={Swords} 
               value={dashStats?.partidos_finalizados ?? '0'} 
               label="Partidos Jugados" 
-              className="bg-warning/5 border-warning/10"
             />
             <StatCard 
               icon={DollarSign} 
               value={dashStats?.cobros_pendientes ?? '0'} 
-              label="Cobros Pendientes" 
-              className="bg-danger/5 border-danger/10"
+              label="Alertas de Pago" 
+              isAlert={Number(dashStats?.cobros_pendientes) > 0}
             />
           </div>
 
           {/* Alerts Center */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-3">
-                <span className="w-8 h-px bg-border-default" /> 
-                Alertas Críticas
-                <span className="w-8 h-px bg-border-default" />
-              </h2>
+          <div className="space-y-8">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-2 h-8 bg-danger skew-x-[-15deg]" />
+                <h2 className="text-xs font-black text-text-dim uppercase tracking-[0.4em]">
+                  Alertas Críticas
+                </h2>
+              </div>
               <button 
                 onClick={async () => {
                   try {
@@ -121,76 +123,86 @@ export default function DashboardHome() {
                   }
                 }}
                 disabled={evaluarMutation.isPending}
-                className="flex items-center gap-2 text-[10px] font-black text-primary hover:text-white transition-all uppercase tracking-widest disabled:opacity-50"
+                className="flex items-center gap-2 text-[10px] font-black text-primary hover:text-white transition-all uppercase tracking-widest disabled:opacity-50 group"
               >
-                <RefreshCw className={`w-3 h-3 ${evaluarMutation.isPending ? 'animate-spin' : ''}`} />
-                Sincronizar
+                <RefreshCw className={`w-4 h-4 group-hover:rotate-180 transition-transform duration-500 ${evaluarMutation.isPending ? 'animate-spin' : ''}`} />
+                Sincronizar Datos
               </button>
             </div>
 
             {alerts?.length > 0 ? (
-              <div className="grid gap-3">
+              <div className="grid gap-4">
                 {alerts.map(alert => (
-                  <GlassCard key={alert.id} className="!p-4 border-l-4 border-l-danger bg-danger/5 group hover:bg-danger/10 transition-all">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center shrink-0 border border-danger/20">
-                          <AlertCircle className="w-5 h-5 text-danger" />
+                  <GlassCard key={alert.id} className="!p-0 border-none ring-1 ring-white/5 bg-bg-surface group hover:ring-danger/40 transition-all relative overflow-hidden rounded-2xl">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-danger opacity-80" />
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6">
+                      <div className="flex gap-5 items-start">
+                        <div className="w-12 h-12 rounded-2xl bg-danger/10 flex items-center justify-center shrink-0 border border-danger/20 shadow-lg group-hover:scale-110 transition-transform">
+                          <AlertCircle className="w-6 h-6 text-danger" />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-text-primary mb-1">{alert.mensaje}</p>
-                          <p className="text-[10px] text-text-dim font-bold uppercase tracking-wider">
-                            {alert.tipo.replace(/_/g, ' ')} • {new Date(alert.created_at).toLocaleString()}
-                          </p>
+                        <div className="space-y-1">
+                          <p className="text-base font-black text-text-primary italic uppercase tracking-tight leading-tight">{alert.mensaje}</p>
+                          <div className="flex flex-wrap items-center gap-3">
+                             <span className="text-[9px] font-black bg-danger/10 text-danger px-2 py-0.5 rounded uppercase tracking-widest">
+                               {alert.tipo.replace(/_/g, ' ')}
+                             </span>
+                             <span className="text-[9px] text-text-dim font-bold uppercase tracking-widest flex items-center gap-1">
+                               <RefreshCw className="w-2.5 h-2.5" /> {new Date(alert.created_at).toLocaleTimeString()}
+                             </span>
+                          </div>
                         </div>
                       </div>
                       <button 
                         onClick={() => resolverMutation.mutate(alert.id)}
-                        className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-dim hover:text-primary transition-all shrink-0 border border-border-subtle"
+                        className="w-full sm:w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-text-dim hover:text-primary hover:bg-primary/10 transition-all shrink-0 border border-white/5 active:scale-95 shadow-sm"
                         title="Marcar como resuelta"
                       >
-                        <CheckCircle className="w-4 h-4" />
+                        <CheckCircle className="w-6 h-6" />
                       </button>
                     </div>
                   </GlassCard>
                 ))}
               </div>
             ) : (
-              <div className="py-12 text-center glass-heavy rounded-3xl border border-white/5">
-                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
-                  <Bell className="w-6 h-6 text-primary opacity-40" />
+              <div className="py-20 text-center bg-bg-surface rounded-[2rem] border border-white/5 shadow-inner">
+                <div className="w-16 h-16 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/5">
+                  <Bell className="w-8 h-8 text-primary opacity-20" />
                 </div>
-                <p className="text-xs font-bold text-text-dim uppercase tracking-widest">No hay alertas activas</p>
+                <p className="text-[11px] font-black text-text-dim uppercase tracking-[0.3em] italic">Sin incidencias detectadas</p>
               </div>
             )}
           </div>
 
-          {/* Quick Actions Header */}
-          <div className="pt-4">
-            <h2 className="text-xs font-black text-text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-              <span className="w-8 h-px bg-border-default" /> 
-              Acciones Estratégicas
-              <span className="w-8 h-px bg-border-default flex-1" />
-            </h2>
+          {/* Strategic Actions Header */}
+          <div className="space-y-8 pt-8">
+            <div className="flex items-center gap-4">
+              <div className="w-2 h-8 bg-secondary skew-x-[-15deg]" />
+              <h2 className="text-xs font-black text-text-dim uppercase tracking-[0.4em]">
+                Misiones Críticas
+              </h2>
+            </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {[
-                { to: '/admin/torneo',   icon: Shield,     label: 'Arquitectura', sub: 'Gestionar Torneo', color: 'text-primary',   bg: 'bg-primary/5',   border: 'hover:border-primary/40' },
-                { to: '/admin/roster',   icon: Users,      label: 'Equipos',      sub: 'Gestionar Roster', color: 'text-secondary', bg: 'bg-secondary/5', border: 'hover:border-secondary/40' },
-                { to: '/admin/partidos', icon: Swords,     label: 'Partidos',     sub: 'Cargar Resultados',color: 'text-warning',   bg: 'bg-warning/5',   border: 'hover:border-warning/40' },
-                { to: '/admin/premios',  icon: Trophy,     label: 'Premios',      sub: 'Escrutinio Final', color: 'text-accent-gold',bg: 'bg-accent-gold/5',border: 'hover:border-accent-gold/40' },
+                { to: '/admin/torneo',   icon: Shield,     label: 'Arquitectura', sub: 'Torneo', color: 'text-primary',   bg: 'bg-primary/5',   border: 'hover:ring-primary/40' },
+                { to: '/admin/roster',   icon: Users,      label: 'Equipos',      sub: 'Roster', color: 'text-secondary', bg: 'bg-secondary/5', border: 'hover:ring-secondary/40' },
+                { to: '/admin/partidos', icon: Swords,     label: 'Partidos',     sub: 'Resultados',color: 'text-warning',   bg: 'bg-warning/5',   border: 'hover:ring-warning/40' },
+                { to: '/admin/premios',  icon: Trophy,     label: 'Premios',      sub: 'Escrutinio', color: 'text-accent-gold',bg: 'bg-accent-gold/5',border: 'hover:ring-accent-gold/40' },
               ].map(a => (
                 <Link key={a.to} to={a.to}
-                  className={`flex flex-col items-center sm:items-start gap-4 p-6 rounded-[1.5rem] bg-bg-surface border border-border-subtle ${a.border} transition-all duration-300 group relative overflow-hidden shadow-sm hover:shadow-md`}>
-                  <div className={`absolute top-0 right-0 w-20 h-20 ${a.bg} blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity`} />
+                  className={`flex flex-col gap-6 p-8 rounded-[2rem] bg-bg-surface ring-1 ring-white/5 ${a.border} transition-all duration-500 group relative overflow-hidden shadow-xl hover:-translate-y-2`}>
+                  <div className={`absolute -bottom-8 -right-8 w-32 h-32 ${a.bg} blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
                   
-                  <div className={`w-12 h-12 rounded-2xl ${a.bg} flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-110 transition-transform duration-500`}>
-                    <a.icon className={`w-6 h-6 ${a.color}`} />
+                  <div className={`w-16 h-16 rounded-[1.5rem] ${a.bg} flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg`}>
+                    <a.icon className={`w-8 h-8 ${a.color}`} />
                   </div>
                   
-                  <div className="text-center sm:text-left">
-                    <p className="text-sm font-heading font-black tracking-tight text-text-primary mb-0.5">{a.label}</p>
-                    <p className="text-[10px] text-text-dim font-bold uppercase tracking-wider">{a.sub}</p>
+                  <div>
+                    <p className="text-2xl font-heading font-black tracking-tighter text-text-primary uppercase italic leading-none mb-2">{a.label}</p>
+                    <div className="flex items-center justify-between">
+                       <p className="text-[10px] text-text-dim font-black uppercase tracking-[0.2em]">{a.sub}</p>
+                       <RefreshCw className="w-3 h-3 text-text-dim group-hover:text-primary group-hover:rotate-180 transition-all duration-700" />
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -232,7 +244,9 @@ function NewLigaModal({ open, onClose }) {
         <label className="block text-xs font-medium text-text-dim">
           URL (Slug)
           <div className="flex items-center gap-1 mt-1 group">
-            <span className="text-xs text-text-dim group-focus-within:text-primary transition-colors">marios.agency/</span>
+            <span className="text-xs text-text-dim group-focus-within:text-primary transition-colors">
+              {(import.meta.env.VITE_API_DOM || 'canchalibre.app/').replace(/^https?:\/\//, '').replace(/\/$/, '')}/liga/
+            </span>
             <input type="text" required value={form.slug} onChange={e => setForm({ ...form, slug: generateSlug(e.target.value) })}
               className="flex-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all font-mono" />
           </div>

@@ -9,7 +9,7 @@ import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
-import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock as LockIcon } from 'lucide-react'
+import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock as LockIcon, Shield } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
 import Loader from '../../components/ui/Loader'
@@ -17,9 +17,9 @@ import Loader from '../../components/ui/Loader'
 export default function MatchEdgeBox() {
   const toast = useToast()
   const { liga } = useLigaActiva()
-  const { data: temporadas } = useTemporadas(liga?.id)
+  const { data: temporadas, isLoading: loadingTemporadas } = useTemporadas(liga?.id)
   const temporadaActiva = temporadas?.find(t => t.estado === 'activa')
-  const { data: tree } = useTemporadaTree(temporadaActiva?.id)
+  const { data: tree, isLoading: loadingTree } = useTemporadaTree(temporadaActiva?.id)
 
   const allJornadas = tree?.fases?.flatMap(f => f.jornadas?.map(j => ({ ...j, faseName: f.nombre })) || []) || []
   const [selectedJornada, setSelectedJornada] = useState(null)
@@ -35,7 +35,7 @@ export default function MatchEdgeBox() {
   const jornadaId = selectedJornada || allJornadas[0]?.id
   const { data: fixtureData, isLoading: loadingFixture } = useFixtureAdmin(jornadaId)
   const partidos = fixtureData?.partidos || []
-  const { data: eventos } = useEventos(selectedPartido)
+  const { data: eventos, isLoading: loadingEventos } = useEventos(selectedPartido)
 
   const cambiarEstado = useCambiarEstadoPartido()
   const registrarGol = useRegistrarGol()
@@ -163,21 +163,40 @@ export default function MatchEdgeBox() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in relative">
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in relative pb-20 px-4 sm:px-0">
       {(registrarGol.isPending || registrarTarjeta.isPending) && (
-        <Loader overlay text="Registrando evento..." />
+        <Loader overlay text="Sincronizando..." />
       )}
-      <h1 className="text-2xl font-heading font-bold">Match Edge Box</h1>
-      <p className="text-sm text-text-dim -mt-4">Carga de eventos en tiempo real. Optimizado para el borde de la cancha.</p>
+      
+      {/* aggressive Header */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-10 md:h-12 bg-primary skew-x-[-15deg] shrink-0" />
+          <h1 className="text-3xl md:text-5xl font-heading font-black tracking-tighter uppercase italic leading-relaxed py-2">Match Edge</h1>
+        </div>
+        <p className="text-[10px] md:text-xs font-bold text-text-dim uppercase tracking-[0.3em] pl-4">Panel de Control de Campo en Tiempo Real</p>
+      </div>
 
-      {/* Jornada selector */}
+      {(loadingTemporadas || loadingTree) && (
+        <div className="py-20 flex flex-col items-center justify-center">
+          <div className="spinner mb-4" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-text-dim">Cargando Estructura...</p>
+        </div>
+      )}
+
+      {/* Jornada selector - Horizontal Scroll */}
       {allJornadas.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-none snap-x mask-fade-right">
           {allJornadas.map(j => (
-            <button key={j.id} onClick={() => { setSelectedJornada(j.id); setSelectedPartido(null) }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all flex items-center gap-1.5 ${
-                jornadaId === j.id ? 'bg-primary/10 text-primary border-primary/20' : 'text-text-dim border-border-subtle'
-              }`}>
+            <button 
+              key={j.id} 
+              onClick={() => { setSelectedJornada(j.id); setSelectedPartido(null) }}
+              className={`px-5 py-3 rounded-xl text-[10px] font-black whitespace-nowrap uppercase italic tracking-widest border-2 transition-all flex items-center gap-2 snap-start ${
+                jornadaId === j.id 
+                  ? 'bg-primary text-bg-deep border-primary shadow-[0_0_20px_rgba(206,222,11,0.2)]' 
+                  : 'bg-bg-surface text-text-dim border-white/5 hover:border-white/20'
+              }`}
+            >
               {j.estado === 'cerrada' && <LockIcon className="w-3 h-3" />}
               Fecha {j.numero}
             </button>
@@ -187,151 +206,238 @@ export default function MatchEdgeBox() {
 
       {/* Match list */}
       {!selectedPartido ? (
-        partidos.length > 0 ? (
-          <div className="flex flex-col gap-3">
+        loadingFixture ? (
+          <div className="py-12 flex flex-col items-center justify-center">
+            <div className="spinner" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-text-dim mt-4">Buscando Partidos...</p>
+          </div>
+        ) : partidos.length > 0 ? (
+          <div className="flex flex-col gap-4">
             {partidos.map(p => (
-              <button key={p.id} onClick={() => setSelectedPartido(p.id)} className="w-full text-left">
-                <GlassCard>
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge status={p.estado} />
-                        {p.cancha && <span className="text-[11px] text-text-dim">{p.cancha}</span>}
+              <button 
+                key={p.id} 
+                onClick={() => setSelectedPartido(p.id)} 
+                className="w-full text-left group transition-transform active:scale-[0.98]"
+              >
+                <GlassCard className="!p-0 overflow-hidden border-none ring-1 ring-white/5 group-hover:ring-primary/40 transition-all">
+                   <div className="h-1 bg-white/5 group-hover:bg-primary/40 transition-colors" />
+                   <div className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${p.estado === 'en_juego' ? 'bg-primary animate-pulse' : 'bg-text-dim'}`} />
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-text-dim">{p.estado.replace('_', ' ')}</span>
                       </div>
-                      <p className="font-medium">
-                        {p.equipo_local?.nombre} <span className="text-primary font-bold">{p.goles_local ?? 0}</span>
-                        <span className="text-text-dim mx-2">vs</span>
-                        <span className="text-primary font-bold">{p.goles_visitante ?? 0}</span> {p.equipo_visitante?.nombre}
-                      </p>
+                      {p.cancha && (
+                        <div className="flex items-center gap-1.5 text-text-dim">
+                          <Clock className="w-3 h-3" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">{p.cancha}</span>
+                        </div>
+                      )}
                     </div>
-                    <Swords className="w-5 h-5 text-text-dim" />
-                  </div>
+
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black uppercase tracking-tighter truncate leading-tight">{p.equipo_local?.nombre}</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 px-4 py-1.5 bg-bg-deep/50 rounded-lg border border-white/5 font-mono">
+                        <span className={`text-xl font-black ${p.goles_local > 0 ? 'text-primary' : 'text-text-dim'}`}>{p.goles_local ?? 0}</span>
+                        <span className="text-[10px] text-text-dim/30">—</span>
+                        <span className={`text-xl font-black ${p.goles_visitante > 0 ? 'text-primary' : 'text-text-dim'}`}>{p.goles_visitante ?? 0}</span>
+                      </div>
+
+                      <div className="flex-1 min-w-0 text-right">
+                        <p className="text-sm font-black uppercase tracking-tighter truncate leading-tight">{p.equipo_visitante?.nombre}</p>
+                      </div>
+                    </div>
+                   </div>
                 </GlassCard>
               </button>
             ))}
           </div>
         ) : (
-          <EmptyState icon={Swords} title="Sin partidos" description="Seleccioná una jornada con partidos programados." />
+          <EmptyState icon={Swords} title="Sin Partidos" description="Seleccioná una jornada con partidos programados." />
         )
       ) : (
         /* Match detail + incident feed */
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <button onClick={() => setSelectedPartido(null)} className="text-sm text-text-dim hover:text-primary transition-colors flex items-center gap-1">
-              ← Volver
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <button 
+              onClick={() => setSelectedPartido(null)} 
+              className="text-[10px] font-black uppercase tracking-widest text-text-dim hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <X className="w-4 h-4" /> Cerrar Box
             </button>
+            
             {partido.estado === 'programado' ? (
-              <Button size="xs" onClick={handleStartMatch}
-                loading={cambiarEstado.isPending} variant="primary">Iniciar</Button>
+              <button 
+                onClick={handleStartMatch}
+                disabled={cambiarEstado.isPending}
+                className="bg-primary text-bg-deep px-6 py-2 rounded-lg font-black uppercase italic tracking-tighter text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(206,222,11,0.2)]"
+              >
+                Iniciar Partido
+              </button>
             ) : partido.estado === 'en_juego' ? (
-              <Button size="xs" onClick={handleEndMatch}
-                loading={cambiarEstado.isPending} variant="danger">Finalizar</Button>
+              <button 
+                onClick={handleEndMatch}
+                disabled={cambiarEstado.isPending}
+                className="bg-danger text-white px-6 py-2 rounded-lg font-black uppercase italic tracking-tighter text-xs hover:scale-105 active:scale-95 transition-all"
+              >
+                Finalizar
+              </button>
             ) : null}
           </div>
 
           {partido && (
             <>
-              <GlassCard hover={false} className="!p-4 ring-1 ring-primary/20">
-                <div className="text-center">
-                  <Badge status={partido.estado} className="mb-2" />
-                  <div className="flex items-center justify-center gap-4">
-                    <div className="text-right flex-1 min-w-0">
-                      <p className="font-heading font-bold text-sm truncate uppercase tracking-tighter">{partido.equipo_local?.nombre}</p>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="text-2xl font-heading font-bold text-primary px-3 py-1 bg-white/5 rounded-lg border border-white/5">
-                        {partido.goles_local ?? 0} - {partido.goles_visitante ?? 0}
+              {/* Premium Scoreboard */}
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded-[22px] blur-sm opacity-50" />
+                <GlassCard hover={false} className="relative !p-6 ring-2 ring-primary/20 bg-bg-surface/80">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-[0.2em] ${
+                        partido.estado === 'en_juego' ? 'bg-primary text-bg-deep animate-pulse' : 'bg-white/10 text-text-dim'
+                      }`}>
+                        {partido.estado === 'en_juego' ? 'Live' : partido.estado}
                       </div>
                       {partido.estado === 'en_juego' && (
-                        <div className="flex items-center gap-1 text-[10px] font-mono text-primary animate-pulse">
+                        <div className="flex items-center gap-1.5 text-xs font-mono font-black text-primary">
                           <Clock className="w-3 h-3" />
                           {formatTime(timer)}'
                         </div>
                       )}
                     </div>
-                    <div className="text-left flex-1 min-w-0">
-                      <p className="font-heading font-bold text-sm truncate uppercase tracking-tighter">{partido.equipo_visitante?.nombre}</p>
+
+                    <div className="w-full flex items-center justify-between gap-4">
+                      <div className="flex-1 text-center space-y-2 min-w-0">
+                        <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 mb-2 shadow-lg">
+                           <Shield className="w-6 h-6 md:w-8 md:h-8 text-primary opacity-40" />
+                        </div>
+                        <p className="font-heading font-black text-sm md:text-lg uppercase italic tracking-tighter truncate leading-tight">{partido.equipo_local?.nombre}</p>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-1 shrink-0">
+                        <div className="text-4xl md:text-6xl font-heading font-black tracking-tighter italic flex items-center gap-4">
+                          <span className={partido.goles_local > 0 ? 'text-primary' : 'text-text-primary'}>{partido.goles_local ?? 0}</span>
+                          <span className="text-xl md:text-3xl text-text-dim/20 skew-x-[-15deg]">:</span>
+                          <span className={partido.goles_visitante > 0 ? 'text-primary' : 'text-text-primary'}>{partido.goles_visitante ?? 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 text-center space-y-2 min-w-0">
+                        <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 mb-2 shadow-lg">
+                           <Shield className="w-6 h-6 md:w-8 md:h-8 text-primary opacity-40" />
+                        </div>
+                        <p className="font-heading font-black text-sm md:text-lg uppercase italic tracking-tighter truncate leading-tight">{partido.equipo_visitante?.nombre}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </GlassCard>
+                </GlassCard>
+              </div>
 
-              {/* Main Incident Buttons */}
+              {/* Main Incident Buttons - Aggressive Skewed Style */}
               {!entryMode && (partido.estado === 'en_juego' || partido.estado === 'finalizado') && (
-                <div className="grid grid-cols-3 gap-3">
-                  <button onClick={() => handleIncident('GOL')}
-                    className="flex flex-col items-center gap-2 p-5 rounded-xl bg-primary/10 border-2 border-primary/40 text-primary font-black text-sm active:scale-95 transition-all hover:bg-primary/20">
-                    <Target className="w-8 h-8" /> GOL
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button 
+                    onClick={() => handleIncident('GOL')}
+                    className="relative h-24 group overflow-hidden rounded-xl active:scale-95 transition-all"
+                  >
+                    <div className="absolute inset-0 bg-primary/20 group-hover:bg-primary/30 transition-colors" />
+                    <div className="absolute inset-0 flex items-center justify-center gap-4 skew-x-[-10deg]">
+                       <Target className="w-8 h-8 text-primary" />
+                       <span className="font-heading font-black text-2xl uppercase italic tracking-tighter text-primary">GOL</span>
+                    </div>
+                    <div className="absolute top-0 right-0 w-12 h-full bg-primary/10 skew-x-[-20deg] translate-x-6" />
                   </button>
-                  <button onClick={() => handleIncident('AMARILLA')}
-                    className="flex flex-col items-center gap-2 p-5 rounded-xl bg-warning/10 border-2 border-warning/40 text-warning font-black text-sm active:scale-95 transition-all hover:bg-warning/20">
-                    <AlertTriangle className="w-8 h-8" /> AMARILLA
+
+                  <button 
+                    onClick={() => handleIncident('AMARILLA')}
+                    className="relative h-24 group overflow-hidden rounded-xl active:scale-95 transition-all"
+                  >
+                    <div className="absolute inset-0 bg-warning/20 group-hover:bg-warning/30 transition-colors" />
+                    <div className="absolute inset-0 flex items-center justify-center gap-4 skew-x-[-10deg]">
+                       <div className="w-6 h-8 bg-warning rounded-sm rotate-12 shadow-[0_0_15px_rgba(245,158,11,0.4)]" />
+                       <span className="font-heading font-black text-2xl uppercase italic tracking-tighter text-warning">AMARILLA</span>
+                    </div>
                   </button>
-                  <button onClick={() => handleIncident('ROJA')}
-                    className="flex flex-col items-center gap-2 p-5 rounded-xl bg-danger/10 border-2 border-danger/40 text-danger font-black text-sm active:scale-95 transition-all hover:bg-danger/20">
-                    <AlertTriangle className="w-8 h-8" /> ROJA
+
+                  <button 
+                    onClick={() => handleIncident('ROJA')}
+                    className="relative h-24 group overflow-hidden rounded-xl active:scale-95 transition-all"
+                  >
+                    <div className="absolute inset-0 bg-danger/20 group-hover:bg-danger/30 transition-colors" />
+                    <div className="absolute inset-0 flex items-center justify-center gap-4 skew-x-[-10deg]">
+                       <div className="w-6 h-8 bg-danger rounded-sm rotate-12 shadow-[0_0_15px_rgba(239,68,68,0.4)]" />
+                       <span className="font-heading font-black text-2xl uppercase italic tracking-tighter text-danger">ROJA</span>
+                    </div>
                   </button>
                 </div>
               )}
 
               {/* Player Selector Entry Flow */}
               {entryMode && (
-                <GlassCard hover={false} className="animate-in slide-in-from-bottom-5 fade-in duration-300 border-2 border-primary/20">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading font-bold uppercase text-xs tracking-widest text-primary flex items-center gap-2">
-                       {entryMode.type === 'GOL' ? <Target className="w-4 h-4"/> : <AlertTriangle className="w-4 h-4"/>}
-                       ¿Quién hizo el {entryMode.type}?
-                    </h3>
-                    <button onClick={() => setEntryMode(null)} className="p-1 hover:bg-white/5 rounded-full transition-colors">
-                      <X className="w-4 h-4 text-text-dim" />
+                <GlassCard hover={false} className="animate-in slide-in-from-bottom-5 fade-in duration-300 border-2 border-primary/20 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="space-y-1">
+                      <h3 className="font-heading font-black uppercase text-sm italic tracking-tighter text-primary flex items-center gap-2">
+                         {entryMode.type === 'GOL' ? <Target className="w-4 h-4"/> : <AlertTriangle className="w-4 h-4"/>}
+                         REGISTRAR {entryMode.type}
+                      </h3>
+                      <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest">Seleccioná al protagonista</p>
+                    </div>
+                    <button onClick={() => setEntryMode(null)} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded-full transition-colors">
+                      <X className="w-5 h-5 text-text-dim" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-8 md:flex-row md:gap-4">
                     {/* Local Team */}
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-text-dim uppercase tracking-tighter truncate">{partido.equipo_local?.nombre}</p>
-                      <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1 scrollbar-none">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="w-1 h-4 bg-primary/40 skew-x-[-15deg]" />
+                        <p className="text-[10px] font-black text-text-dim uppercase tracking-widest truncate">{partido.equipo_local?.nombre}</p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2 scrollbar-thin">
                         {loadingLocal ? (
-                          <div className="p-4 flex flex-col items-center justify-center">
-                            <Loader size="sm" />
-                            <p className="text-[10px] text-text-dim mt-2">Cargando...</p>
-                          </div>
+                          <div className="p-4 flex justify-center"><div className="spinner sm" /></div>
                         ) : playersLocal?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.length > 0 ? (
                           playersLocal?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.map(p => (
                             <button key={p.id} onClick={() => submitEvent(p)}
-                              className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5 hover:border-primary/40 hover:bg-primary/5 text-left text-xs transition-colors group">
-                              <span className="w-4 font-bold text-primary group-hover:scale-110 transition-transform">{p.dorsal || '—'}</span>
-                              <span className="truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
+                              className="flex items-center gap-3 p-3 rounded-xl bg-bg-deep/50 border border-white/5 hover:border-primary/40 hover:bg-primary/5 text-left transition-all group active:scale-[0.97]">
+                              <span className="w-6 font-mono font-black text-primary text-sm group-hover:scale-110 transition-transform">{p.dorsal || '—'}</span>
+                              <span className="text-xs font-bold uppercase tracking-tighter truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
                             </button>
                           ))
                         ) : (
-                          <div className="p-4 text-center rounded-lg border border-dashed border-border-subtle">
-                             <p className="text-[10px] text-text-dim">Sin jugadores inscritos</p>
+                          <div className="p-4 text-center rounded-xl border border-dashed border-white/5 bg-white/[0.02]">
+                             <p className="text-[10px] font-black uppercase text-text-dim/50 tracking-widest">Sin jugadores</p>
                           </div>
                         )}
                       </div>
                     </div>
+
                     {/* Visitor Team */}
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-text-dim uppercase tracking-tighter truncate text-right">{partido.equipo_visitante?.nombre}</p>
-                      <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1 scrollbar-none">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center justify-end gap-2 px-1">
+                        <p className="text-[10px] font-black text-text-dim uppercase tracking-widest truncate text-right">{partido.equipo_visitante?.nombre}</p>
+                        <div className="w-1 h-4 bg-primary/40 skew-x-[-15deg]" />
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2 scrollbar-thin">
                         {loadingVisit ? (
-                          <div className="p-4 flex flex-col items-center justify-center">
-                            <Loader size="sm" />
-                            <p className="text-[10px] text-text-dim mt-2">Cargando...</p>
-                          </div>
+                          <div className="p-4 flex justify-center"><div className="spinner sm" /></div>
                         ) : playersVisit?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.length > 0 ? (
                           playersVisit?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.map(p => (
                             <button key={p.id} onClick={() => submitEvent(p)}
-                              className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5 hover:border-primary/40 hover:bg-primary/5 text-left text-xs transition-colors group">
-                              <span className="w-4 font-bold text-primary group-hover:scale-110 transition-transform">{p.dorsal || '—'}</span>
-                              <span className="truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
+                              className="flex items-center gap-3 p-3 rounded-xl bg-bg-deep/50 border border-white/5 hover:border-primary/40 hover:bg-primary/5 text-left transition-all group active:scale-[0.97]">
+                              <span className="w-6 font-mono font-black text-primary text-sm group-hover:scale-110 transition-transform">{p.dorsal || '—'}</span>
+                              <span className="text-xs font-bold uppercase tracking-tighter truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
                             </button>
                           ))
                         ) : (
-                          <div className="p-4 text-center rounded-lg border border-dashed border-border-subtle">
-                             <p className="text-[10px] text-text-dim">Sin jugadores inscritos</p>
+                          <div className="p-4 text-center rounded-xl border border-dashed border-white/5 bg-white/[0.02]">
+                             <p className="text-[10px] font-black uppercase text-text-dim/50 tracking-widest">Sin jugadores</p>
                           </div>
                         )}
                       </div>
@@ -341,45 +447,60 @@ export default function MatchEdgeBox() {
               )}
 
               {/* Event Feed */}
-              {!entryMode && eventos && (
-                <div className="space-y-3">
-                  <h3 className="font-heading font-semibold text-sm flex items-center gap-2 px-2">
-                    <Clock className="w-4 h-4 text-text-dim" /> Historial de incidencias
-                  </h3>
-                  {(eventos.goles?.length > 0 || eventos.tarjetas?.length > 0) ? (
-                    <div className="flex flex-col gap-2">
-                      {[...eventos.goles, ...eventos.tarjetas]
-                        .sort((a, b) => (b.minuto || 0) - (a.minuto || 0))
-                        .map((e, idx) => (
-                          <div key={idx} className="flex items-center gap-3 p-3 rounded-xl glass-thin border border-white/5 animate-in fade-in slide-in-from-left-2 duration-300" 
-                               style={{ animationDelay: `${idx * 50}ms` }}>
-                            {e.tipo ? (
-                              <span className="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded bg-white/5">
-                                {e.tipo === 'amarilla' ? '🟡' : '🔴'}
-                              </span>
-                            ) : (
-                              <Target className="w-5 h-5 text-primary shrink-0" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                               <p className="font-bold text-xs truncate">
-                                 {e.inscripcion_jugador?.jugador?.nombre} {e.inscripcion_jugador?.jugador?.apellido}
-                               </p>
-                               <p className="text-[10px] text-text-dim uppercase tracking-tighter">
-                                 {e.inscripcion_jugador?.plantel?.equipo?.nombre}
-                               </p>
-                            </div>
-                            <div className="text-[10px] font-mono text-text-dim px-2 bg-white/5 rounded">
-                              {e.minuto}'
-                            </div>
-                          </div>
-                        ))}
+              {!entryMode && (
+                <div className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between px-2">
+                    <h3 className="font-heading font-black uppercase italic text-xs tracking-widest flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-primary" /> Historial de incidencias
+                    </h3>
+                    <div className="h-[1px] flex-1 bg-white/5 mx-4" />
+                  </div>
+                  
+                  {loadingEventos ? (
+                    <div className="py-8 flex flex-col items-center justify-center">
+                      <div className="spinner sm" />
+                      <p className="text-[9px] font-black uppercase tracking-widest text-text-dim mt-4">Actualizando Cronología...</p>
                     </div>
-                  ) : (
-                     <GlassCard className="text-center py-8 opacity-60">
-                        <User className="w-8 h-8 text-text-dim mx-auto mb-2 opacity-20" />
-                        <p className="text-xs text-text-dim">Sin incidencias registradas</p>
-                     </GlassCard>
-                  )}
+                  ) : eventos ? (
+                    (eventos.goles?.length > 0 || eventos.tarjetas?.length > 0) ? (
+                      <div className="flex flex-col gap-3">
+                        {[...eventos.goles, ...eventos.tarjetas]
+                          .sort((a, b) => (b.minuto || 0) - (a.minuto || 0))
+                          .map((e, idx) => (
+                            <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-bg-surface/50 border border-white/5 animate-in fade-in slide-in-from-left-2 duration-300 relative overflow-hidden group" 
+                                 style={{ animationDelay: `${idx * 50}ms` }}>
+                              <div className="absolute top-0 left-0 w-1 h-full bg-white/5 group-hover:bg-primary/20 transition-colors" />
+                              
+                              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 group-hover:border-primary/20 transition-all">
+                                {e.tipo ? (
+                                  <div className={`w-3.5 h-5 rounded-sm rotate-6 shadow-lg ${e.tipo === 'amarilla' ? 'bg-warning' : 'bg-danger'}`} />
+                                ) : (
+                                  <Target className="w-5 h-5 text-primary" />
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                 <p className="font-black text-sm uppercase italic tracking-tighter truncate leading-tight">
+                                   {e.inscripcion_jugador?.jugador?.nombre} {e.inscripcion_jugador?.jugador?.apellido}
+                                 </p>
+                                 <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mt-0.5">
+                                   {e.inscripcion_jugador?.plantel?.equipo?.nombre}
+                                 </p>
+                              </div>
+
+                              <div className="px-3 py-1.5 bg-bg-deep rounded-lg border border-white/5 text-[11px] font-mono font-black text-primary italic">
+                                {e.minuto}'
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                       <div className="text-center py-12 bg-bg-surface/30 rounded-3xl border border-dashed border-white/5">
+                          <Swords className="w-10 h-10 text-text-dim mx-auto mb-3 opacity-20" />
+                          <p className="text-[10px] font-black uppercase tracking-widest text-text-dim/60 italic">Esperando incidencias del encuentro</p>
+                       </div>
+                    )
+                  ) : null}
                 </div>
               )}
             </>

@@ -48,7 +48,13 @@ class EquipoService {
 
     const { data, error } = await supabaseAdmin
       .from('equipo')
-      .select('id, nombre, escudo_url, color_principal, created_at')
+      .select(`
+        id, nombre, escudo_url, color_principal, created_at,
+        inscripciones:inscripcion_equipo(
+          id, 
+          temporada:temporada(id, nombre, estado)
+        )
+      `)
       .eq('liga_id', ligaId)
       .eq('activo', true)
       .order('nombre', { ascending: true })

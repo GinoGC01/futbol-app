@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLigas, useTemporadas, usePremiosAdmin, useCrearPremio, useTemporadaTree } from '../../hooks/useAdmin'
+import { useLigas, useTemporadas, usePremiosAdmin, useCrearPremio, useTemporadaTree, useTogglePublicacionPremio } from '../../hooks/useAdmin'
 import { adminService } from '../../services/adminService'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
@@ -35,8 +35,14 @@ export default function AwardScrutinyTool() {
     setLoadingAnalisis(false)
   }
 
+  const togglePubMutation = useTogglePublicacionPremio()
+
   async function togglePub(premioId, publicado) {
-    await adminService.togglePublicacion(premioId, publicado)
+    try {
+      await togglePubMutation.mutateAsync({ id: premioId, publicado })
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   if (isLoading) return <Loader text="Cargando premios..." className="py-20" />

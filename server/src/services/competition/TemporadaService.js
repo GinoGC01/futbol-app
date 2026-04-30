@@ -146,7 +146,7 @@ class TemporadaService {
     const { data: temporadas, error } = await supabaseAdmin
       .from("temporada")
       .select(`
-        id, nombre, estado, fecha_inicio, fecha_fin,
+        id, nombre, estado, fecha_inicio, fecha_fin, modalidad,
         liga:liga_id(id, tipo_futbol),
         formato:formato_competencia(id, nombre, tipo)
       `)
@@ -228,7 +228,7 @@ class TemporadaService {
       .from("temporada")
       .select(
         `
-        id, nombre, estado, fecha_inicio, fecha_fin,
+        id, nombre, estado, fecha_inicio, fecha_fin, modalidad,
         liga:liga_id(id, tipo_futbol),
         formato:formato_competencia(id, nombre, tipo),
         fases:fase(
