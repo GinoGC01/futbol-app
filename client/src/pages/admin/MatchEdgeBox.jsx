@@ -12,6 +12,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock as LockIcon } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
+import Loader from '../../components/ui/Loader'
 
 export default function MatchEdgeBox() {
   const toast = useToast()
@@ -162,7 +163,10 @@ export default function MatchEdgeBox() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in relative">
+      {(registrarGol.isPending || registrarTarjeta.isPending) && (
+        <Loader overlay text="Registrando evento..." />
+      )}
       <h1 className="text-2xl font-heading font-bold">Match Edge Box</h1>
       <p className="text-sm text-text-dim -mt-4">Carga de eventos en tiempo real. Optimizado para el borde de la cancha.</p>
 
@@ -289,7 +293,10 @@ export default function MatchEdgeBox() {
                       <p className="text-[10px] font-bold text-text-dim uppercase tracking-tighter truncate">{partido.equipo_local?.nombre}</p>
                       <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1 scrollbar-none">
                         {loadingLocal ? (
-                          <div className="p-4 text-center text-[10px] text-text-dim">Cargando...</div>
+                          <div className="p-4 flex flex-col items-center justify-center">
+                            <Loader size="sm" />
+                            <p className="text-[10px] text-text-dim mt-2">Cargando...</p>
+                          </div>
                         ) : playersLocal?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.length > 0 ? (
                           playersLocal?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.map(p => (
                             <button key={p.id} onClick={() => submitEvent(p)}
@@ -310,7 +317,10 @@ export default function MatchEdgeBox() {
                       <p className="text-[10px] font-bold text-text-dim uppercase tracking-tighter truncate text-right">{partido.equipo_visitante?.nombre}</p>
                       <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1 scrollbar-none">
                         {loadingVisit ? (
-                          <div className="p-4 text-center text-[10px] text-text-dim">Cargando...</div>
+                          <div className="p-4 flex flex-col items-center justify-center">
+                            <Loader size="sm" />
+                            <p className="text-[10px] text-text-dim mt-2">Cargando...</p>
+                          </div>
                         ) : playersVisit?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.length > 0 ? (
                           playersVisit?.find(p => p.temporada_id === temporadaActiva?.id)?.plantel?.inscripciones?.map(p => (
                             <button key={p.id} onClick={() => submitEvent(p)}

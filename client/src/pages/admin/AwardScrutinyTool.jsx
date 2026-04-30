@@ -9,6 +9,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import { Award, Plus, Search, Trophy, BarChart3, Crown } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
+import Loader from '../../components/ui/Loader'
 
 export default function AwardScrutinyTool() {
   const { liga } = useLigaActiva()
@@ -38,7 +39,7 @@ export default function AwardScrutinyTool() {
     await adminService.togglePublicacion(premioId, publicado)
   }
 
-  if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
+  if (isLoading) return <Loader text="Cargando premios..." className="py-20" />
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">

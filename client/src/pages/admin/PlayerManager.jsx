@@ -10,6 +10,8 @@ import { useToast } from '../../components/ui/Toast'
 import { User, Search, UserPlus, Shield, Trophy, ChevronRight, ChevronLeft, AlertCircle, Trash2, UserCheck, Calendar } from 'lucide-react'
 import { useLigaActiva } from '../../context/LigaContext'
 
+import Loader from '../../components/ui/Loader'
+
 export default function PlayerManager() {
   const { liga } = useLigaActiva()
   const [globalPage, setGlobalPage] = useState(1)
@@ -48,7 +50,7 @@ export default function PlayerManager() {
 
   const recentUnsigned = globalMatches
 
-  if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
+  if (isLoading) return <Loader text="Cargando jugadores de la liga..." className="py-20" />
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">

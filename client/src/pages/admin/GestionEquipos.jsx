@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAdminLiga, useAdminEquipos, useCrearEquipo } from '../../hooks/useAdminData'
+import Loader from '../../components/ui/Loader'
 
 export default function GestionEquipos() {
   const [nombre, setNombre] = useState('')
@@ -41,7 +42,7 @@ export default function GestionEquipos() {
       )}
 
       {isLoading ? (
-        <div className="loading"><div className="spinner" /></div>
+        <Loader className="py-10" />
       ) : (
         <ul className="items-list" data-testid="lista-equipos">
           {equipos.map(eq => (

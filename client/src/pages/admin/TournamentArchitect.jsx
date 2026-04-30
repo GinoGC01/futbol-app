@@ -9,6 +9,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import { Trophy, Plus, ChevronRight, ChevronDown, Layers, Calendar, Lock as LockIcon, Pencil, Swords, Zap, Check, X, Shield } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
+import Loader from '../../components/ui/Loader'
 
 export default function TournamentArchitect() {
   const { liga } = useLigaActiva()
@@ -16,7 +17,7 @@ export default function TournamentArchitect() {
   const { data: formatos } = useFormatos()
   const { data: equipos } = useEquipos(liga?.id)
   const [selectedTemp, setSelectedTemp] = useState(null)
-  const { data: tree } = useTemporadaTree(selectedTemp)
+  const { data: tree, isLoading: loadingTree } = useTemporadaTree(selectedTemp)
 
   const [showNewTemp, setShowNewTemp] = useState(false)
   const [showEditTemp, setShowEditTemp] = useState(false)
@@ -29,10 +30,11 @@ export default function TournamentArchitect() {
 
   const isVault = tree?.estado === 'finalizada'
 
-  if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
+  if (isLoading) return <Loader text="Cargando temporadas..." className="py-20" />
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in relative">
+      {loadingTree && <Loader overlay text="Cargando estructura del torneo..." />}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-heading font-bold">Arquitecto de Torneo</h1>
         <Button variant="outline" size="sm" onClick={() => setShowNewTemp(true)}>

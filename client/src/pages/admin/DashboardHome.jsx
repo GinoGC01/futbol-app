@@ -9,6 +9,7 @@ import { Shield, Users, Swords, DollarSign, Plus, Trophy, Bell, RefreshCw, Check
 import { Link } from 'react-router-dom'
 import { useToast } from '../../components/ui/Toast'
 import { useLigaActiva } from '../../context/LigaContext'
+import Loader from '../../components/ui/Loader'
 
 export default function DashboardHome() {
   const { user } = useAuth()
@@ -24,7 +25,7 @@ export default function DashboardHome() {
   
   const temporadaActiva = temporadas?.find(t => t.estado === 'activa')
 
-  if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
+  if (isLoading) return <Loader text="Cargando panel de control..." className="py-20" />
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 sm:space-y-12 animate-fade-in pb-10">

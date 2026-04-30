@@ -25,6 +25,7 @@ import LeagueSettings from './pages/admin/LeagueSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import ResetPassword from './pages/admin/ResetPassword'
 import VerifyEmail from './pages/admin/VerifyEmail'
+import Loader from './components/ui/Loader'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,10 +36,9 @@ const queryClient = new QueryClient({
     }
   }
 })
-
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="spinner" /></div>
+  if (loading) return <Loader fullScreen text="Verificando sesión..." />
   if (!user) return <Navigate to="/admin/login" replace />
   return children
 }

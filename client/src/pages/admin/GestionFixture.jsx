@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAdminLiga, useAdminEquipos, useAdminTemporada, useAdminPartidos, useCrearPartido } from '../../hooks/useAdminData'
+import Loader from '../../components/ui/Loader'
 
 export default function GestionFixture() {
   const { data: adminLiga } = useAdminLiga()
@@ -33,7 +34,7 @@ export default function GestionFixture() {
     })
   }
 
-  if (!temporada) return <p className="empty-msg">No hay temporada activa.</p>
+  if (!temporada) return <Loader text="Cargando temporada..." className="py-20" />
 
   // Agrupar por jornada
   const porJornada = partidos.reduce((acc, p) => {

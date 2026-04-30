@@ -11,6 +11,7 @@ import { Users, Plus, Search, UserPlus, Shield, ExternalLink, Settings, Trash2 }
 import TeamDetailView from './TeamDetailView'
 
 import { useLigaActiva } from '../../context/LigaContext'
+import Loader from '../../components/ui/Loader'
 
 export default function RosterManager() {
   const { liga } = useLigaActiva()
@@ -21,7 +22,7 @@ export default function RosterManager() {
   const deleteEquipo = useDeleteEquipo()
   const toast = useToast()
 
-  if (isLoading) return <div className="flex items-center justify-center py-20"><div className="spinner" /></div>
+  if (isLoading) return <Loader text="Cargando equipos de la liga..." className="py-20" />
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">

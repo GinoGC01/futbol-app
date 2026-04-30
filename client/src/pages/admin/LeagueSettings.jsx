@@ -7,8 +7,10 @@ import GlassCard from '../../components/ui/GlassCard'
 import { Settings, Trash2, AlertTriangle, Save, Image as ImageIcon, MapPin, Trophy, DollarSign } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import Loader from '../../components/ui/Loader'
+
 export default function LeagueSettings() {
-  const { liga } = useLigaActiva()
+  const { liga, isLoading } = useLigaActiva()
   const navigate = useNavigate()
   const toast = useToast()
   const updateMutation = useUpdateLiga()
@@ -39,6 +41,10 @@ export default function LeagueSettings() {
       setIsDeleting(false)
     }
   }, [liga?.id]) // Usar liga.id como dependencia
+
+  if (isLoading) {
+    return <Loader text="Cargando configuración de la liga..." className="py-20" />
+  }
 
   if (!liga) {
     return (
