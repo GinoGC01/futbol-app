@@ -13,6 +13,7 @@ const router = Router()
 
 // Login con JWT propio
 router.post('/login', AuthController.login.bind(AuthController))
+router.post('/google', AuthController.googleLogin.bind(AuthController))
 router.post('/logout', AuthController.logout.bind(AuthController))
 router.post(
   '/register',

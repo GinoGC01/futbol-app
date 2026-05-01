@@ -8,9 +8,9 @@ export default function StatCard({ icon: Icon, value, label, trend, className = 
       whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
       className={`relative overflow-hidden border-none p-5 sm:p-6 ring-1 transition-all group ${
         isAlert 
-          ? 'ring-danger/30 bg-danger/5' 
-          : 'ring-white/5 hover:ring-primary/30 bg-bg-surface'
-      } rounded-[1.5rem] ${className}`}
+          ? 'ring-danger/30 bg-danger/5 border-l-4 border-l-danger' 
+          : 'ring-white/5 hover:ring-primary/30 bg-bg-surface border-l-4 border-l-primary/30 hover:border-l-primary'
+      } rounded-none ${className}`}
     >
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/[0.03] to-transparent rounded-bl-[80px]" />
@@ -22,7 +22,7 @@ export default function StatCard({ icon: Icon, value, label, trend, className = 
             {label}
           </p>
           <div className="space-y-1 pt-1">
-            <h3 className={`text-2xl sm:text-3xl font-heading font-black tracking-tighter uppercase italic leading-[1.1] truncate ${
+            <h3 className={`text-2xl sm:text-3xl font-heading font-black tracking-wide uppercase italic leading-[1.1] truncate ${
               isAlert ? 'text-danger' : 'text-text-primary'
             }`}>
               {value}

@@ -51,7 +51,7 @@ export default function PlayerProfile() {
                 )}
               </div>
               <div className="text-center sm:text-left">
-                <h1 className="text-4xl font-heading font-black tracking-tight">{jugador?.nombre} {jugador?.apellido}</h1>
+                <h1 className="text-4xl font-heading font-black tracking-normal">{jugador?.nombre} {jugador?.apellido}</h1>
                 <Link to={`/equipo/${equipo?.id}`} className="inline-flex items-center gap-1.5 text-text-secondary mt-2 hover:text-secondary transition-colors text-lg">
                   <ShieldIcon className="w-4 h-4" /> {equipo?.nombre}
                 </Link>

@@ -80,7 +80,7 @@ export default function LeagueExplorer() {
       <main className="max-w-7xl mx-auto px-8 py-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div>
-            <h1 className="text-5xl md:text-7xl font-heading font-black italic tracking-tighter uppercase mb-4">
+            <h1 className="text-5xl md:text-7xl font-heading font-black italic tracking-wide uppercase mb-4">
               EXPLORADOR <span className="text-primary">DE LIGAS</span>
             </h1>
             <p className="text-text-secondary text-sm font-bold uppercase tracking-[0.2em] opacity-80">
@@ -144,7 +144,7 @@ export default function LeagueExplorer() {
 
                       <div className="flex-1 text-center md:text-left relative z-10">
                         <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
-                          <h3 className="text-2xl font-heading font-black italic tracking-tight group-hover:text-primary transition-colors uppercase">
+                          <h3 className="text-2xl font-heading font-black italic tracking-normal group-hover:text-primary transition-colors uppercase">
                             {liga.nombre}
                           </h3>
                           <Badge status="activa" label="REGISTRO ABIERTO" className="scale-75 origin-left" />

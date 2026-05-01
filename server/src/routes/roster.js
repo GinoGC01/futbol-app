@@ -152,6 +152,21 @@ router.post(
   InscripcionController.agregarJugador,
 );
 
+router.post(
+  "/inscripciones/jugador/batch",
+  [
+    body("plantel_id").isUUID().withMessage("ID de plantel requerido"),
+    body("jugadores").isArray().withMessage("Se requiere una lista de jugadores"),
+    body("jugadores.*.jugador_id").isUUID().withMessage("ID de jugador inválido"),
+    body("jugadores.*.dorsal").optional().isInt({ min: 0, max: 99 }),
+    body("jugadores.*.posicion")
+      .optional()
+      .isIn(["arquero", "defensor", "mediocampista", "delantero"]),
+  ],
+  InscripcionController.agregarJugadoresBatch,
+);
+
+
 router.patch(
   "/inscripciones/pago/:id",
   [

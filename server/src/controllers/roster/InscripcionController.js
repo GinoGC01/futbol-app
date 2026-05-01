@@ -141,6 +141,30 @@ class InscripcionController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/roster/inscripciones/jugador/batch
+   */
+  async agregarJugadoresBatch(req, res, next) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty())
+        return res.status(400).json({ status: "fail", errors: errors.array() });
+
+      const { plantel_id, jugadores } = req.body;
+
+      const results = await InscripcionService.agregarJugadoresBatch(
+        plantel_id,
+        jugadores,
+        req.organizador.id,
+      );
+
+      res.status(201).json({ status: "success", data: results });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+
 
 export default new InscripcionController();

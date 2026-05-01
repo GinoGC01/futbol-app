@@ -87,7 +87,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
 
             <div className="space-y-4 pt-2">
               <div className="relative inline-block">
-                <h1 className="text-4xl md:text-7xl font-heading font-black tracking-tighter uppercase italic leading-[0.9] group">
+                <h1 className="text-4xl md:text-7xl font-heading font-black tracking-wide uppercase italic leading-[0.9] group">
                   {equipo.nombre.split(' ').map((word, i) => (
                     <span key={i} className={i === 0 ? "text-text-primary" : "text-primary"}>{word} </span>
                   ))}
@@ -113,7 +113,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
             {!latestInscripcion && (
               <Button 
                 variant="ghost" 
-                className="flex-1 lg:flex-none h-16 px-8 text-danger hover:bg-danger/10 border border-white/5 font-black uppercase italic tracking-tighter"
+                className="flex-1 lg:flex-none h-16 px-8 text-danger hover:bg-danger/10 border border-white/5 font-black uppercase italic tracking-wide"
                 onClick={() => {
                   if (confirm(`¿Estás seguro de eliminar definitivamente el equipo "${equipo.nombre}"?`)) {
                     deleteEquipo.mutate(equipo.id, {
@@ -134,7 +134,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
               <Button 
                 variant="outline" 
                 onClick={() => setShowInscribeTeam(true)} 
-                className="flex-1 lg:flex-none h-16 px-10 border-secondary text-secondary hover:bg-secondary hover:text-bg-deep font-black uppercase italic tracking-tighter shadow-xl shadow-secondary/10"
+                className="flex-1 lg:flex-none h-16 px-10 border-secondary text-secondary hover:bg-secondary hover:text-bg-deep font-black uppercase italic tracking-wide shadow-xl shadow-secondary/10"
               >
                 <Calendar className="w-5 h-5 mr-3 stroke-[3]" /> Inscribir en Liga
               </Button>
@@ -142,7 +142,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
               <Button 
                 variant="primary" 
                 onClick={() => setShowAddPlayer(true)} 
-                className="flex-1 lg:flex-none h-16 px-12 font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 text-lg"
+                className="flex-1 lg:flex-none h-16 px-12 font-black uppercase italic tracking-wide shadow-2xl shadow-primary/20 text-lg"
                 disabled={viewedInscripcion?.temporada?.estado === 'finalizada'}
               >
                 <UserPlus className="w-6 h-6 mr-3 stroke-[4]" /> 
@@ -208,14 +208,14 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                                 {p.jugador.nombre[0]}{p.jugador.apellido[0]}
                               </div>
                               <div>
-                                <p className="text-lg font-black uppercase italic tracking-tighter leading-none group-hover:text-primary transition-colors">{p.jugador.nombre} {p.jugador.apellido}</p>
+                                <p className="text-lg font-black uppercase italic tracking-wide leading-none group-hover:text-primary transition-colors">{p.jugador.nombre} {p.jugador.apellido}</p>
                                 <p className="text-[10px] text-text-dim font-bold tracking-[0.2em] uppercase mt-1.5 opacity-60">ID: {p.jugador.id.split('-')[0]}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-8 py-6">
                             <div className="flex justify-center">
-                              <div className="w-12 h-12 rounded-xl bg-bg-deep border border-white/10 flex items-center justify-center text-primary font-black text-xl italic tracking-tighter shadow-inner group-hover:border-primary/30 transition-colors">
+                              <div className="w-12 h-12 rounded-xl bg-bg-deep border border-white/10 flex items-center justify-center text-primary font-black text-xl italic tracking-wide shadow-inner group-hover:border-primary/30 transition-colors">
                                 {p.dorsal || '--'}
                               </div>
                             </div>
@@ -245,7 +245,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                                 <Users className="w-10 h-10 text-text-dim opacity-20" />
                               </div>
                               <div className="space-y-1">
-                                <p className="text-xl font-heading font-black uppercase italic tracking-tighter">Sin Rosters Registrados</p>
+                                <p className="text-xl font-heading font-black uppercase italic tracking-wide">Sin Rosters Registrados</p>
                                 <p className="text-[10px] text-text-dim font-black uppercase tracking-widest">Comienza a fichar atletas para este club</p>
                               </div>
                             </div>
@@ -269,7 +269,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                           {p.jugador.nombre[0]}{p.jugador.apellido[0]}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xl font-black uppercase italic leading-tight tracking-tighter truncate">
+                          <p className="text-xl font-black uppercase italic leading-tight tracking-wide truncate">
                             {p.jugador.nombre} {p.jugador.apellido}
                           </p>
                           <div className="flex items-center gap-3 mt-1.5">
@@ -323,7 +323,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                       <Calendar className="w-7 h-7" />
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
-                      <p className="font-black text-2xl uppercase italic tracking-tighter leading-[1.1]">{ins.temporada.nombre}</p>
+                      <p className="font-black text-2xl uppercase italic tracking-wide leading-[1.1]">{ins.temporada.nombre}</p>
                       <p className="text-[10px] text-text-dim uppercase font-black tracking-[0.2em] mt-1.5 flex items-center gap-2">
                         <span className={`w-1.5 h-1.5 rounded-full ${ins.temporada.estado === 'activa' ? 'bg-success' : 'bg-text-dim'}`} />
                         {ins.temporada.estado}
@@ -332,7 +332,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="text-right pt-1">
-                      <p className="text-lg font-black uppercase italic tracking-tighter leading-[1.1]">{ins.plantel.inscripciones.length} JUG.</p>
+                      <p className="text-lg font-black uppercase italic tracking-wide leading-[1.1]">{ins.plantel.inscripciones.length} JUG.</p>
                       <p className={`text-[10px] font-black uppercase tracking-widest ${ins.estado_pago === 'pagado' ? 'text-primary' : 'text-danger'}`}>
                         {ins.estado_pago}
                       </p>
@@ -382,7 +382,7 @@ function StatItem({ label, value, subValue, icon: Icon, color, action, isAlert }
             {label}
           </p>
           <div className="space-y-1 pt-1">
-            <p className={`text-4xl font-heading font-black tracking-tighter uppercase italic leading-[1.1] ${isAlert ? 'text-danger' : 'text-text-primary'}`}>
+            <p className={`text-4xl font-heading font-black tracking-wide uppercase italic leading-[1.1] ${isAlert ? 'text-danger' : 'text-text-primary'}`}>
               {value}
             </p>
             {subValue && (
@@ -734,7 +734,7 @@ function UpdatePaymentModal({ open, onClose, inscripcion }) {
         <div className="p-4 bg-bg-surface border border-border-subtle rounded-2xl space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-xs text-text-dim font-bold uppercase tracking-widest">Monto Total</span>
-            <span className="text-sm font-black tracking-tighter">${inscripcion.monto_total}</span>
+            <span className="text-sm font-black tracking-wide">${inscripcion.monto_total}</span>
           </div>
           
           <label className="block space-y-2">
@@ -754,7 +754,7 @@ function UpdatePaymentModal({ open, onClose, inscripcion }) {
 
           <div className="pt-4 border-t border-white/5 flex justify-between items-center">
             <span className="text-xs text-text-dim font-bold uppercase tracking-widest">Restante</span>
-            <span className={`text-lg font-black tracking-tighter ${restante <= 0 ? 'text-success' : 'text-warning'}`}>
+            <span className={`text-lg font-black tracking-wide ${restante <= 0 ? 'text-success' : 'text-warning'}`}>
               ${restante}
             </span>
           </div>
@@ -762,7 +762,7 @@ function UpdatePaymentModal({ open, onClose, inscripcion }) {
 
         <div className="flex gap-3">
           <Button variant="ghost" onClick={onClose} className="flex-1">Cancelar</Button>
-          <Button type="submit" loading={updatePago.isPending} className="flex-1 bg-primary text-secondary font-black uppercase italic tracking-tighter">
+          <Button type="submit" loading={updatePago.isPending} className="flex-1 bg-primary text-secondary font-black uppercase italic tracking-wide">
             Actualizar Pago
           </Button>
         </div>

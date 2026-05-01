@@ -515,6 +515,97 @@ class InscripcionService {
       inscripciones: nuevasInscripciones,
     };
   }
+
+  /**
+   * Inscribe múltiples jugadores a un plantel en lote.
+   */
+  async agregarJugadoresBatch(plantelId, jugadores, organizadorId) {
+    if (!Array.isArray(jugadores) || jugadores.length === 0) {
+      throw new AppError("Se requiere una lista de jugadores", 400);
+    }
+
+    // 1. Obtener plantel con su temporada y equipo para verificar ownership
+    const { data: plantel, error: plantelError } = await supabaseAdmin
+      .from("plantel")
+      .select(`
+        id, equipo_id, temporada_id, limite_jugadores,
+        equipo:equipo(liga_id, nombre)
+      `)
+      .eq("id", plantelId)
+      .maybeSingle();
+
+    if (plantelError || !plantel)
+      throw new AppError("Plantel no encontrado", 404);
+
+    // 2. Aislamiento
+    await LigaService.verifyOwnership(plantel.equipo.liga_id, organizadorId);
+
+    // 3. Hard Lock de temporada
+    await TemporadaService.validateNotFinalizada(plantel.temporada_id);
+
+    // 4. Verificar cupo actual
+    const { count: jugadoresActuales, error: countError } = await supabaseAdmin
+      .from("inscripcion_jugador")
+      .select("*", { count: "exact", head: true })
+      .eq("plantel_id", plantelId);
+
+    if (countError)
+      throw new AppError(`Error verificando cupo: ${countError.message}`, 500);
+
+    const espacioDisponible = plantel.limite_jugadores - jugadoresActuales;
+    if (jugadores.length > espacioDisponible) {
+      throw new AppError(
+        `No hay cupo suficiente. Espacio disponible: ${espacioDisponible}. Intentas inscribir: ${jugadores.length}`,
+        400
+      );
+    }
+
+    // 5. Verificar duplicidad de jugadores en la misma temporada (en cualquier equipo)
+    const jugadorIds = jugadores.map(j => j.jugador_id);
+    const { data: inscripcionesExistentes, error: dupError } = await supabaseAdmin
+      .from("inscripcion_jugador")
+      .select(`
+        jugador_id,
+        plantel:plantel!inner(equipo_id, temporada_id, equipo:equipo(nombre))
+      `)
+      .in("jugador_id", jugadorIds)
+      .eq("plantel.temporada_id", plantel.temporada_id);
+
+    if (dupError) throw new AppError(`Error verificando duplicidad: ${dupError.message}`, 500);
+
+    if (inscripcionesExistentes.length > 0) {
+      const nombresEquipos = [...new Set(inscripcionesExistentes.map(i => i.plantel?.equipo?.nombre))].join(", ");
+      throw new AppError(
+        `Algunos jugadores ya están inscritos en otros equipos (${nombresEquipos}) para esta temporada.`,
+        409
+      );
+    }
+
+    // 6. Preparar payload
+    const payload = jugadores.map(j => ({
+      jugador_id: j.jugador_id,
+      plantel_id: plantelId,
+      dorsal: j.dorsal ? Number(j.dorsal) : null,
+      posicion: j.posicion || 'mediocampista',
+      estado: "activo"
+    }));
+
+    // 7. Insertar en lote
+    const { data: nuevasInscripciones, error: insError } = await supabaseAdmin
+      .from("inscripcion_jugador")
+      .insert(payload)
+      .select("id, jugador_id, plantel_id, dorsal, posicion, estado");
+
+    if (insError) {
+      if (insError.code === "23505") {
+        throw new AppError("Uno o más jugadores ya están en este plantel o tienen dorsales duplicados", 409);
+      }
+      throw new AppError(`Error al inscribir jugadores en bloque: ${insError.message}`, 500);
+    }
+
+    return nuevasInscripciones;
+  }
 }
+
 
 export default new InscripcionService();

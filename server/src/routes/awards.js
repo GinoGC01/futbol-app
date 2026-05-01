@@ -33,7 +33,7 @@ router.post(
     ]).withMessage('Criterio no válido'),
     body('categoria').isIn(['jugador', 'equipo']).withMessage('Categoría: jugador o equipo'),
     body('premio_fisico').optional().isString().isLength({ max: 200 }),
-    body('imagen_url').optional().isURL()
+    body('imagen_url').optional({ checkFalsy: true }).isURL()
   ],
   AwardController.crearPremio
 )

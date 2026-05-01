@@ -30,32 +30,36 @@ export default function DashboardHome() {
   return (
     <div className="max-w-6xl mx-auto space-y-10 sm:space-y-16 animate-fade-in pb-20 px-4 sm:px-0">
       {/* Welcome & Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 border-b border-white/5 pb-8">
-        <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(206,222,11,0.5)]" /> 
-            Command Center
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 border-b-4 border-primary/20 pb-12 relative">
+        <div className="absolute -left-10 top-0 w-1 h-full bg-primary/10 skew-x-[-15deg] hidden xl:block" />
+        <div className="space-y-6">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-primary text-bg-deep text-[10px] font-black uppercase tracking-[0.3em] skew-x-[-15deg]">
+            <span className="skew-x-[15deg] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-bg-deep animate-pulse" /> 
+              System Operational: Level 1
+            </span>
           </div>
-          <div className="relative pt-1">
-            <h1 className="text-5xl sm:text-7xl font-heading font-black tracking-tighter leading-[1.1] uppercase italic">
-              Hola, <span className="text-primary">{user?.email?.split('@')[0]}</span>
+          <div className="relative">
+            <h1 className="text-6xl sm:text-8xl font-heading font-black tracking-normal leading-[0.9] uppercase italic text-white mix-blend-difference">
+              HOLA, <span className="text-primary">{user?.email?.split('@')[0]}</span>
             </h1>
-            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-full bg-primary/30 skew-x-[-15deg] hidden lg:block" />
+            <p className="text-xl text-text-dim max-w-xl font-bold uppercase tracking-normal mt-4 border-l-4 border-primary pl-6 py-2">
+              {liga 
+                ? `COMANDANDO LA LIGA ` 
+                : 'PREPARADO PARA EL DESPEGUE. '}
+              {liga && <span className="text-primary italic">{liga.nombre}</span>}
+            </p>
           </div>
-          <p className="text-lg text-text-dim max-w-lg font-medium leading-tight">
-            {liga 
-              ? `Gestionando los destinos de ` 
-              : 'Bienvenido a la plataforma central de ligas. '}
-            {liga && <span className="text-text-primary font-black italic uppercase tracking-tight">{liga.nombre}</span>}
-          </p>
         </div>
         
         <div className="flex shrink-0">
           <Button 
+            variant="primary"
+            size="lg"
             onClick={() => setShowNewLiga(true)} 
-            className="w-full sm:w-auto h-14 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+            className="h-20 px-12 text-xl shadow-[0_20px_50px_rgba(206,222,11,0.2)]"
           >
-            <Plus className="w-6 h-6 mr-2 stroke-[4]" /> 
+            <Plus className="w-8 h-8 mr-3 stroke-[3]" /> 
             {liga ? 'Nueva Liga' : 'Crear mi primera Liga'}
           </Button>
         </div>
@@ -69,9 +73,9 @@ export default function DashboardHome() {
               <Trophy className="w-14 h-14 text-primary" />
             </div>
             <div className="max-w-md mx-auto px-6">
-              <h2 className="text-3xl font-heading font-black mb-4 tracking-tighter uppercase italic leading-[1.1] pt-1">Comienza tu Legado</h2>
+              <h2 className="text-3xl font-heading font-black mb-4 tracking-wide uppercase italic leading-[1.1] pt-1">Comienza tu Legado</h2>
               <p className="text-base text-text-dim mb-10 leading-relaxed font-medium">No hemos encontrado ninguna liga asociada a tu cuenta. Crea tu primera liga para empezar a gestionar torneos, equipos y jugadores con estilo profesional.</p>
-              <Button onClick={() => setShowNewLiga(true)} size="lg" className="w-full shadow-2xl shadow-primary/30 h-16 text-lg font-black italic uppercase italic tracking-tighter">
+              <Button onClick={() => setShowNewLiga(true)} size="lg" className="w-full shadow-2xl shadow-primary/30 h-16 text-lg font-black italic uppercase italic tracking-wide">
                 Crear mi primera Liga
               </Button>
             </div>
@@ -141,7 +145,7 @@ export default function DashboardHome() {
                           <AlertCircle className="w-6 h-6 text-danger" />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-base font-black text-text-primary italic uppercase tracking-tight leading-tight">{alert.mensaje}</p>
+                          <p className="text-base font-black text-text-primary italic uppercase tracking-normal leading-tight">{alert.mensaje}</p>
                           <div className="flex flex-wrap items-center gap-3">
                              <span className="text-[9px] font-black bg-danger/10 text-danger px-2 py-0.5 rounded uppercase tracking-widest">
                                {alert.tipo.replace(/_/g, ' ')}
@@ -198,7 +202,7 @@ export default function DashboardHome() {
                   </div>
                   
                   <div>
-                    <p className="text-2xl font-heading font-black tracking-tighter text-text-primary uppercase italic leading-none mb-2">{a.label}</p>
+                    <p className="text-2xl font-heading font-black tracking-wide text-text-primary uppercase italic leading-none mb-2">{a.label}</p>
                     <div className="flex items-center justify-between">
                        <p className="text-[10px] text-text-dim font-black uppercase tracking-[0.2em]">{a.sub}</p>
                        <RefreshCw className="w-3 h-3 text-text-dim group-hover:text-primary group-hover:rotate-180 transition-all duration-700" />

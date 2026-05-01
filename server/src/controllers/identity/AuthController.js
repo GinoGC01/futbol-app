@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
+import { OAuth2Client } from 'google-auth-library'
 import { supabaseAdmin } from '../../lib/supabase.js'
 import OrganizadorService from '../../services/identity/OrganizadorService.js'
 import LigaService from '../../services/identity/LigaService.js'
@@ -313,6 +314,64 @@ class AuthController {
       res.json({ status: 'success', message: 'Contraseña cambiada exitosamente.' })
     } catch (error) {
       next(error)
+    }
+  }
+
+  /**
+   * POST /api/identity/google
+   */
+  async googleLogin(req, res, next) {
+    try {
+      const { credential } = req.body
+      if (!credential) throw new AppError('Token de Google requerido', 400)
+
+      const client = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID)
+      
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.VITE_GOOGLE_CLIENT_ID
+      })
+
+      const payload = ticket.getPayload()
+      const { email, name, sub: googleId } = payload
+
+      // 1. Buscar si ya existe el organizador por email
+      let organizador = await OrganizadorService.findByEmail(email)
+
+      if (!organizador) {
+        // 2. Si no existe, lo creamos (Login Social)
+        const { data: newOrg, error: orgErr } = await supabaseAdmin.from('organizador').insert([{
+          nombre: name,
+          email: email,
+          email_verified: true,
+          // No seteamos password_hash ya que entra por Google
+        }]).select('*').single()
+
+        if (orgErr) throw new AppError('Error al crear perfil con Google', 500)
+        organizador = newOrg
+      } else if (!organizador.email_verified) {
+        // Si ya existe pero no estaba verificado, lo verificamos ahora que entró por Google
+        await supabaseAdmin.from('organizador').update({ email_verified: true }).eq('id', organizador.id)
+      }
+
+      // 3. Generar nuestro JWT
+      const token = this.signToken(organizador.id, organizador.email)
+      this.setTokenCookie(res, token)
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          token,
+          user: {
+            id: organizador.id,
+            nombre: organizador.nombre,
+            email: organizador.email
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Google Login Error:', error)
+      next(new AppError('Error en la autenticación con Google', 401))
     }
   }
 }

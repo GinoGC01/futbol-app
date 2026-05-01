@@ -90,7 +90,7 @@ export default function LeagueSettings() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">
           <Settings className="w-3 h-3" /> Configuración Global
         </div>
-        <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight leading-none">
+        <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-normal leading-none">
           Ajustes de la <span className="text-primary italic">Liga</span>
         </h1>
         <p className="text-base text-text-dim">Modifica los parámetros fundamentales de <span className="text-text-primary font-bold">{liga.nombre}</span>.</p>
@@ -181,7 +181,7 @@ export default function LeagueSettings() {
                 <Button
                   type="submit"
                   loading={updateMutation.isPending}
-                  className="px-8 h-12 bg-primary text-secondary font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                  className="px-8 h-12 bg-primary text-secondary font-black uppercase italic tracking-wide shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                 >
                   <Save className="w-4 h-4 mr-2" /> Guardar Cambios
                 </Button>
@@ -243,7 +243,7 @@ export default function LeagueSettings() {
               <div className="w-14 h-14 bg-danger/10 rounded-2xl flex items-center justify-center border border-danger/20">
                 <Trash2 className="w-7 h-7 text-danger" />
               </div>
-              <h3 className="text-xl font-heading font-black text-text-primary tracking-tight">Borrar Liga Permanentemente</h3>
+              <h3 className="text-xl font-heading font-black text-text-primary tracking-normal">Borrar Liga Permanentemente</h3>
               <div className="space-y-3 text-sm text-text-dim leading-relaxed max-w-xl">
                 <p>Esta operación es <span className="text-danger font-bold italic">final e irreversible</span>.</p>
                 <p>Se ejecutará un borrado en cascada que eliminará:</p>
@@ -276,7 +276,7 @@ export default function LeagueSettings() {
                 onClick={handleDelete}
                 disabled={deleteConfirm.trim() !== liga.nombre.trim() || isDeleting}
                 loading={isDeleting}
-                className="w-full h-14 bg-danger hover:bg-danger/80 text-white font-black uppercase italic tracking-tighter shadow-xl shadow-danger/20 disabled:opacity-30 disabled:grayscale transition-all hover:scale-[1.02] active:scale-95"
+                className="w-full h-14 bg-danger hover:bg-danger/80 text-white font-black uppercase italic tracking-wide shadow-xl shadow-danger/20 disabled:opacity-30 disabled:grayscale transition-all hover:scale-[1.02] active:scale-95"
               >
                 <Trash2 className="w-5 h-5 mr-2" /> Destruir Todo
               </Button>

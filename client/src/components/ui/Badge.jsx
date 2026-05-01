@@ -27,14 +27,16 @@ export default function Badge({ status, label, className = '' }) {
 
   return (
     <span className={`
-      inline-flex items-center gap-1.5 px-2.5 py-0.5
-      text-[11px] font-semibold tracking-wider uppercase
-      rounded-full border ${s} ${className}
+      inline-flex items-center gap-1.5 px-3 py-1
+      text-[10px] font-black tracking-[0.1em] uppercase
+      skew-x-[-15deg] border-l-2 ${s} ${className}
     `}>
-      {(status === 'live' || status === 'en_juego') && (
-        <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      )}
-      {text}
+      <span className="skew-x-[15deg] flex items-center gap-1.5">
+        {(status === 'live' || status === 'en_juego') && (
+          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+        )}
+        {text}
+      </span>
     </span>
   )
 }

@@ -27,19 +27,21 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
                 className={`
                   fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2
                   w-[calc(100%-2rem)] ${widths[size]}
-                  glass-heavy rounded-2xl p-6 shadow-lg
+                  bg-bg-deep border border-white/10 rounded-none p-0 shadow-[0_0_100px_rgba(0,0,0,0.8)]
                   max-h-[85vh] overflow-y-auto
                 `}
               >
-                <div className="flex items-center justify-between mb-5">
-                  <Dialog.Title className="text-lg font-heading font-semibold">
+                <div className="sticky top-0 z-10 bg-bg-deep/90 backdrop-blur-md border-b border-white/5 p-6 flex items-center justify-between">
+                  <Dialog.Title className="text-xl font-heading font-black uppercase italic tracking-wide text-white">
                     {title}
                   </Dialog.Title>
-                  <Dialog.Close className="w-8 h-8 rounded-lg bg-bg-elevated flex items-center justify-center text-text-dim hover:text-text-primary transition-colors">
-                    <X className="w-4 h-4" />
+                  <Dialog.Close className="w-10 h-10 bg-white/5 flex items-center justify-center text-text-dim hover:text-danger transition-all skew-x-[-12deg] group">
+                    <X className="w-5 h-5 skew-x-[12deg] group-hover:scale-110" />
                   </Dialog.Close>
                 </div>
-                {children}
+                <div className="p-8">
+                  {children}
+                </div>
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>

@@ -45,7 +45,7 @@ export default function TeamProfile() {
                 )}
               </div>
               <div>
-                <h1 className="text-4xl font-heading font-black tracking-tight">{equipo?.nombre || 'Nombre del Equipo'}</h1>
+                <h1 className="text-4xl font-heading font-black tracking-normal">{equipo?.nombre || 'Nombre del Equipo'}</h1>
                 <p className="text-text-secondary mt-1 text-lg">{liga?.nombre || 'Liga Independiente'} · {liga?.zona || 'Zona Única'}</p>
                 <div className="flex gap-2 mt-3">
                   <Badge status="activa" label="Inscripción Activa" />

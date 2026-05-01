@@ -52,7 +52,7 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="max-w-4xl mx-auto relative z-10"
         >
-          <h1 className="text-6xl md:text-8xl font-heading font-black mb-6 tracking-tighter leading-[0.9] uppercase">
+          <h1 className="text-6xl md:text-8xl font-heading font-black mb-6 tracking-wide leading-[0.9] uppercase">
             TU TORNEO,<br />
             <span className="text-primary italic">NIVEL PROFESIONAL</span>
           </h1>
@@ -87,7 +87,7 @@ export default function Home() {
       {/* Featured Section */}
       <section className="max-w-7xl mx-auto px-8 pb-32">
         <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
-          <h2 className="text-3xl font-heading font-black italic text-primary tracking-tighter uppercase">
+          <h2 className="text-3xl font-heading font-black italic text-primary tracking-wide uppercase">
             LIGAS DESTACADAS
           </h2>
           <Link to="/ligas" className="flex items-center gap-2 text-xs font-bold tracking-widest hover:text-primary transition-all uppercase group">
@@ -181,7 +181,7 @@ function LeagueCard({ title, subtitle, badge, badgeColor, cta }) {
         <div className="mb-4">
           <Badge status={badgeColor} label={badge} className="scale-90 origin-left" />
         </div>
-        <h3 className="text-2xl font-heading font-black italic leading-tight mb-1 group-hover:text-primary transition-colors uppercase tracking-tight">
+        <h3 className="text-2xl font-heading font-black italic leading-tight mb-1 group-hover:text-primary transition-colors uppercase tracking-normal">
           {title}
         </h3>
         <p className="text-[10px] font-bold text-white/40 tracking-widest mb-8 uppercase">
@@ -199,7 +199,7 @@ function LeagueCard({ title, subtitle, badge, badgeColor, cta }) {
 function StatItem({ label, value }) {
   return (
     <div className="text-center flex-1">
-      <p className="text-4xl font-heading font-black text-primary italic tracking-tighter mb-1">
+      <p className="text-4xl font-heading font-black text-primary italic tracking-wide mb-1">
         {value}
       </p>
       <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase">

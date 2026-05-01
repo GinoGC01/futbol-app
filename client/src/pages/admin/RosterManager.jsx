@@ -43,12 +43,12 @@ export default function RosterManager() {
             <Users className="w-3.5 h-3.5" /> Club Management
           </div>
           <div className="relative pt-2">
-            <h1 className="text-4xl sm:text-6xl font-heading font-black tracking-tighter leading-[1.1] uppercase italic">
+            <h1 className="text-4xl sm:text-6xl font-heading font-black tracking-wide leading-[1.1] uppercase italic">
               Gestión de <span className="text-primary">Equipos</span>
             </h1>
             <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-full bg-primary/30 skew-x-[-15deg] hidden lg:block" />
           </div>
-          <p className="text-base text-text-dim max-w-md font-medium leading-tight italic uppercase tracking-tight">
+          <p className="text-base text-text-dim max-w-md font-medium leading-tight italic uppercase tracking-normal">
             Administra el plantel, inscripciones y la identidad visual de cada equipo.
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function RosterManager() {
                 setSelectionMode(!selectionMode)
                 setSelectedIds([])
               }} 
-              className={`flex-1 sm:flex-none h-14 px-6 font-black uppercase italic tracking-tighter border transition-all ${
+              className={`flex-1 sm:flex-none h-14 px-6 font-black uppercase italic tracking-wide border transition-all ${
                 selectionMode ? 'bg-primary text-bg-deep border-primary' : 'bg-white/5 border-white/10 text-text-dim hover:text-primary'
               }`}
             >
@@ -73,14 +73,14 @@ export default function RosterManager() {
               <Button 
                 variant="ghost" 
                 onClick={() => setShowSearchPlayer(true)} 
-                className="flex-1 sm:flex-none h-14 px-6 bg-white/5 border border-white/10 text-text-dim hover:text-primary font-black uppercase italic tracking-tighter"
+                className="flex-1 sm:flex-none h-14 px-6 bg-white/5 border border-white/10 text-text-dim hover:text-primary font-black uppercase italic tracking-wide"
               >
                 <Search className="w-5 h-5 mr-2" /> Buscar
               </Button>
               <Button 
                 variant="primary" 
                 onClick={() => setShowNewEquipo(true)} 
-                className="flex-1 sm:flex-none h-14 px-8 font-black uppercase italic tracking-tighter shadow-xl shadow-primary/20"
+                className="flex-1 sm:flex-none h-14 px-8 font-black uppercase italic tracking-wide shadow-xl shadow-primary/20"
               >
                 <Plus className="w-6 h-6 mr-2 stroke-[4]" /> Nuevo Equipo
               </Button>
@@ -100,7 +100,7 @@ export default function RosterManager() {
             <Button 
               variant="primary" 
               onClick={() => setShowBatchEnroll(true)} 
-              className="h-12 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20"
+              className="h-12 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-wide shadow-lg shadow-primary/20"
             >
               <Layers className="w-4 h-4 mr-2" /> Inscribir en Lote
             </Button>
@@ -159,7 +159,7 @@ export default function RosterManager() {
                       <Shield className="w-8 h-8" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-2xl font-heading font-black uppercase italic tracking-tighter leading-[1.1] truncate group-hover:text-primary transition-colors">
+                      <p className="text-2xl font-heading font-black uppercase italic tracking-wide leading-[1.1] truncate group-hover:text-primary transition-colors">
                         {eq.nombre}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
@@ -247,14 +247,14 @@ export default function RosterManager() {
             </div>
           </div>
           <div className="space-y-4 max-w-sm mx-auto">
-            <h3 className="text-2xl sm:text-3xl font-heading font-black tracking-tighter uppercase italic">Clubes No Encontrados</h3>
-            <p className="text-sm text-text-dim font-medium uppercase tracking-tight italic">
+            <h3 className="text-2xl sm:text-3xl font-heading font-black tracking-wide uppercase italic">Clubes No Encontrados</h3>
+            <p className="text-sm text-text-dim font-medium uppercase tracking-normal italic">
               Tu liga aún no tiene equipos registrados. Comienza a construir tu roster oficial ahora mismo.
             </p>
           </div>
           <Button 
             onClick={() => setShowNewEquipo(true)} 
-            className="h-16 px-10 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+            className="h-16 px-10 bg-primary text-bg-deep font-black uppercase italic tracking-wide shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
           >
             <Plus className="w-6 h-6 mr-2 stroke-[4]" /> Registrar Primer Equipo
           </Button>
@@ -327,7 +327,7 @@ function NewEquipoModal({ open, onClose, ligaId }) {
         <Button 
           type="submit" 
           loading={mutation.isPending} 
-          className="w-full h-16 bg-primary text-bg-deep font-black uppercase italic tracking-tighter text-lg shadow-xl shadow-primary/20"
+          className="w-full h-16 bg-primary text-bg-deep font-black uppercase italic tracking-wide text-lg shadow-xl shadow-primary/20"
         >
           Crear Equipo
         </Button>
@@ -367,7 +367,7 @@ function SearchPlayerModal({ open, onClose }) {
               className="w-full pl-12 pr-4 py-4 bg-bg-input border border-white/5 rounded-2xl text-sm text-text-primary outline-none focus:border-primary transition-all font-bold" 
             />
           </div>
-          <Button onClick={search} loading={searching} className="h-14 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-tighter">
+          <Button onClick={search} loading={searching} className="h-14 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-wide">
             Buscar
           </Button>
         </div>
@@ -381,7 +381,7 @@ function SearchPlayerModal({ open, onClose }) {
                   {j.nombre[0]}{j.apellido[0]}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-black uppercase italic tracking-tight">{j.nombre} {j.apellido}</p>
+                  <p className="text-sm font-black uppercase italic tracking-normal">{j.nombre} {j.apellido}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <p className="text-[10px] text-text-dim font-bold tracking-widest uppercase">ID: {j.id.split('-')[0]}</p>
                     {j.fecha_nacimiento && (
@@ -399,7 +399,7 @@ function SearchPlayerModal({ open, onClose }) {
         ) : query && !searching ? (
           <div className="py-12 text-center bg-white/2 rounded-3xl border-2 border-dashed border-white/5">
             <Users className="w-12 h-12 text-text-dim opacity-20 mx-auto mb-4" />
-            <p className="text-sm font-bold text-text-dim uppercase tracking-tight italic">No se encontraron jugadores.</p>
+            <p className="text-sm font-bold text-text-dim uppercase tracking-normal italic">No se encontraron jugadores.</p>
           </div>
         ) : null}
         
@@ -441,7 +441,7 @@ function BatchEnrollModal({ open, onClose, equipoIds, temporadas }) {
           <div className="absolute top-0 right-0 w-32 h-full bg-primary/5 skew-x-[-20deg] translate-x-12 pointer-events-none" />
           <div className="relative z-10">
             <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] italic mb-1">Equipos a Procesar</p>
-            <p className="text-5xl font-heading font-black text-primary italic leading-none tracking-tighter">
+            <p className="text-5xl font-heading font-black text-primary italic leading-none tracking-wide">
               {equipoIds.length} <span className="text-xl">CLUBES</span>
             </p>
           </div>
@@ -485,7 +485,7 @@ function BatchEnrollModal({ open, onClose, equipoIds, temporadas }) {
           <Button 
             type="submit" 
             loading={mutation.isPending} 
-            className="w-full h-20 bg-primary text-bg-deep font-black uppercase italic tracking-tighter text-xl shadow-2xl shadow-primary/20"
+            className="w-full h-20 bg-primary text-bg-deep font-black uppercase italic tracking-wide text-xl shadow-2xl shadow-primary/20"
           >
             Confirmar Inscripción Masiva
           </Button>

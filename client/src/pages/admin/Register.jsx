@@ -216,7 +216,7 @@ export default function Register() {
                 <div className="w-20 h-20 bg-primary/10 flex items-center justify-center mx-auto mb-8 border border-primary/20">
                   <Mail className="w-10 h-10 text-primary" />
                 </div>
-                <h2 className="text-3xl font-heading font-black italic text-primary uppercase mb-4 tracking-tighter">¡CASI LISTO!</h2>
+                <h2 className="text-3xl font-heading font-black italic text-primary uppercase mb-4 tracking-wide">¡CASI LISTO!</h2>
                 <p className="text-sm font-bold text-white/60 uppercase tracking-widest mb-8 leading-relaxed">
                   Hemos enviado un enlace de verificación a tu correo. Por favor, verifícalo para activar tu cuenta.
                 </p>

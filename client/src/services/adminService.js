@@ -40,6 +40,7 @@ export const adminService = {
   getJugadoresOrganizador: (page = 1, limit = 20) =>
     api.get(`/roster/jugadores/recientes?page=${page}&limit=${limit}`),
   addJugadorAPlantel: (data) => api.post("/roster/inscripciones/jugador", data),
+  addJugadoresBatch: (data) => api.post("/roster/inscripciones/jugador/batch", data),
   searchJugadores: (query, ligaId) =>
     api.get(
       `/roster/jugadores/search?q=${encodeURIComponent(query)}${ligaId ? `&liga_id=${ligaId}` : ""}`,

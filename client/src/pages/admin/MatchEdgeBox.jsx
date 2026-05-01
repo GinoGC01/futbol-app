@@ -172,7 +172,7 @@ export default function MatchEdgeBox() {
       <div className="space-y-1">
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-10 md:h-12 bg-primary skew-x-[-15deg] shrink-0" />
-          <h1 className="text-3xl md:text-5xl font-heading font-black tracking-tighter uppercase italic leading-relaxed py-2">Match Edge</h1>
+          <h1 className="text-3xl md:text-5xl font-heading font-black tracking-wide uppercase italic leading-relaxed py-2">Match Edge</h1>
         </div>
         <p className="text-[10px] md:text-xs font-bold text-text-dim uppercase tracking-[0.3em] pl-4">Panel de Control de Campo en Tiempo Real</p>
       </div>
@@ -237,7 +237,7 @@ export default function MatchEdgeBox() {
 
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black uppercase tracking-tighter truncate leading-tight">{p.equipo_local?.nombre}</p>
+                        <p className="text-sm font-black uppercase tracking-wide truncate leading-tight">{p.equipo_local?.nombre}</p>
                       </div>
                       
                       <div className="flex items-center gap-3 px-4 py-1.5 bg-bg-deep/50 rounded-lg border border-white/5 font-mono">
@@ -247,7 +247,7 @@ export default function MatchEdgeBox() {
                       </div>
 
                       <div className="flex-1 min-w-0 text-right">
-                        <p className="text-sm font-black uppercase tracking-tighter truncate leading-tight">{p.equipo_visitante?.nombre}</p>
+                        <p className="text-sm font-black uppercase tracking-wide truncate leading-tight">{p.equipo_visitante?.nombre}</p>
                       </div>
                     </div>
                    </div>
@@ -273,7 +273,7 @@ export default function MatchEdgeBox() {
               <button 
                 onClick={handleStartMatch}
                 disabled={cambiarEstado.isPending}
-                className="bg-primary text-bg-deep px-6 py-2 rounded-lg font-black uppercase italic tracking-tighter text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(206,222,11,0.2)]"
+                className="bg-primary text-bg-deep px-6 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(206,222,11,0.2)]"
               >
                 Iniciar Partido
               </button>
@@ -281,7 +281,7 @@ export default function MatchEdgeBox() {
               <button 
                 onClick={handleEndMatch}
                 disabled={cambiarEstado.isPending}
-                className="bg-danger text-white px-6 py-2 rounded-lg font-black uppercase italic tracking-tighter text-xs hover:scale-105 active:scale-95 transition-all"
+                className="bg-danger text-white px-6 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all"
               >
                 Finalizar
               </button>
@@ -314,11 +314,11 @@ export default function MatchEdgeBox() {
                         <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 mb-2 shadow-lg">
                            <Shield className="w-6 h-6 md:w-8 md:h-8 text-primary opacity-40" />
                         </div>
-                        <p className="font-heading font-black text-sm md:text-lg uppercase italic tracking-tighter truncate leading-tight">{partido.equipo_local?.nombre}</p>
+                        <p className="font-heading font-black text-sm md:text-lg uppercase italic tracking-wide truncate leading-tight">{partido.equipo_local?.nombre}</p>
                       </div>
 
                       <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="text-4xl md:text-6xl font-heading font-black tracking-tighter italic flex items-center gap-4">
+                        <div className="text-4xl md:text-6xl font-heading font-black tracking-wide italic flex items-center gap-4">
                           <span className={partido.goles_local > 0 ? 'text-primary' : 'text-text-primary'}>{partido.goles_local ?? 0}</span>
                           <span className="text-xl md:text-3xl text-text-dim/20 skew-x-[-15deg]">:</span>
                           <span className={partido.goles_visitante > 0 ? 'text-primary' : 'text-text-primary'}>{partido.goles_visitante ?? 0}</span>
@@ -329,7 +329,7 @@ export default function MatchEdgeBox() {
                         <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 mb-2 shadow-lg">
                            <Shield className="w-6 h-6 md:w-8 md:h-8 text-primary opacity-40" />
                         </div>
-                        <p className="font-heading font-black text-sm md:text-lg uppercase italic tracking-tighter truncate leading-tight">{partido.equipo_visitante?.nombre}</p>
+                        <p className="font-heading font-black text-sm md:text-lg uppercase italic tracking-wide truncate leading-tight">{partido.equipo_visitante?.nombre}</p>
                       </div>
                     </div>
                   </div>
@@ -346,7 +346,7 @@ export default function MatchEdgeBox() {
                     <div className="absolute inset-0 bg-primary/20 group-hover:bg-primary/30 transition-colors" />
                     <div className="absolute inset-0 flex items-center justify-center gap-4 skew-x-[-10deg]">
                        <Target className="w-8 h-8 text-primary" />
-                       <span className="font-heading font-black text-2xl uppercase italic tracking-tighter text-primary">GOL</span>
+                       <span className="font-heading font-black text-2xl uppercase italic tracking-wide text-primary">GOL</span>
                     </div>
                     <div className="absolute top-0 right-0 w-12 h-full bg-primary/10 skew-x-[-20deg] translate-x-6" />
                   </button>
@@ -358,7 +358,7 @@ export default function MatchEdgeBox() {
                     <div className="absolute inset-0 bg-warning/20 group-hover:bg-warning/30 transition-colors" />
                     <div className="absolute inset-0 flex items-center justify-center gap-4 skew-x-[-10deg]">
                        <div className="w-6 h-8 bg-warning rounded-sm rotate-12 shadow-[0_0_15px_rgba(245,158,11,0.4)]" />
-                       <span className="font-heading font-black text-2xl uppercase italic tracking-tighter text-warning">AMARILLA</span>
+                       <span className="font-heading font-black text-2xl uppercase italic tracking-wide text-warning">AMARILLA</span>
                     </div>
                   </button>
 
@@ -369,7 +369,7 @@ export default function MatchEdgeBox() {
                     <div className="absolute inset-0 bg-danger/20 group-hover:bg-danger/30 transition-colors" />
                     <div className="absolute inset-0 flex items-center justify-center gap-4 skew-x-[-10deg]">
                        <div className="w-6 h-8 bg-danger rounded-sm rotate-12 shadow-[0_0_15px_rgba(239,68,68,0.4)]" />
-                       <span className="font-heading font-black text-2xl uppercase italic tracking-tighter text-danger">ROJA</span>
+                       <span className="font-heading font-black text-2xl uppercase italic tracking-wide text-danger">ROJA</span>
                     </div>
                   </button>
                 </div>
@@ -381,7 +381,7 @@ export default function MatchEdgeBox() {
                   <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                   <div className="flex items-center justify-between mb-6">
                     <div className="space-y-1">
-                      <h3 className="font-heading font-black uppercase text-sm italic tracking-tighter text-primary flex items-center gap-2">
+                      <h3 className="font-heading font-black uppercase text-sm italic tracking-wide text-primary flex items-center gap-2">
                          {entryMode.type === 'GOL' ? <Target className="w-4 h-4"/> : <AlertTriangle className="w-4 h-4"/>}
                          REGISTRAR {entryMode.type}
                       </h3>
@@ -407,7 +407,7 @@ export default function MatchEdgeBox() {
                             <button key={p.id} onClick={() => submitEvent(p)}
                               className="flex items-center gap-3 p-3 rounded-xl bg-bg-deep/50 border border-white/5 hover:border-primary/40 hover:bg-primary/5 text-left transition-all group active:scale-[0.97]">
                               <span className="w-6 font-mono font-black text-primary text-sm group-hover:scale-110 transition-transform">{p.dorsal || '—'}</span>
-                              <span className="text-xs font-bold uppercase tracking-tighter truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
+                              <span className="text-xs font-bold uppercase tracking-wide truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
                             </button>
                           ))
                         ) : (
@@ -432,7 +432,7 @@ export default function MatchEdgeBox() {
                             <button key={p.id} onClick={() => submitEvent(p)}
                               className="flex items-center gap-3 p-3 rounded-xl bg-bg-deep/50 border border-white/5 hover:border-primary/40 hover:bg-primary/5 text-left transition-all group active:scale-[0.97]">
                               <span className="w-6 font-mono font-black text-primary text-sm group-hover:scale-110 transition-transform">{p.dorsal || '—'}</span>
-                              <span className="text-xs font-bold uppercase tracking-tighter truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
+                              <span className="text-xs font-bold uppercase tracking-wide truncate">{p.jugador?.nombre} {p.jugador?.apellido}</span>
                             </button>
                           ))
                         ) : (
@@ -480,7 +480,7 @@ export default function MatchEdgeBox() {
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                 <p className="font-black text-sm uppercase italic tracking-tighter truncate leading-tight">
+                                 <p className="font-black text-sm uppercase italic tracking-wide truncate leading-tight">
                                    {e.inscripcion_jugador?.jugador?.nombre} {e.inscripcion_jugador?.jugador?.apellido}
                                  </p>
                                  <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mt-0.5">

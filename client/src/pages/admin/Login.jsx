@@ -5,6 +5,7 @@ import { Mail, Lock as LockIcon, Share2, Rss, Users } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'
+import { GoogleLogin } from '@react-oauth/google'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -25,6 +26,22 @@ export default function Login() {
       navigate('/admin')
     } catch (err) {
       setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSuccess = async (response) => {
+    const { credential } = response
+    setLoading(true)
+    setError('')
+    
+    try {
+      const { token, user } = await api.post('/identity/google', { credential })
+      signIn(token, user)
+      navigate('/admin')
+    } catch (err) {
+      setError(err.message || 'Error al iniciar sesión con Google')
     } finally {
       setLoading(false)
     }
@@ -70,7 +87,7 @@ export default function Login() {
               <img src="/images/logotipo.png" alt="Logo" className="h-32 object-contain" />
             </motion.div>
             
-            <h1 className="text-4xl md:text-5xl font-heading font-black italic tracking-tighter leading-tight uppercase">
+            <h1 className="text-4xl md:text-5xl font-heading font-black italic tracking-wide leading-tight uppercase">
               ACCESO PARA<br />
               <span className="text-primary">ORGANIZADORES</span>
             </h1>
@@ -135,6 +152,24 @@ export default function Login() {
                 )}
               </button>
             </form>
+
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">O TAMBIÉN</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+
+            <div className="flex justify-center">
+              <GoogleLogin 
+                onSuccess={handleGoogleSuccess} 
+                onError={() => setError('Error en la autenticación con Google')}
+                theme="filled_black"
+                shape="square"
+                size="large"
+                width="100%"
+                text="continue_with"
+              />
+            </div>
 
             <div className="mt-8 text-center border-t border-white/10 pt-8">
               <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-2">

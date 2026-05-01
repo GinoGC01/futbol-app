@@ -393,6 +393,18 @@ export function useAddJugador() {
   });
 }
 
+export function useAddJugadoresBatch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: adminService.addJugadoresBatch,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inscripciones-equipo"] });
+      qc.invalidateQueries({ queryKey: ["equipos"] });
+      qc.invalidateQueries({ queryKey: ["jugadores-liga"] });
+    },
+  });
+}
+
 export function useDeleteEquipo() {
   const qc = useQueryClient();
   return useMutation({

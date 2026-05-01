@@ -69,19 +69,19 @@ export default function TournamentArchitect() {
             <Trophy className="w-3.5 h-3.5" /> League Designer
           </div>
           <div className="relative pt-2">
-            <h1 className="text-4xl sm:text-6xl font-heading font-black tracking-tighter leading-[1.1] uppercase italic">
+            <h1 className="text-4xl sm:text-6xl font-heading font-black tracking-wide leading-[1.1] uppercase italic">
               Arquitecto de <span className="text-primary">Torneo</span>
             </h1>
             <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-full bg-secondary/30 skew-x-[-15deg] hidden lg:block" />
           </div>
-          <p className="text-base text-text-dim max-w-md font-medium leading-tight italic uppercase tracking-tight">
+          <p className="text-base text-text-dim max-w-md font-medium leading-tight italic uppercase tracking-normal">
             Diseña la estructura competitiva y gestiona el fixture oficial.
           </p>
         </div>
         
         <Button 
           onClick={() => setShowNewTemp(true)} 
-          className="w-full sm:w-auto h-14 px-8 bg-secondary text-bg-deep font-black uppercase italic tracking-tighter shadow-2xl shadow-secondary/20 hover:scale-105 active:scale-95 transition-all"
+          className="w-full sm:w-auto h-14 px-8 bg-secondary text-bg-deep font-black uppercase italic tracking-wide shadow-2xl shadow-secondary/20 hover:scale-105 active:scale-95 transition-all"
         >
           <Plus className="w-6 h-6 mr-2 stroke-[4]" /> Nueva Temporada
         </Button>
@@ -100,7 +100,7 @@ export default function TournamentArchitect() {
               <button 
                 key={t.id} 
                 onClick={() => setSelectedTemp(t.id)}
-                className={`flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-black uppercase italic tracking-tighter border transition-all snap-start shrink-0 min-w-[200px] sm:min-w-0 ${
+                className={`flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-black uppercase italic tracking-wide border transition-all snap-start shrink-0 min-w-[200px] sm:min-w-0 ${
                   selectedTemp === t.id 
                     ? 'bg-primary/10 text-primary border-primary/30 ring-1 ring-primary/20 shadow-lg shadow-primary/5' 
                     : 'bg-bg-surface text-text-dim border-white/5 hover:border-white/20'
@@ -119,7 +119,7 @@ export default function TournamentArchitect() {
             icon={Trophy} 
             title="Sin temporadas" 
             description="Comienza creando tu primera edición del torneo." 
-            action={<Button onClick={() => setShowNewTemp(true)} className="font-black italic uppercase tracking-tighter">Crear Ahora</Button>} 
+            action={<Button onClick={() => setShowNewTemp(true)} className="font-black italic uppercase tracking-wide">Crear Ahora</Button>} 
           />
         )}
       </div>
@@ -134,7 +134,7 @@ export default function TournamentArchitect() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
               <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tighter text-text-primary uppercase italic leading-[1.1]">
+                  <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-wide text-text-primary uppercase italic leading-[1.1]">
                     {tree.nombre}
                   </h2>
                   <Badge status={tree.estado} className="h-6" />
@@ -153,21 +153,21 @@ export default function TournamentArchitect() {
               <div className="flex flex-wrap items-center gap-3 sm:shrink-0">
                 {!isVault && (
                   <>
-                    <Button variant="outline" size="sm" onClick={() => setShowEditTemp(true)} className="flex-1 sm:flex-none h-12 px-6 font-black uppercase italic tracking-tighter">
+                    <Button variant="outline" size="sm" onClick={() => setShowEditTemp(true)} className="flex-1 sm:flex-none h-12 px-6 font-black uppercase italic tracking-wide">
                       <Pencil className="w-4 h-4 mr-2" /> Editar
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleDeleteTemporada} loading={deleteTemporada.isPending} className="flex-1 sm:flex-none h-12 px-6 font-black uppercase italic tracking-tighter text-danger border-danger hover:bg-danger hover:text-bg-deep">
+                    <Button variant="outline" size="sm" onClick={handleDeleteTemporada} loading={deleteTemporada.isPending} className="flex-1 sm:flex-none h-12 px-6 font-black uppercase italic tracking-wide text-danger border-danger hover:bg-danger hover:text-bg-deep">
                       <Trash2 className="w-4 h-4 mr-2" /> Eliminar
                     </Button>
                   </>
                 )}
                 {tree.estado === 'borrador' && (
-                  <Button variant="primary" size="sm" onClick={() => setShowEditTemp(true)} className="flex-1 sm:flex-none h-12 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20">
+                  <Button variant="primary" size="sm" onClick={() => setShowEditTemp(true)} className="flex-1 sm:flex-none h-12 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-wide shadow-lg shadow-primary/20">
                     <Zap className="w-4 h-4 mr-2" /> Abrir Edición
                   </Button>
                 )}
                 {isVault && (
-                  <div className="flex items-center gap-2 px-5 py-3 rounded-xl bg-danger/10 text-danger border border-danger/20 text-xs font-black uppercase italic tracking-tighter">
+                  <div className="flex items-center gap-2 px-5 py-3 rounded-xl bg-danger/10 text-danger border border-danger/20 text-xs font-black uppercase italic tracking-wide">
                     <LockIcon className="w-4 h-4" /> Bóveda de Datos
                   </div>
                 )}
@@ -193,7 +193,7 @@ export default function TournamentArchitect() {
                         </div>
                         
                         <div className="flex-1 min-w-0 space-y-1 pt-1">
-                          <h4 className="text-xl sm:text-2xl font-heading font-black tracking-tighter text-text-primary uppercase italic leading-[1.1] truncate">
+                          <h4 className="text-xl sm:text-2xl font-heading font-black tracking-wide text-text-primary uppercase italic leading-[1.1] truncate">
                             {fase.nombre}
                           </h4>
                           <div className="flex flex-wrap items-center gap-3">
@@ -212,10 +212,10 @@ export default function TournamentArchitect() {
                               <Button variant="ghost" size="sm" onClick={() => setEditingFase(fase)} className="flex-1 sm:flex-none h-11 px-4 text-text-dim hover:text-primary bg-white/5 border border-white/5">
                                 <Pencil className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => setShowGenerateFixture(fase)} className="flex-1 sm:flex-none h-11 px-5 text-primary bg-primary/5 border border-primary/20 font-black uppercase italic tracking-tighter text-xs">
+                              <Button variant="ghost" size="sm" onClick={() => setShowGenerateFixture(fase)} className="flex-1 sm:flex-none h-11 px-5 text-primary bg-primary/5 border border-primary/20 font-black uppercase italic tracking-wide text-xs">
                                 <Zap className="w-4 h-4 mr-2" /> Fixture
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => { setSelectedFase(fase.id); setShowNewJornadas(true) }} className="flex-1 sm:flex-none h-11 px-5 text-text-primary bg-white/5 border border-white/10 font-black uppercase italic tracking-tighter text-xs">
+                              <Button variant="ghost" size="sm" onClick={() => { setSelectedFase(fase.id); setShowNewJornadas(true) }} className="flex-1 sm:flex-none h-11 px-5 text-text-primary bg-white/5 border border-white/10 font-black uppercase italic tracking-wide text-xs">
                                 <Plus className="w-4 h-4 mr-2" /> Jornadas
                               </Button>
                             </>
@@ -253,9 +253,9 @@ export default function TournamentArchitect() {
               ) : (
                 <div className="text-center py-16 bg-bg-deep/50 rounded-[2rem] border-2 border-dashed border-white/5">
                   <Layers className="w-16 h-16 text-text-dim/20 mx-auto mb-6" />
-                  <p className="text-base text-text-dim font-bold mb-6 italic uppercase tracking-tight">El torneo aún no tiene fases competitivas.</p>
+                  <p className="text-base text-text-dim font-bold mb-6 italic uppercase tracking-normal">El torneo aún no tiene fases competitivas.</p>
                   {!isVault && (
-                    <Button onClick={() => setShowNewFase(true)} className="font-black italic uppercase tracking-tighter h-12 px-8">
+                    <Button onClick={() => setShowNewFase(true)} className="font-black italic uppercase tracking-wide h-12 px-8">
                       <Plus className="w-5 h-5 mr-2" /> Definir Primera Fase
                     </Button>
                   )}
@@ -334,7 +334,7 @@ function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, l
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-black uppercase italic tracking-tighter leading-none">Fecha {jornada.numero}</span>
+            <span className="text-sm font-black uppercase italic tracking-wide leading-none">Fecha {jornada.numero}</span>
             <Badge status={jornada.estado} className="text-[8px] h-4" />
           </div>
           {jornada.fecha_tentativa && (
@@ -378,7 +378,7 @@ function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, l
                     <Button 
                       size="xs" 
                       variant="outline" 
-                      className="text-danger hover:bg-danger/10 border-danger/20 h-10 px-4 font-black uppercase italic tracking-tighter text-[10px]"
+                      className="text-danger hover:bg-danger/10 border-danger/20 h-10 px-4 font-black uppercase italic tracking-wide text-[10px]"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (confirm('¿Cerrar esta fecha? Todos los partidos se marcarán como postergados.')) {
@@ -423,11 +423,11 @@ function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, l
                     <div className="flex-1 flex items-center justify-between min-w-0 gap-3">
                       <div className="flex items-center gap-2 min-w-0">
                          <div className="w-1.5 h-6 rounded-full shrink-0" style={{ backgroundColor: p.equipo_local?.color_principal || '#CEDE0B' }} />
-                         <span className="text-[11px] font-black uppercase italic tracking-tighter truncate">{p.equipo_local?.nombre}</span>
+                         <span className="text-[11px] font-black uppercase italic tracking-wide truncate">{p.equipo_local?.nombre}</span>
                       </div>
                       <div className="px-2 text-[9px] font-black text-primary italic shrink-0">VS</div>
                       <div className="flex items-center gap-2 min-w-0 text-right justify-end">
-                         <span className="text-[11px] font-black uppercase italic tracking-tighter truncate">{p.equipo_visitante?.nombre}</span>
+                         <span className="text-[11px] font-black uppercase italic tracking-wide truncate">{p.equipo_visitante?.nombre}</span>
                          <div className="w-1.5 h-6 rounded-full shrink-0" style={{ backgroundColor: p.equipo_visitante?.color_principal || '#ffffff' }} />
                       </div>
                     </div>
@@ -505,7 +505,7 @@ function MatchCreator({ jornadaId, equipos }) {
         </div>
       </div>
 
-      <Button type="submit" loading={createPartido.isPending} className="w-full h-14 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20">
+      <Button type="submit" loading={createPartido.isPending} className="w-full h-14 bg-primary text-bg-deep font-black uppercase italic tracking-wide shadow-2xl shadow-primary/20">
         Confirmar Encuentro
       </Button>
     </form>
@@ -521,7 +521,7 @@ function TeamInscriptionsBadge({ teamId, temporadaId, required, ligaId }) {
   const activos = plantel?.plantel?.inscripciones?.filter(i => i.estado === 'activo')?.length || 0
 
   return (
-    <div className={`ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-tight uppercase ${
+    <div className={`ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-normal uppercase ${
       activos >= required ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning animate-pulse'
     }`}>
       {activos}/{required} JUG.
@@ -730,7 +730,7 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
             </div>
           </div>
 
-          <Button onClick={handleGenerate} className="w-full gap-2 h-14 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20" disabled={selectedTeams.length < 2}>
+          <Button onClick={handleGenerate} className="w-full gap-2 h-14 bg-primary text-bg-deep font-black uppercase italic tracking-wide shadow-2xl shadow-primary/20" disabled={selectedTeams.length < 2}>
             <Zap className="w-5 h-5" /> {isKnockout ? 'Generar Bracket' : 'Generar Fixture'} ({selectedTeams.length} equipos)
           </Button>
         </div>
@@ -751,7 +751,7 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
           </div>
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setConfirming(false)} className="flex-1 h-12 font-bold">Cancelar</Button>
-            <Button onClick={confirmGenerate} loading={isPending} className="flex-1 h-12 bg-warning hover:bg-warning/90 text-bg-deep font-black uppercase italic tracking-tighter">
+            <Button onClick={confirmGenerate} loading={isPending} className="flex-1 h-12 bg-warning hover:bg-warning/90 text-bg-deep font-black uppercase italic tracking-wide">
               Sí, Generar
             </Button>
           </div>
