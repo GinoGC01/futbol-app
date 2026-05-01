@@ -15,6 +15,7 @@ export const adminService = {
   createTemporada: (data) => api.post("/competition/temporadas", data),
   updateTemporada: (id, data) =>
     api.patch(`/competition/temporadas/${id}`, data),
+  deleteTemporada: (id) => api.delete(`/competition/temporadas/${id}`),
   updateEstadoTemporada: (id, estado) =>
     api.patch(`/competition/temporadas/${id}/estado`, { estado }),
   getTemporadaTree: (id) => api.get(`/competition/temporadas/${id}/tree`),
@@ -56,6 +57,8 @@ export const adminService = {
   createPartido: (data) => api.post("/match/partidos", data),
   generateFixture: (faseId, equipoIds) =>
     api.post(`/match/partidos/generate/${faseId}`, { equipo_ids: equipoIds }),
+  generateKnockout: (faseId, equipoIds) =>
+    api.post(`/match/partidos/knockout/${faseId}`, { equipo_ids: equipoIds }),
   cambiarEstadoPartido: (id, estado) =>
     api.patch(`/match/partidos/${id}/estado`, { estado }),
   registrarResultado: (id, data) =>

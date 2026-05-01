@@ -60,6 +60,22 @@ router.patch(
   CompetitionController.updateTemporada
 )
 
+router.delete(
+  '/temporadas/:id',
+  [
+    param('id').isUUID().withMessage('ID de temporada inválido')
+  ],
+  CompetitionController.deleteTemporada
+)
+
+router.patch(
+  '/temporadas/:id/restore',
+  [
+    param('id').isUUID().withMessage('ID de temporada inválido')
+  ],
+  CompetitionController.restoreTemporada
+)
+
 router.get('/formatos', CompetitionController.getFormatos)
 
 // ============================================

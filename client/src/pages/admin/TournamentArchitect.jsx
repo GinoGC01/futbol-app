@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useLigas, useEquipos, useTemporadas, useTemporadaTree, useCreateTemporada, useCreateFase, useCreateJornadas, useFormatos, useUpdateTemporada, useUpdateFase, useUpdateJornada, useFixtureAdmin, useCreatePartido, useGenerateFixture, useInscripcionesEquipo, useCerrarJornada, useInscripcionesTemporada } from '../../hooks/useAdmin'
+import { useLigas, useEquipos, useTemporadas, useTemporadaTree, useCreateTemporada, useCreateFase, useCreateJornadas, useFormatos, useUpdateTemporada, useUpdateFase, useUpdateJornada, useFixtureAdmin, useCreatePartido, useGenerateFixture, useGenerateKnockout, useInscripcionesEquipo, useCerrarJornada, useInscripcionesTemporada, useDeleteTemporada } from '../../hooks/useAdmin'
 import { useToast } from '../../components/ui/Toast'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import EmptyState from '../../components/ui/EmptyState'
-import { Trophy, Plus, ChevronRight, ChevronDown, Layers, Calendar, Lock as LockIcon, Pencil, Swords, Zap, Check, X, Shield } from 'lucide-react'
+import { Trophy, Plus, ChevronRight, ChevronDown, Layers, Calendar, Lock as LockIcon, Pencil, Swords, Zap, Check, X, Shield, Trash2 } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
 import Loader from '../../components/ui/Loader'
@@ -32,6 +32,22 @@ export default function TournamentArchitect() {
 
   const isVault = tree?.estado === 'finalizada'
 
+  const deleteTemporada = useDeleteTemporada()
+  const toast = useToast()
+
+  const handleDeleteTemporada = () => {
+    if (confirm('¿Estás seguro de que quieres eliminar esta temporada? Esta acción es irreversible y eliminará todos los partidos, jornadas y fases de la temporada en cascada.')) {
+      deleteTemporada.mutate(tree.id, {
+        onSuccess: () => {
+          toast.success('Temporada eliminada');
+          setSelectedTemp(null);
+        },
+        onError: (err) => {
+          toast.error(err.message || 'Error al eliminar temporada');
+        }
+      });
+    }
+  };
   // Sincronizar selectedTemp con la primera temporada si no hay selección
   useEffect(() => {
     if (temporadas?.length > 0 && !selectedTemp) {
@@ -136,9 +152,14 @@ export default function TournamentArchitect() {
 
               <div className="flex flex-wrap items-center gap-3 sm:shrink-0">
                 {!isVault && (
-                  <Button variant="outline" size="sm" onClick={() => setShowEditTemp(true)} className="flex-1 sm:flex-none h-12 px-6 font-black uppercase italic tracking-tighter">
-                    <Pencil className="w-4 h-4 mr-2" /> Editar
-                  </Button>
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => setShowEditTemp(true)} className="flex-1 sm:flex-none h-12 px-6 font-black uppercase italic tracking-tighter">
+                      <Pencil className="w-4 h-4 mr-2" /> Editar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleDeleteTemporada} loading={deleteTemporada.isPending} className="flex-1 sm:flex-none h-12 px-6 font-black uppercase italic tracking-tighter text-danger border-danger hover:bg-danger hover:text-bg-deep">
+                      <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                    </Button>
+                  </>
                 )}
                 {tree.estado === 'borrador' && (
                   <Button variant="primary" size="sm" onClick={() => setShowEditTemp(true)} className="flex-1 sm:flex-none h-12 px-8 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20">
@@ -513,10 +534,12 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
   const [confirming, setConfirming] = useState(false)
   const [resultData, setResultData] = useState(null)
   const generateFixture = useGenerateFixture()
+  const generateKnockout = useGenerateKnockout()
   const toast = useToast()
 
   const faseId = fase?.id
   const idaYVuelta = fase?.ida_y_vuelta || false
+  const isKnockout = fase?.tipo === 'eliminacion_directa'
 
   useEffect(() => {
     if (open) {
@@ -527,9 +550,7 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
   }, [open, equipos])
 
   function toggleTeam(id) {
-    setSelectedTeams(prev => 
-      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
-    )
+    setSelectedTeams(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id])
   }
 
   function handleGenerate() {
@@ -538,10 +559,11 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
   }
 
   function confirmGenerate() {
-    generateFixture.mutate({ faseId, equipoIds: selectedTeams }, {
+    const mutation = isKnockout ? generateKnockout : generateFixture
+    mutation.mutate({ faseId, equipoIds: selectedTeams }, {
       onSuccess: (data) => {
         toast.success(data.message || 'Fixture generado exitosamente')
-        if (data.warnings?.length > 0) {
+        if (data.warnings?.length > 0 || data.bracket) {
           setResultData(data)
         } else {
           onClose()
@@ -555,28 +577,53 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
   }
 
   const n = selectedTeams.length
+
+  // Knockout stats
+  const nextPow2 = (v) => { let p = 1; while (p < v) p *= 2; return p }
+  const bracketSize = isKnockout ? nextPow2(n) : 0
+  const byeCount = isKnockout ? bracketSize - n : 0
+  const knockoutRounds = isKnockout ? Math.log2(bracketSize) : 0
+  const ROUND_MAP = { 32:'16avos', 16:'8vos', 8:'4tos', 4:'Semis', 2:'Final' }
+  const knockoutRoundNames = (() => {
+    if (!isKnockout) return []
+    const names = []; let c = bracketSize
+    while (c >= 2) { names.push(ROUND_MAP[c] || `Ronda de ${c}`); c /= 2 }
+    return names
+  })()
+
+  // Round-robin stats
   const roundsPerLeg = n % 2 === 0 ? n - 1 : n
-  const totalRounds = idaYVuelta ? roundsPerLeg * 2 : roundsPerLeg
+  const totalRoundsRR = idaYVuelta ? roundsPerLeg * 2 : roundsPerLeg
   const matchesPerRound = Math.floor(n / 2)
-  const totalMatches = totalRounds * matchesPerRound
+  const totalMatchesRR = totalRoundsRR * matchesPerRound
+
+  const totalRounds = isKnockout ? (idaYVuelta ? knockoutRounds * 2 : knockoutRounds) : totalRoundsRR
   const existingJornadas = fase?.jornadas?.length || 0
   const jornadasAutoCreate = Math.max(0, totalRounds - existingJornadas)
 
   const modalidadReq = currentTemporada?.modalidad || (currentTemporada?.liga?.tipo_futbol 
-    ? parseInt(currentTemporada.liga.tipo_futbol.replace(/\D/g, '')) 
-    : 11);
+    ? parseInt(currentTemporada.liga.tipo_futbol.replace(/\D/g, '')) : 11)
 
   // Post-generation result view
   if (resultData) {
     return (
-      <Modal open={open} onClose={onClose} title="Fixture Generado" size="md">
+      <Modal open={open} onClose={onClose} title={isKnockout ? "Bracket Generado" : "Fixture Generado"} size="md">
         <div className="space-y-5 animate-fade-in text-center">
           <div className="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center mx-auto">
             <Check className="w-8 h-8 text-success" />
           </div>
           <div>
-            <h3 className="font-heading font-bold text-lg text-success mb-1">¡Fixture Generado!</h3>
+            <h3 className="font-heading font-bold text-lg text-success mb-1">{isKnockout ? '¡Bracket Generado!' : '¡Fixture Generado!'}</h3>
             <p className="text-sm text-text-dim">{resultData.message}</p>
+            {resultData.rondas_nombres && (
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                {resultData.rondas_nombres.map((name, i) => (
+                  <span key={i} className="text-[9px] font-black bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20 uppercase tracking-widest">
+                    {name}
+                  </span>
+                ))}
+              </div>
+            )}
             {resultData.jornadas_autocreadas > 0 && (
               <p className="mt-2 text-xs text-secondary bg-secondary/5 p-2 rounded-lg border border-secondary/10">
                 Se crearon automáticamente <span className="font-bold">{resultData.jornadas_autocreadas}</span> jornadas adicionales.
@@ -591,59 +638,69 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
               ))}
             </div>
           )}
-          <Button onClick={onClose} className="w-full bg-success hover:bg-success/90 text-bg-deep font-bold">
-            Cerrar
-          </Button>
+          <Button onClick={onClose} className="w-full bg-success hover:bg-success/90 text-bg-deep font-bold">Cerrar</Button>
         </div>
       </Modal>
     )
   }
 
+  const isPending = isKnockout ? generateKnockout.isPending : generateFixture.isPending
+
   return (
-    <Modal open={open} onClose={onClose} title="Generar Fixture Automático" size="md">
+    <Modal open={open} onClose={onClose} title={isKnockout ? "Generar Bracket de Eliminación" : "Generar Fixture Automático"} size="md">
       {!confirming ? (
         <div className="space-y-5 animate-fade-in">
-          {/* Algorithm Info Panel */}
           <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-3">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-primary" />
-              <p className="text-xs font-black text-primary uppercase tracking-widest">Motor de Fixture</p>
+              <p className="text-xs font-black text-primary uppercase tracking-widest">{isKnockout ? 'Motor Eliminación Directa' : 'Motor de Fixture'}</p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
-                <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">Equipos</p>
-                <p className="text-lg font-black text-text-primary leading-none">{n}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
-                <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">Jornadas</p>
-                <p className="text-lg font-black text-text-primary leading-none">{totalRounds}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
-                <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">Part/Jornada</p>
-                <p className="text-lg font-black text-text-primary leading-none">{matchesPerRound}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
-                <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">Total</p>
-                <p className="text-lg font-black text-text-primary leading-none">{totalMatches}</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {idaYVuelta && (
-                <span className="text-[9px] font-black text-secondary bg-secondary/10 px-2 py-1 rounded-md border border-secondary/20 uppercase tracking-widest">
-                  Ida y Vuelta
-                </span>
-              )}
-              {n % 2 !== 0 && (
-                <span className="text-[9px] font-black text-warning bg-warning/10 px-2 py-1 rounded-md border border-warning/20 uppercase tracking-widest">
-                  {n} impares — rotación descanso
-                </span>
-              )}
-              {jornadasAutoCreate > 0 && (
-                <span className="text-[9px] font-black text-secondary bg-secondary/10 px-2 py-1 rounded-md border border-secondary/20 uppercase tracking-widest">
-                  +{jornadasAutoCreate} jornadas automáticas
-                </span>
-              )}
-            </div>
+            {isKnockout ? (
+              <>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
+                    <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">Equipos</p>
+                    <p className="text-lg font-black text-text-primary leading-none">{n}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
+                    <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">Cuadro</p>
+                    <p className="text-lg font-black text-text-primary leading-none">{bracketSize}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
+                    <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">Rondas</p>
+                    <p className="text-lg font-black text-text-primary leading-none">{knockoutRounds}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {knockoutRoundNames.map((name, i) => (
+                    <span key={i} className="text-[9px] font-black text-secondary bg-secondary/10 px-2 py-1 rounded-md border border-secondary/20 uppercase tracking-widest">{name}</span>
+                  ))}
+                </div>
+                {byeCount > 0 && (
+                  <span className="inline-block text-[9px] font-black text-warning bg-warning/10 px-2 py-1 rounded-md border border-warning/20 uppercase tracking-widest">
+                    {byeCount} BYEs — los mejor rankeados avanzan directo
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {[{l:'Equipos',v:n},{l:'Jornadas',v:totalRoundsRR},{l:'Part/Jornada',v:matchesPerRound},{l:'Total',v:totalMatchesRR}].map(s=>(
+                    <div key={s.l} className="p-2.5 rounded-xl bg-bg-deep/50 border border-white/5">
+                      <p className="text-[9px] text-text-dim uppercase font-bold tracking-wider mb-0.5">{s.l}</p>
+                      <p className="text-lg font-black text-text-primary leading-none">{s.v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {idaYVuelta && <span className="text-[9px] font-black text-secondary bg-secondary/10 px-2 py-1 rounded-md border border-secondary/20 uppercase tracking-widest">Ida y Vuelta</span>}
+                  {n % 2 !== 0 && <span className="text-[9px] font-black text-warning bg-warning/10 px-2 py-1 rounded-md border border-warning/20 uppercase tracking-widest">{n} impares — rotación descanso</span>}
+                </div>
+              </>
+            )}
+            {jornadasAutoCreate > 0 && (
+              <span className="inline-block text-[9px] font-black text-secondary bg-secondary/10 px-2 py-1 rounded-md border border-secondary/20 uppercase tracking-widest">+{jornadasAutoCreate} jornadas automáticas</span>
+            )}
           </div>
 
           {/* Team Selector */}
@@ -651,22 +708,16 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
             <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider mb-2">Equipos que participan ({selectedTeams?.length || 0}/{equipos?.length || 0})</p>
             <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1 flex flex-col items-center justify-center">
               {!equipos ? (
-                 <div className="py-10 text-[10px] text-text-dim italic">Cargando equipos...</div>
+                <div className="py-10 text-[10px] text-text-dim italic">Cargando equipos...</div>
               ) : equipos.length === 0 ? (
-                 <div className="py-10 text-[10px] text-text-dim italic text-center">No hay equipos inscritos en esta temporada.<br/>Inscribe equipos en la sección de Roster antes de generar el fixture.</div>
+                <div className="py-10 text-[10px] text-text-dim italic text-center">No hay equipos inscritos en esta temporada.<br/>Inscribe equipos en la sección de Roster antes de generar el fixture.</div>
               ) : (
                 equipos.map(eq => {
                   const isSelected = selectedTeams.includes(eq.id)
                   return (
                     <button key={eq.id} onClick={() => toggleTeam(eq.id)} type="button"
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
-                        isSelected 
-                          ? 'bg-primary/5 border-primary/30 text-text-primary' 
-                          : 'bg-bg-surface border-border-subtle text-text-dim opacity-60'
-                      }`}>
-                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
-                        isSelected ? 'bg-primary border-primary' : 'border-border-default'
-                      }`}>
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${isSelected ? 'bg-primary/5 border-primary/30 text-text-primary' : 'bg-bg-surface border-border-subtle text-text-dim opacity-60'}`}>
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${isSelected ? 'bg-primary border-primary' : 'border-border-default'}`}>
                         {isSelected && <Check className="w-3 h-3 text-bg-deep" />}
                       </div>
                       <Shield className="w-4 h-4 shrink-0" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
@@ -680,7 +731,7 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
           </div>
 
           <Button onClick={handleGenerate} className="w-full gap-2 h-14 bg-primary text-bg-deep font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20" disabled={selectedTeams.length < 2}>
-            <Zap className="w-5 h-5" /> Generar Fixture ({selectedTeams.length} equipos)
+            <Zap className="w-5 h-5" /> {isKnockout ? 'Generar Bracket' : 'Generar Fixture'} ({selectedTeams.length} equipos)
           </Button>
         </div>
       ) : (
@@ -691,24 +742,16 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
           <div>
             <h3 className="font-heading font-bold text-lg text-warning mb-1">Confirmar Generación</h3>
             <p className="text-sm text-text-dim">
-              Se generará un fixture de <span className="font-bold text-text-primary">{totalMatches} partidos</span> en <span className="font-bold text-text-primary">{totalRounds} jornadas</span> para <span className="font-bold text-text-primary">{n} equipos</span>.
-              {idaYVuelta && <><br/><span className="text-secondary font-bold">Formato ida y vuelta</span> — la segunda rueda invierte la localía.</>}
+              {isKnockout
+                ? <>Se generará un <span className="font-bold text-text-primary">bracket de eliminación directa</span> para <span className="font-bold text-text-primary">{n} equipos</span> con <span className="font-bold text-text-primary">{knockoutRounds} rondas</span> ({knockoutRoundNames.join(' → ')}).{byeCount > 0 && <><br/><span className="text-warning font-bold">{byeCount} equipos pasarán con BYE</span> en la primera ronda.</>}</>
+                : <>Se generará un fixture de <span className="font-bold text-text-primary">{totalMatchesRR} partidos</span> en <span className="font-bold text-text-primary">{totalRoundsRR} jornadas</span> para <span className="font-bold text-text-primary">{n} equipos</span>.{idaYVuelta && <><br/><span className="text-secondary font-bold">Formato ida y vuelta</span> — la segunda rueda invierte la localía.</>}</>
+              }
             </p>
-            {jornadasAutoCreate > 0 && (
-              <p className="mt-2 text-xs text-secondary bg-secondary/5 p-2 rounded-lg border border-secondary/10">
-                Se crearán automáticamente <span className="font-bold">{jornadasAutoCreate}</span> jornadas adicionales.
-              </p>
-            )}
-            <p className="mt-2 text-xs text-warning/80 bg-warning/5 p-2 rounded-lg border border-warning/10 italic">
-              ⚠ Si ya existían partidos en las jornadas de esta fase, serán eliminados y reemplazados.
-            </p>
-            <p className="mt-2 text-xs text-text-dim">
-              Mínimo recomendado: <span className="font-bold text-primary">{modalidadReq} jugadores</span> por equipo (Fútbol {modalidadReq}).
-            </p>
+            <p className="mt-2 text-xs text-warning/80 bg-warning/5 p-2 rounded-lg border border-warning/10 italic">⚠ Si ya existían partidos en las jornadas de esta fase, serán eliminados y reemplazados.</p>
           </div>
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setConfirming(false)} className="flex-1 h-12 font-bold">Cancelar</Button>
-            <Button onClick={confirmGenerate} loading={generateFixture.isPending} className="flex-1 h-12 bg-warning hover:bg-warning/90 text-bg-deep font-black uppercase italic tracking-tighter">
+            <Button onClick={confirmGenerate} loading={isPending} className="flex-1 h-12 bg-warning hover:bg-warning/90 text-bg-deep font-black uppercase italic tracking-tighter">
               Sí, Generar
             </Button>
           </div>

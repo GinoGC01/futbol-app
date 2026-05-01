@@ -52,7 +52,7 @@ class EquipoService {
         id, nombre, escudo_url, color_principal, created_at,
         inscripciones:inscripcion_equipo(
           id, 
-          temporada:temporada(id, nombre, estado)
+          temporada:temporada(id, nombre, estado, deleted_at)
         )
       `)
       .eq('liga_id', ligaId)

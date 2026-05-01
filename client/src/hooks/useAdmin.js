@@ -152,6 +152,22 @@ export function useUpdateTemporada() {
   });
 }
 
+export function useDeleteTemporada() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: adminService.deleteTemporada,
+    onSuccess: (_, deletedId) => {
+      // Remove optimistically so useEffect in components doesn't re-select it
+      qc.setQueriesData({ queryKey: ["temporadas"] }, (oldData) => {
+        if (!oldData || !Array.isArray(oldData)) return oldData;
+        return oldData.filter(t => t.id !== deletedId);
+      });
+      qc.invalidateQueries({ queryKey: ["temporadas"] });
+      qc.removeQueries({ queryKey: ["temporada-tree", deletedId] });
+    },
+  });
+}
+
 export function useCreateFase() {
   const qc = useQueryClient();
   return useMutation({
@@ -200,6 +216,18 @@ export function useGenerateFixture() {
   return useMutation({
     mutationFn: ({ faseId, equipoIds }) =>
       adminService.generateFixture(faseId, equipoIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fixture-admin"] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}
+
+export function useGenerateKnockout() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ faseId, equipoIds }) =>
+      adminService.generateKnockout(faseId, equipoIds),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["fixture-admin"] });
       qc.invalidateQueries({ queryKey: ["temporada-tree"] });

@@ -438,6 +438,227 @@ class PartidoService {
       warnings: [...fixtureResult.warnings, ...rosterWarnings.map(w => w.mensaje)]
     }
   }
+
+  /**
+   * Genera un cuadro de eliminación directa usando el FixtureEngine.
+   * - Valida ownership, equipos y planteles.
+   * - Auto-crea jornadas (una por ronda, o dos si ida y vuelta).
+   * - Construye el bracket completo con BYEs, slots vacíos y partidos reales.
+   * - Solo inserta partidos de la primera ronda (y rondas con avances automáticos por BYE).
+   * - Las rondas futuras se representan como slots vacíos.
+   */
+  async generateKnockout(faseId, organizadorId, equipoIds) {
+    // 1. Obtener datos de la fase y liga asociada
+    const { data: fase, error: faseErr } = await supabaseAdmin
+      .from('fase')
+      .select(`
+        id, nombre, tipo, ida_y_vuelta, orden,
+        temporada:temporada_id(
+          id, liga_id, estado,
+          liga:liga_id(id, tipo_futbol)
+        ),
+        jornadas:jornada(id, numero)
+      `)
+      .eq('id', faseId)
+      .single()
+
+    if (faseErr || !fase) throw new AppError('Fase no encontrada', 404)
+
+    // Reglas de negocio C-02: Dependencia de fases
+    // R1: Si la fase de eliminación no es la primera, no se permite generación automática.
+    // El organizador debe gestionar los cruces manualmente para asegurar seeding correcto desde la fase previa.
+    if (fase.orden > 1) {
+      throw new AppError('No se permite la generación automática de brackets para fases que dependen de una etapa anterior. Debes crear los partidos manualmente para definir los cruces según la clasificación.', 403)
+    }
+
+    await LigaService.verifyOwnership(fase.temporada.liga_id, organizadorId)
+
+    if (fase.temporada.estado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede generar bracket (Modo Bóveda)', 403)
+    }
+
+    if (fase.tipo !== 'eliminacion_directa') {
+      throw new AppError('Esta fase no es de eliminación directa. Usa generateRoundRobin para todos contra todos.', 400)
+    }
+
+    if (!equipoIds || equipoIds.length < 2) {
+      throw new AppError('Se necesitan al menos 2 equipos para generar el cuadro de eliminación', 400)
+    }
+
+    // Validar que todos los equipos pertenecen a la liga
+    const { data: equiposValidos, error: eqErr } = await supabaseAdmin
+      .from('equipo')
+      .select('id')
+      .eq('liga_id', fase.temporada.liga_id)
+      .in('id', equipoIds)
+
+    if (eqErr) throw new AppError(`Error validando equipos: ${eqErr.message}`, 500)
+    if (equiposValidos.length !== equipoIds.length) {
+      throw new AppError('Uno o más equipos no pertenecen a esta liga', 400)
+    }
+
+    // Validar inscripciones en la temporada
+    const { data: inscripcionesTemporada, error: insCheckErr } = await supabaseAdmin
+      .from('inscripcion_equipo')
+      .select('equipo_id')
+      .eq('temporada_id', fase.temporada.id)
+      .in('equipo_id', equipoIds)
+
+    if (insCheckErr) throw new AppError(`Error validando inscripciones: ${insCheckErr.message}`, 500)
+    if (inscripcionesTemporada.length !== equipoIds.length) {
+      throw new AppError('Uno o más equipos seleccionados no están inscritos en esta temporada', 400)
+    }
+
+    // Validación de planteles
+    const { data: planteles, error: pError } = await supabaseAdmin
+      .from('plantel')
+      .select(`
+        equipo_id,
+        inscripciones:inscripcion_jugador(id, estado)
+      `)
+      .eq('temporada_id', fase.temporada.id)
+      .in('equipo_id', equipoIds)
+
+    if (pError) throw new AppError(`Error al validar planteles: ${pError.message}`, 500)
+
+    const rosterWarnings = []
+    const tipoFutbol = fase.temporada.liga?.tipo_futbol || 'f5'
+    const modalidad = parseInt(tipoFutbol.replace(/\D/g, '')) || 5
+
+    equipoIds.forEach(eid => {
+      const p = planteles.find(plt => plt.equipo_id === eid)
+      const activos = p?.inscripciones?.filter(i => i.estado === 'activo')?.length || 0
+      if (activos < modalidad) {
+        rosterWarnings.push({
+          equipo_id: eid,
+          mensaje: `El equipo tiene solo ${activos} de ${modalidad} jugadores activos requeridos.`
+        })
+      }
+    })
+
+    // 2. Generar bracket con FixtureEngine
+    const knockoutResult = FixtureEngine.generateKnockout(equipoIds, {
+      idaYVuelta: fase.ida_y_vuelta
+    })
+
+    // 3. Calcular jornadas necesarias (una por ronda, o dos si ida y vuelta)
+    const totalJornadasNeeded = fase.ida_y_vuelta
+      ? knockoutResult.totalRounds * 2
+      : knockoutResult.totalRounds
+
+    let jornadas = (fase.jornadas || []).sort((a, b) => a.numero - b.numero)
+
+    // Auto-crear jornadas faltantes
+    if (jornadas.length < totalJornadasNeeded) {
+      const faltantes = totalJornadasNeeded - jornadas.length
+      const startNumber = jornadas.length > 0 ? jornadas[jornadas.length - 1].numero + 1 : 1
+
+      const nuevasJornadas = []
+      for (let i = 0; i < faltantes; i++) {
+        const roundIdx = fase.ida_y_vuelta ? Math.floor((jornadas.length + i) / 2) : jornadas.length + i
+        const roundName = knockoutResult.roundNames[roundIdx] || `Ronda ${roundIdx + 1}`
+        const suffix = fase.ida_y_vuelta && (jornadas.length + i) % 2 === 1 ? ' (Vuelta)' : ''
+
+        nuevasJornadas.push({
+          fase_id: faseId,
+          numero: startNumber + i,
+          estado: 'programada'
+        })
+      }
+
+      const { data: insertadas, error: jorErr } = await supabaseAdmin
+        .from('jornada')
+        .insert(nuevasJornadas)
+        .select('id, numero')
+
+      if (jorErr) throw new AppError(`Error creando jornadas automáticas: ${jorErr.message}`, 500)
+
+      jornadas = [...jornadas, ...insertadas].sort((a, b) => a.numero - b.numero)
+    }
+
+    // 4. Borrar partidos existentes de TODAS las jornadas de esta fase
+    const jornadaIds = jornadas.map(j => j.id)
+    const { error: deleteErr } = await supabaseAdmin
+      .from('partido')
+      .delete()
+      .in('jornada_id', jornadaIds)
+
+    if (deleteErr) throw new AppError(`Error eliminando partidos existentes: ${deleteErr.message}`, 500)
+
+    // 5. Insertar partidos reales (primera ronda + avances automáticos)
+    const allPartidos = []
+    const bracketMap = [] // Track matchNumber -> jornada mapping for the bracket
+
+    for (let r = 0; r < knockoutResult.rounds.length; r++) {
+      const round = knockoutResult.rounds[r]
+      // Map round to jornada (ida y vuelta gets 2 jornadas per round)
+      const jornadaIdx = fase.ida_y_vuelta ? r * 2 : r
+
+      for (const match of round.matches) {
+        // Skip BYE matches — they don't need DB records
+        if (match.isBye) continue
+
+        // Only insert matches that have both teams resolved
+        if (match.local && match.visitante) {
+          allPartidos.push({
+            jornada_id: jornadas[jornadaIdx].id,
+            equipo_local_id: match.local,
+            equipo_visitante_id: match.visitante,
+            estado: 'programado'
+          })
+
+          // R8: Insert return leg match
+          if (match.idaYVuelta && match.vuelta && jornadaIdx + 1 < jornadas.length) {
+            allPartidos.push({
+              jornada_id: jornadas[jornadaIdx + 1].id,
+              equipo_local_id: match.vuelta.local,
+              equipo_visitante_id: match.vuelta.visitante,
+              estado: 'programado'
+            })
+          }
+        }
+
+        bracketMap.push({
+          matchNumber: match.matchNumber,
+          jornada_id: jornadas[jornadaIdx]?.id,
+          round: match.round,
+          roundName: match.roundName,
+          local: match.local,
+          visitante: match.visitante,
+          localSource: match.localSource,
+          visitanteSource: match.visitanteSource
+        })
+      }
+    }
+
+    // 6. Insertar en batch
+    let insertados = []
+    if (allPartidos.length > 0) {
+      const { data: inserted, error: insErr } = await supabaseAdmin
+        .from('partido')
+        .insert(allPartidos)
+        .select('id, jornada_id, equipo_local_id, equipo_visitante_id')
+
+      if (insErr) throw new AppError(`Error insertando partidos: ${insErr.message}`, 500)
+      insertados = inserted
+    }
+
+    return {
+      message: `Bracket generado: ${insertados.length} partidos en ${knockoutResult.totalRounds} rondas (${knockoutResult.roundNames.join(' → ')})`,
+      mode: 'eliminacion_directa',
+      partidos_creados: insertados.length,
+      rondas: knockoutResult.totalRounds,
+      rondas_nombres: knockoutResult.roundNames,
+      bracket_size: knockoutResult.bracketSize,
+      bye_count: knockoutResult.byeCount,
+      jornadas_usadas: totalJornadasNeeded,
+      jornadas_autocreadas: Math.max(0, totalJornadasNeeded - (fase.jornadas || []).length),
+      ida_y_vuelta: fase.ida_y_vuelta,
+      bracket: knockoutResult.bracket,
+      bracketMap,
+      warnings: [...knockoutResult.warnings, ...rosterWarnings.map(w => w.mensaje)]
+    }
+  }
 }
 
 export default new PartidoService()

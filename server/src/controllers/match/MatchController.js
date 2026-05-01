@@ -73,6 +73,21 @@ class MatchController {
       res.status(201).json({ status: 'success', data: result })
     } catch (error) { next(error) }
   }
+
+  async generateKnockout(req, res, next) {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+      const { faseId } = req.params
+      const { equipo_ids } = req.body
+      const organizadorId = req.organizador.id
+
+      const result = await PartidoService.generateKnockout(faseId, organizadorId, equipo_ids)
+
+      res.status(201).json({ status: 'success', data: result })
+    } catch (error) { next(error) }
+  }
 }
 
 export default new MatchController()

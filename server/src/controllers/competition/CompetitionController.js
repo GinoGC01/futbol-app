@@ -32,9 +32,10 @@ class CompetitionController {
       // El listado de temporadas necesita el liga_id por param/query 
       // y validar si la liga del owner.
       const ligaId = req.query.liga_id
+      const filterArchived = req.query.filter || 'active'
       const organizadorId = req.organizador.id
 
-      const temporadas = await TemporadaService.getTemporadasByLiga(ligaId, organizadorId)
+      const temporadas = await TemporadaService.getTemporadasByLiga(ligaId, organizadorId, filterArchived)
       
       res.status(200).json({ status: 'success', results: temporadas.length, data: temporadas })
     } catch (error) { next(error) }
@@ -84,6 +85,28 @@ class CompetitionController {
       const actualizada = await TemporadaService.updateTemporada(id, organizadorId, req.body)
       
       res.status(200).json({ status: 'success', data: actualizada })
+    } catch (error) { next(error) }
+  }
+
+  async deleteTemporada(req, res, next) {
+    try {
+      const { id } = req.params
+      const organizadorId = req.organizador.id
+
+      const result = await TemporadaService.deleteTemporada(id, organizadorId)
+
+      res.status(200).json({ status: 'success', data: result })
+    } catch (error) { next(error) }
+  }
+
+  async restoreTemporada(req, res, next) {
+    try {
+      const { id } = req.params
+      const organizadorId = req.organizador.id
+
+      const result = await TemporadaService.restoreTemporada(id, organizadorId)
+
+      res.status(200).json({ status: 'success', data: result })
     } catch (error) { next(error) }
   }
 

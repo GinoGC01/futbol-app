@@ -95,12 +95,88 @@ class FixtureEngine {
   }
 
   /**
+   * Genera un cuadro de eliminación directa completo.
+   * @param {string[]} equipoIds — UUIDs de los equipos participantes (mínimo 2)
+   * @param {Object} options — Opciones de configuración
+   * @param {boolean} options.idaYVuelta — Si true, cada cruce tiene ida y vuelta (R8)
+   * @param {string[]} options.ranking — Orden de equipos por ranking (mejor a peor). Si no se provee, se usa el orden de equipoIds.
+   * @returns {{ rounds: Array, bracket: Object, totalRounds: number, totalMatches: number, bracketSize: number, warnings: string[] }}
+   */
+  generateKnockout(equipoIds, options = {}) {
+    if (!equipoIds || equipoIds.length < 2) {
+      throw new Error('Se necesitan al menos 2 equipos para generar el cuadro de eliminación')
+    }
+
+    const { idaYVuelta = false, ranking = null } = options
+    const warnings = []
+    const n = equipoIds.length
+
+    // Ranking: si se provee ranking, usarlo; si no, usar el orden original
+    const rankedTeams = ranking ? [...ranking] : [...equipoIds]
+    
+    // Validar que todos los equipoIds estén en el ranking
+    if (ranking) {
+      const rankSet = new Set(ranking)
+      const missing = equipoIds.filter(id => !rankSet.has(id))
+      if (missing.length > 0) {
+        warnings.push(`Ranking incompleto: ${missing.length} equipos sin posición. Se agregarán al final.`)
+        rankedTeams.push(...missing)
+      }
+    }
+
+    // ─── PASO 1: Calcular potencia de 2 más cercana (bracketSize) ───
+    const bracketSize = this._nextPowerOf2(n)
+    const totalByes = bracketSize - n
+
+    if (totalByes > 0) {
+      warnings.push(`Se generarán ${totalByes} BYEs para completar el cuadro de ${bracketSize}`)
+    }
+
+    // ─── PASO 2: Nombrar las rondas ───
+    const roundNames = this._getRoundNames(bracketSize)
+    const totalRounds = roundNames.length
+
+    // ─── PASO 3: Generar seeds con BYEs distribuidos equitativamente (R2) ───
+    const seeds = this._generateKnockoutSeeds(rankedTeams, bracketSize, totalByes)
+
+    // ─── PASO 4: Construir el árbol de eliminación completo (R5, R6) ───
+    const { rounds, bracket } = this._buildBracketTree(seeds, roundNames, bracketSize, idaYVuelta)
+
+    // Calcular total de partidos (sin contar BYEs)
+    let totalMatches = 0
+    for (const round of rounds) {
+      totalMatches += round.matches.filter(m => !m.isBye).length
+    }
+
+    return {
+      rounds,
+      bracket,
+      roundNames,
+      totalRounds,
+      totalMatches,
+      bracketSize,
+      byeCount: totalByes,
+      idaYVuelta,
+      warnings
+    }
+  }
+
+  /**
    * Calcula cuántas jornadas necesita una fase.
    */
   calculateRequiredRounds(teamCount, idaYVuelta) {
     const n = teamCount
     const roundsPerLeg = n % 2 === 0 ? n - 1 : n
     return idaYVuelta ? roundsPerLeg * 2 : roundsPerLeg
+  }
+
+  /**
+   * Calcula las jornadas necesarias para eliminación directa.
+   */
+  calculateKnockoutRounds(teamCount, idaYVuelta) {
+    const bracketSize = this._nextPowerOf2(teamCount)
+    const totalRounds = Math.log2(bracketSize)
+    return idaYVuelta ? totalRounds * 2 : totalRounds
   }
 
   // ═══════════════════════════════════════════
@@ -423,6 +499,283 @@ class FixtureEngine {
     }
 
     return violations
+  }
+
+  // ═══════════════════════════════════════════
+  // KNOCKOUT PRIVATE METHODS
+  // ═══════════════════════════════════════════
+
+  /**
+   * Siguiente potencia de 2 >= n.
+   */
+  _nextPowerOf2(n) {
+    let p = 1
+    while (p < n) p *= 2
+    return p
+  }
+
+  /**
+   * Nombra las rondas desde la primera hasta la final según el bracketSize.
+   * 32 → [16avos, 8vos, 4tos, Semis, Final]
+   * 16 → [8vos, 4tos, Semis, Final]
+   * 8  → [4tos, Semis, Final]
+   * 4  → [Semis, Final]
+   * 2  → [Final]
+   */
+  _getRoundNames(bracketSize) {
+    const ROUND_NAMES = {
+      32: '16avos',
+      16: '8vos',
+      8: '4tos',
+      4: 'Semis',
+      2: 'Final'
+    }
+
+    const names = []
+    let current = bracketSize
+    while (current >= 2) {
+      names.push(ROUND_NAMES[current] || `Ronda de ${current}`)
+      current = current / 2
+    }
+    return names
+  }
+
+  /**
+   * Genera los seeds del bracket con BYEs distribuidos equitativamente (R2, R3).
+   * Los equipos mejor rankeados reciben los BYEs (R3).
+   * 
+   * Usa el sistema de seeding estándar de torneos:
+   * - Seed 1 vs Seed N, Seed 2 vs Seed N-1, etc.
+   * - BYEs van contra los seeds más altos (mejor rankeados)
+   * 
+   * @returns {Array<{position: number, team: string|null, seed: number}>}
+   */
+  _generateKnockoutSeeds(rankedTeams, bracketSize, totalByes) {
+    // Generar el orden de seeds estándar (bracket seeding)
+    // Esto asegura que los mejores rankeados no se enfrenten hasta rondas finales
+    const seedOrder = this._generateSeedOrder(bracketSize)
+
+    // Crear array de participantes: los primeros N son equipos, el resto BYEs
+    const participants = []
+    for (let i = 0; i < bracketSize; i++) {
+      if (i < rankedTeams.length) {
+        participants.push({ seed: i + 1, team: rankedTeams[i], isBye: false })
+      } else {
+        participants.push({ seed: i + 1, team: null, isBye: true })
+      }
+    }
+
+    // Colocar participantes en las posiciones del bracket según seedOrder
+    const seeds = new Array(bracketSize)
+    for (let i = 0; i < bracketSize; i++) {
+      const seedNumber = seedOrder[i]
+      seeds[i] = participants[seedNumber - 1]
+      seeds[i].position = i
+    }
+
+    return seeds
+  }
+
+  /**
+   * Genera el orden de seeds estándar para un bracket de potencia de 2.
+   * Asegura que Seed 1 y Seed 2 estén en lados opuestos del cuadro,
+   * Seed 3 y Seed 4 se distribuyan equitativamente, etc.
+   * 
+   * Para bracketSize=8: [1, 8, 4, 5, 2, 7, 3, 6]
+   */
+  _generateSeedOrder(bracketSize) {
+    let order = [1]
+    let currentSize = 1
+
+    while (currentSize < bracketSize) {
+      const nextSize = currentSize * 2
+      const newOrder = []
+      for (const seed of order) {
+        newOrder.push(seed)
+        newOrder.push(nextSize + 1 - seed)
+      }
+      order = newOrder
+      currentSize = nextSize
+    }
+
+    return order
+  }
+
+  /**
+   * Construye el árbol completo del bracket.
+   * 
+   * - Primera ronda: pares de seeds con sus equipos/BYEs
+   * - Rondas futuras: slots vacíos con referencia al partido origen (R5)
+   * - Todo el cuadro es visible desde el inicio (R6)
+   * 
+   * @returns {{ rounds: Array, bracket: Object }}
+   */
+  _buildBracketTree(seeds, roundNames, bracketSize, idaYVuelta) {
+    const rounds = []
+    let matchCounter = 0
+
+    // ─── Primera Ronda ───
+    const firstRoundMatches = []
+    const firstRoundMatchCount = bracketSize / 2
+
+    for (let i = 0; i < firstRoundMatchCount; i++) {
+      const teamA = seeds[i * 2]
+      const teamB = seeds[i * 2 + 1]
+      matchCounter++
+
+      const isBye = teamA.isBye || teamB.isBye
+
+      // R7: Localía por ranking (el mejor rankeado es local)
+      let local, visitante
+      if (isBye) {
+        // BYE: el equipo real es local, el otro es null
+        local = teamA.isBye ? teamB : teamA
+        visitante = teamA.isBye ? teamA : teamB
+      } else {
+        // R7: Mejor seed (menor número) es local
+        if (teamA.seed < teamB.seed) {
+          local = teamA
+          visitante = teamB
+        } else {
+          local = teamB
+          visitante = teamA
+        }
+      }
+
+      const match = {
+        matchNumber: matchCounter,
+        local: local.team,
+        visitante: visitante.team,
+        localSeed: local.seed,
+        visitanteSeed: visitante.seed,
+        isBye,
+        winner: isBye ? (teamA.isBye ? teamB.team : teamA.team) : null,
+        round: 0,
+        roundName: roundNames[0]
+      }
+
+      // R8: Si es ida y vuelta y NO es BYE, generar el partido de vuelta
+      if (idaYVuelta && !isBye) {
+        match.idaYVuelta = true
+        match.vuelta = {
+          matchNumber: matchCounter,
+          local: visitante.team,    // Vuelta: el mejor rankeado juega de local (R8)
+          visitante: local.team,
+          isVuelta: true
+        }
+      }
+
+      firstRoundMatches.push(match)
+    }
+
+    rounds.push({
+      roundIndex: 0,
+      roundName: roundNames[0],
+      matches: firstRoundMatches
+    })
+
+    // ─── Rondas Siguientes (slots vacíos con referencias) ───
+    let previousMatchCount = firstRoundMatchCount
+    for (let r = 1; r < roundNames.length; r++) {
+      const roundMatches = []
+      const matchesInRound = previousMatchCount / 2
+
+      for (let i = 0; i < matchesInRound; i++) {
+        matchCounter++
+        const sourceMatchA = rounds[r - 1].matches[i * 2]
+        const sourceMatchB = rounds[r - 1].matches[i * 2 + 1]
+
+        // Resolver avances automáticos de BYEs
+        const autoAdvanceA = sourceMatchA.isBye ? sourceMatchA.winner : null
+        const autoAdvanceB = sourceMatchB.isBye ? sourceMatchB.winner : null
+
+        const hasLocalResolved = autoAdvanceA !== null
+        const hasVisitanteResolved = autoAdvanceB !== null
+
+        const match = {
+          matchNumber: matchCounter,
+          local: autoAdvanceA,
+          visitante: autoAdvanceB,
+          // R5: Referencia a partidos origen
+          localSource: hasLocalResolved ? null : `Ganador P${sourceMatchA.matchNumber}`,
+          visitanteSource: hasVisitanteResolved ? null : `Ganador P${sourceMatchB.matchNumber}`,
+          localSourceMatch: sourceMatchA.matchNumber,
+          visitanteSourceMatch: sourceMatchB.matchNumber,
+          isBye: hasLocalResolved && hasVisitanteResolved && (autoAdvanceA === null || autoAdvanceB === null),
+          winner: null,
+          round: r,
+          roundName: roundNames[r]
+        }
+
+        // Si ambos lados tienen avance automático (2 BYEs consecutivos generan un BYE en esta ronda),
+        // esto no debería pasar con distribución correcta, pero por seguridad:
+        if (hasLocalResolved && hasVisitanteResolved && autoAdvanceA && autoAdvanceB) {
+          match.isBye = false
+          // R7: Mejor seed es local
+          // Usamos los seeds de los equipos originales
+          const seedA = this._findSeedForTeam(seeds, autoAdvanceA)
+          const seedB = this._findSeedForTeam(seeds, autoAdvanceB)
+          if (seedA && seedB && seedA.seed < seedB.seed) {
+            match.local = autoAdvanceA
+            match.visitante = autoAdvanceB
+          } else {
+            match.local = autoAdvanceB
+            match.visitante = autoAdvanceA
+          }
+        }
+
+        // R8: Ida y vuelta para partidos reales de rondas futuras
+        if (idaYVuelta && match.local && match.visitante && !match.isBye) {
+          match.idaYVuelta = true
+          match.vuelta = {
+            matchNumber: matchCounter,
+            local: match.visitante,
+            visitante: match.local,
+            isVuelta: true
+          }
+        }
+
+        roundMatches.push(match)
+      }
+
+      rounds.push({
+        roundIndex: r,
+        roundName: roundNames[r],
+        matches: roundMatches
+      })
+
+      previousMatchCount = matchesInRound
+    }
+
+    // Construir representación plana del bracket para la visualización
+    const bracket = {
+      size: bracketSize,
+      rounds: roundNames,
+      matchCount: matchCounter,
+      structure: rounds.map(r => ({
+        name: r.roundName,
+        matchCount: r.matches.length,
+        matches: r.matches.map(m => ({
+          matchNumber: m.matchNumber,
+          local: m.local,
+          visitante: m.visitante,
+          localSource: m.localSource,
+          visitanteSource: m.visitanteSource,
+          isBye: m.isBye,
+          winner: m.winner,
+          roundName: m.roundName
+        }))
+      }))
+    }
+
+    return { rounds, bracket }
+  }
+
+  /**
+   * Busca el seed original de un equipo.
+   */
+  _findSeedForTeam(seeds, teamId) {
+    return seeds.find(s => s.team === teamId) || null
   }
 }
 

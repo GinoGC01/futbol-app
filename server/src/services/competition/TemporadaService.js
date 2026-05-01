@@ -14,6 +14,7 @@ class TemporadaService {
       .from("temporada")
       .select("estado, liga_id, liga:liga_id(monto_inscripcion)")
       .eq("id", temporadaId)
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (error)
@@ -139,11 +140,11 @@ class TemporadaService {
     }
   }
 
-  async getTemporadasByLiga(ligaId, organizadorId) {
+  async getTemporadasByLiga(ligaId, organizadorId, filterArchived = 'active') {
     await LigaService.verifyOwnership(ligaId, organizadorId);
 
     // 2. Consultar BD con formato anidado para ligas
-    const { data: temporadas, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("temporada")
       .select(`
         id, nombre, estado, fecha_inicio, fecha_fin, modalidad,
@@ -152,6 +153,14 @@ class TemporadaService {
       `)
       .eq("liga_id", ligaId)
       .order("created_at", { ascending: false });
+
+    if (filterArchived === 'active') {
+      query = query.is("deleted_at", null);
+    } else if (filterArchived === 'archived') {
+      query = query.not("deleted_at", "is", null);
+    }
+
+    const { data: temporadas, error } = await query;
 
     if (error) {
       throw new AppError(`Error al listar temporadas: ${error.message}`, 500);
@@ -170,6 +179,7 @@ class TemporadaService {
       .from("temporada")
       .select("estado, liga_id")
       .eq("id", temporadaId)
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (checkError || !seasonCheck) {
@@ -217,6 +227,7 @@ class TemporadaService {
       .from("temporada")
       .select("liga_id")
       .eq("id", temporadaId)
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (tempError || !temporadaCheck)
@@ -238,6 +249,7 @@ class TemporadaService {
       `,
       )
       .eq("id", temporadaId)
+      .is("deleted_at", null)
       .single();
 
     if (arbolError)
@@ -289,6 +301,7 @@ class TemporadaService {
       .from("temporada")
       .select("id, estado, liga_id")
       .eq("id", temporadaId)
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (checkError || !seasonCheck) {
@@ -355,6 +368,63 @@ class TemporadaService {
     }
 
     return result.data;
+  }
+  async deleteTemporada(temporadaId, organizadorId) {
+    // 1. Verify existence & ownership
+    const { data: seasonCheck, error: checkError } = await supabaseAdmin
+      .from("temporada")
+      .select("id, liga_id")
+      .eq("id", temporadaId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (checkError || !seasonCheck) {
+      throw new AppError("Temporada no encontrada o ya archivada", 404);
+    }
+
+    await LigaService.verifyOwnership(seasonCheck.liga_id, organizadorId);
+
+    // 2. Delete temporada (Soft Delete)
+    const { error } = await supabaseAdmin
+      .from("temporada")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", temporadaId);
+
+    if (error) {
+      throw new AppError(`Error al archivar temporada: ${error.message}`, 500);
+    }
+
+    return { message: "Temporada archivada exitosamente" };
+  }
+
+  /**
+   * Restaura una temporada archivada (limpia el deleted_at)
+   */
+  async restoreTemporada(temporadaId, organizadorId) {
+    // 1. Verify existence & ownership (sin filtrar deleted_at para poder encontrarla)
+    const { data: seasonCheck, error: checkError } = await supabaseAdmin
+      .from("temporada")
+      .select("id, liga_id")
+      .eq("id", temporadaId)
+      .maybeSingle();
+
+    if (checkError || !seasonCheck) {
+      throw new AppError("Temporada no encontrada", 404);
+    }
+
+    await LigaService.verifyOwnership(seasonCheck.liga_id, organizadorId);
+
+    // 2. Restore temporada
+    const { error } = await supabaseAdmin
+      .from("temporada")
+      .update({ deleted_at: null })
+      .eq("id", temporadaId);
+
+    if (error) {
+      throw new AppError(`Error al restaurar temporada: ${error.message}`, 500);
+    }
+
+    return { message: "Temporada restaurada exitosamente" };
   }
 }
 

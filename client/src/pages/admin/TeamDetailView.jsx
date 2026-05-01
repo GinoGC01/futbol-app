@@ -52,60 +52,68 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
   if (isLoading) return <div className="py-20 flex justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
 
   return (
-    <div className="space-y-8 animate-fade-in pb-32">
+    <div className="space-y-10 animate-fade-in pb-32">
       {/* Header Sección */}
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0 -ml-2 text-text-dim hover:text-primary">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+      <div className="flex flex-col gap-8">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={onBack} 
+            className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-text-dim hover:text-primary hover:border-primary/30 transition-all active:scale-90 group"
+          >
+            <ArrowLeft className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
+          </button>
           <div className="h-[1px] flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+          <div className="px-4 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] italic">
+            Team Intelligence
+          </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="flex items-start gap-5">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="flex items-start gap-6">
             <div className="relative shrink-0">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl flex items-center justify-center relative overflow-hidden group shadow-2xl border-2 border-white/5"
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] flex items-center justify-center relative overflow-hidden group shadow-[0_0_50px_rgba(0,0,0,0.5)] border-4 border-white/5 transition-transform hover:rotate-3 duration-500"
                 style={{ backgroundColor: equipo.color_principal ? `${equipo.color_principal}20` : 'rgba(206, 222, 11, 0.1)' }}>
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-                <Shield className="w-10 h-10 md:w-12 md:h-12 relative z-10" style={{ color: equipo.color_principal || 'var(--color-primary)' }} />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
+                <Shield className="w-12 h-12 md:w-16 md:h-16 relative z-10" style={{ color: equipo.color_principal || 'var(--color-primary)' }} />
+                <div className="absolute -right-2 -bottom-2 w-16 h-16 bg-white/5 blur-2xl rounded-full" />
               </div>
               <button 
                 onClick={() => setShowEditTeam(true)}
-                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-bg-surface border border-white/10 flex items-center justify-center text-text-dim hover:text-primary shadow-lg transition-transform hover:scale-110"
+                className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-bg-surface border border-white/10 flex items-center justify-center text-text-dim hover:text-primary shadow-2xl transition-all hover:scale-110 active:scale-95 group/edit"
               >
-                <Edit3 className="w-4 h-4" />
+                <Edit3 className="w-5 h-5 transition-transform group-hover/edit:rotate-12" />
               </button>
             </div>
 
-            <div className="space-y-2 pt-2">
-              <div className="relative">
-                <h1 className="text-4xl md:text-5xl font-heading font-black tracking-tighter uppercase italic leading-[1.1]">
-                  {equipo.nombre}
+            <div className="space-y-4 pt-2">
+              <div className="relative inline-block">
+                <h1 className="text-4xl md:text-7xl font-heading font-black tracking-tighter uppercase italic leading-[0.9] group">
+                  {equipo.nombre.split(' ').map((word, i) => (
+                    <span key={i} className={i === 0 ? "text-text-primary" : "text-primary"}>{word} </span>
+                  ))}
                 </h1>
-                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-full bg-primary opacity-50 skew-x-[-15deg] hidden md:block" />
+                <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-full bg-primary/30 skew-x-[-15deg] hidden md:block" />
               </div>
               
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-md flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="px-4 py-1.5 bg-primary/10 border border-primary/30 rounded-xl flex items-center gap-2 shadow-[0_0_20px_rgba(206,222,11,0.1)]">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                    {viewedInscripcion ? viewedInscripcion.temporada.nombre : 'Sin Temporada'}
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary italic">
+                    {viewedInscripcion ? viewedInscripcion.temporada.nombre : 'TEMPORADA NO ASIGNADA'}
                   </span>
                 </div>
-                <div className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em] flex items-center gap-1.5">
-                  <Users className="w-3 h-3" /> {plantel.length} Jugadores
+                <div className="text-xs font-black text-text-dim uppercase tracking-[0.3em] flex items-center gap-2 italic">
+                  <Users className="w-4 h-4 text-primary" /> {plantel.length} <span className="text-[10px] opacity-60">Efectivos</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4 w-full lg:w-auto">
             {!latestInscripcion && (
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="text-danger hover:bg-danger/10 border border-danger/20 h-12 px-6"
+                className="flex-1 lg:flex-none h-16 px-8 text-danger hover:bg-danger/10 border border-white/5 font-black uppercase italic tracking-tighter"
                 onClick={() => {
                   if (confirm(`¿Estás seguro de eliminar definitivamente el equipo "${equipo.nombre}"?`)) {
                     deleteEquipo.mutate(equipo.id, {
@@ -119,27 +127,32 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                 }}
                 loading={deleteEquipo.isPending}
               >
-                <Trash2 className="w-4 h-4 mr-2" /> Borrar Equipo
+                <Trash2 className="w-5 h-5 mr-3" /> Eliminar Club
               </Button>
             )}
             {!latestInscripcion ? (
-              <Button variant="outline" size="lg" onClick={() => setShowInscribeTeam(true)} className="h-12 px-8 border-secondary text-secondary hover:bg-secondary hover:text-bg-deep font-black uppercase italic tracking-tighter">
-                <Calendar className="w-4 h-4 mr-2" /> Inscribir en Liga
+              <Button 
+                variant="outline" 
+                onClick={() => setShowInscribeTeam(true)} 
+                className="flex-1 lg:flex-none h-16 px-10 border-secondary text-secondary hover:bg-secondary hover:text-bg-deep font-black uppercase italic tracking-tighter shadow-xl shadow-secondary/10"
+              >
+                <Calendar className="w-5 h-5 mr-3 stroke-[3]" /> Inscribir en Liga
               </Button>
             ) : (
               <Button 
                 variant="primary" 
-                size="lg" 
                 onClick={() => setShowAddPlayer(true)} 
-                className="h-12 px-8 font-black uppercase italic tracking-tighter"
+                className="flex-1 lg:flex-none h-16 px-12 font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 text-lg"
                 disabled={viewedInscripcion?.temporada?.estado === 'finalizada'}
               >
-                <UserPlus className="w-4 h-4 mr-2" /> {viewedInscripcion?.temporada?.estado === 'finalizada' ? 'Temporada Cerrada' : 'Sumar Jugador'}
+                <UserPlus className="w-6 h-6 mr-3 stroke-[4]" /> 
+                {viewedInscripcion?.temporada?.estado === 'finalizada' ? 'Registro Cerrado' : 'Fichar Talento'}
               </Button>
             )}
           </div>
         </div>
       </div>
+
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -172,62 +185,69 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
 
         <div className="min-h-[400px]">
           {activeTab === 'plantel' ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Desktop View Table */}
               <div className="hidden md:block">
-                <GlassCard className="overflow-hidden border-none p-0 ring-1 ring-white/5">
+                <GlassCard className="overflow-hidden border-none p-0 ring-1 ring-white/5 shadow-2xl">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-white/5 border-b border-white/5">
-                        <th className="px-6 py-5 text-[11px] font-black text-text-dim uppercase tracking-[0.2em]">Jugador</th>
-                        <th className="px-6 py-5 text-[11px] font-black text-text-dim uppercase tracking-[0.2em]">Dorsal</th>
-                        <th className="px-6 py-5 text-[11px] font-black text-text-dim uppercase tracking-[0.2em]">Posición</th>
-                        <th className="px-6 py-5 text-[11px] font-black text-text-dim uppercase tracking-[0.2em]">Estado</th>
-                        <th className="px-6 py-5 text-right"></th>
+                      <tr className="bg-white/[0.02] border-b border-white/5">
+                        <th className="px-8 py-6 text-[10px] font-black text-text-dim uppercase tracking-[0.3em] italic">Atleta / Identidad</th>
+                        <th className="px-8 py-6 text-[10px] font-black text-text-dim uppercase tracking-[0.3em] italic text-center">Nro</th>
+                        <th className="px-8 py-6 text-[10px] font-black text-text-dim uppercase tracking-[0.3em] italic">Posición Técnica</th>
+                        <th className="px-8 py-6 text-[10px] font-black text-text-dim uppercase tracking-[0.3em] italic">Estado</th>
+                        <th className="px-8 py-6 text-right"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {plantel.length > 0 ? plantel.map(p => (
-                        <tr key={p.id} className="group hover:bg-white/[0.03] transition-colors">
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm italic">
+                        <tr key={p.id} className="group hover:bg-primary/[0.02] transition-colors relative">
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-5">
+                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 flex items-center justify-center text-primary font-black text-lg italic shadow-lg group-hover:scale-110 transition-transform">
                                 {p.jugador.nombre[0]}{p.jugador.apellido[0]}
                               </div>
                               <div>
-                                <p className="text-base font-black uppercase tracking-tight italic">{p.jugador.nombre} {p.jugador.apellido}</p>
-                                <p className="text-[10px] text-text-dim font-bold tracking-widest">UID: {p.jugador.id.split('-')[0]}</p>
+                                <p className="text-lg font-black uppercase italic tracking-tighter leading-none group-hover:text-primary transition-colors">{p.jugador.nombre} {p.jugador.apellido}</p>
+                                <p className="text-[10px] text-text-dim font-bold tracking-[0.2em] uppercase mt-1.5 opacity-60">ID: {p.jugador.id.split('-')[0]}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-5">
-                            <div className="inline-flex items-center justify-center w-10 h-10 rounded bg-bg-deep border border-white/10 text-primary font-black text-sm italic">
-                              {p.dorsal || '--'}
+                          <td className="px-8 py-6">
+                            <div className="flex justify-center">
+                              <div className="w-12 h-12 rounded-xl bg-bg-deep border border-white/10 flex items-center justify-center text-primary font-black text-xl italic tracking-tighter shadow-inner group-hover:border-primary/30 transition-colors">
+                                {p.dorsal || '--'}
+                              </div>
                             </div>
                           </td>
-                          <td className="px-6 py-5">
-                            <span className="text-[10px] font-black uppercase tracking-[0.1em] px-2.5 py-1 bg-white/5 border border-white/10 rounded-md text-text-secondary">
-                              {p.posicion || 'N/A'}
+                          <td className="px-8 py-6">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] italic px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl text-text-secondary group-hover:border-primary/20 transition-colors">
+                              {p.posicion || 'NO ASIGNADA'}
                             </span>
                           </td>
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase italic">
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(206,222,11,0.5)]" /> 
-                              Activo
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-3 text-[10px] font-black text-primary uppercase italic tracking-widest">
+                              <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_12px_rgba(206,222,11,0.6)]" /> 
+                              En Plantilla
                             </div>
                           </td>
-                          <td className="px-6 py-5 text-right">
-                            <button className="p-2 text-text-dim hover:text-danger hover:bg-danger/10 rounded-lg transition-colors">
-                              <Trash2 className="w-5 h-5" />
+                          <td className="px-8 py-6 text-right">
+                            <button className="w-10 h-10 flex items-center justify-center text-text-dim hover:text-danger hover:bg-danger/10 border border-transparent hover:border-danger/20 rounded-xl transition-all active:scale-90 group/btn">
+                              <Trash2 className="w-5 h-5 transition-transform group-hover/btn:rotate-6" />
                             </button>
                           </td>
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan="5" className="px-6 py-20 text-center">
-                            <div className="flex flex-col items-center gap-3 opacity-30">
-                              <Users className="w-12 h-12" />
-                              <p className="text-sm font-black uppercase italic tracking-widest">Sin Jugadores</p>
+                          <td colSpan="5" className="px-8 py-32 text-center">
+                            <div className="flex flex-col items-center gap-6 animate-pulse">
+                              <div className="w-24 h-24 rounded-[2rem] bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center">
+                                <Users className="w-10 h-10 text-text-dim opacity-20" />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xl font-heading font-black uppercase italic tracking-tighter">Sin Rosters Registrados</p>
+                                <p className="text-[10px] text-text-dim font-black uppercase tracking-widest">Comienza a fichar atletas para este club</p>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -237,41 +257,47 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
                 </GlassCard>
               </div>
 
+
               {/* Mobile View Cards */}
-              <div className="grid grid-cols-1 gap-3 md:hidden">
+              <div className="grid grid-cols-1 gap-4 md:hidden">
                 {plantel.length > 0 ? plantel.map(p => (
-                  <GlassCard key={p.id} className="p-4 border-none ring-1 ring-white/10">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-black text-lg italic">
+                  <GlassCard key={p.id} className="p-6 border-none ring-1 ring-white/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-white/[0.02] rounded-bl-[40px] pointer-events-none" />
+                    <div className="flex items-center justify-between gap-6 relative z-10">
+                      <div className="flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-black text-xl italic shadow-lg">
                           {p.jugador.nombre[0]}{p.jugador.apellido[0]}
                         </div>
-                        <div>
-                          <p className="text-lg font-black uppercase italic leading-tight tracking-tight">
+                        <div className="min-w-0">
+                          <p className="text-xl font-black uppercase italic leading-tight tracking-tighter truncate">
                             {p.jugador.nombre} {p.jugador.apellido}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
-                             <span className="text-[10px] font-black uppercase bg-white/5 px-2 py-0.5 rounded text-text-dim">
+                          <div className="flex items-center gap-3 mt-1.5">
+                             <div className="flex items-center justify-center h-6 px-2 bg-primary text-bg-deep text-[10px] font-black rounded-md italic">
                                #{p.dorsal || '--'}
-                             </span>
-                             <span className="text-[10px] font-black uppercase text-primary italic">
+                             </div>
+                             <span className="text-[10px] font-black uppercase tracking-widest text-text-dim italic">
                                {p.posicion}
                              </span>
                           </div>
                         </div>
                       </div>
-                      <button className="w-10 h-10 flex items-center justify-center text-text-dim hover:text-danger active:scale-95 transition-all">
-                        <Trash2 className="w-5 h-5" />
+                      <button className="w-12 h-12 flex items-center justify-center bg-white/5 border border-white/10 text-text-dim hover:text-danger hover:border-danger/30 rounded-xl transition-all active:scale-90">
+                        <Trash2 className="w-6 h-6" />
                       </button>
                     </div>
                   </GlassCard>
                 )) : (
-                  <div className="py-20 text-center opacity-30">
-                    <p className="text-sm font-black uppercase italic tracking-widest">Sin Jugadores</p>
+                  <div className="py-24 text-center space-y-6">
+                    <div className="w-20 h-20 rounded-[2rem] bg-white/5 border border-dashed border-white/10 flex items-center justify-center mx-auto opacity-20">
+                      <Users className="w-10 h-10" />
+                    </div>
+                    <p className="text-xs font-black uppercase italic tracking-widest text-text-dim">Sin Jugadores en el Roster</p>
                   </div>
                 )}
               </div>
             </div>
+
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {inscripciones?.map(ins => (
