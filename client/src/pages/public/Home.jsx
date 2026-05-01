@@ -42,7 +42,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative pt-32 pb-48 px-6 text-center overflow-hidden">
         {/* Background Isotipo */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] opacity-[0.03] pointer-events-none z-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] opacity-[0.03] pointer-events-none z-0">
           <img src="/images/isotipo.png" alt="" className="w-full h-full object-contain" />
         </div>
 
