@@ -28,22 +28,22 @@ export default function DashboardHome() {
   if (isLoading) return <Loader text="Cargando panel de control..." className="py-20" />
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 sm:space-y-16 animate-fade-in pb-20 px-4 sm:px-0">
+    <div className="max-w-6xl mx-auto space-y-8 sm:space-y-16 animate-fade-in pb-20 px-4 sm:px-0">
       {/* Welcome & Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 border-b-4 border-primary/20 pb-12 relative">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 lg:gap-10 border-b-4 border-primary/20 pb-8 sm:pb-12 relative">
         <div className="absolute -left-10 top-0 w-1 h-full bg-primary/10 skew-x-[-15deg] hidden xl:block" />
         <div className="space-y-6">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-primary text-bg-deep text-[10px] font-black uppercase tracking-[0.3em] skew-x-[-15deg]">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-primary text-bg-deep text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] skew-x-[-15deg]">
             <span className="skew-x-[15deg] flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-bg-deep animate-pulse" /> 
               System Operational: Level 1
             </span>
           </div>
           <div className="relative">
-            <h1 className="text-6xl sm:text-8xl font-heading font-black tracking-normal leading-[0.9] uppercase italic text-white mix-blend-difference">
+            <h1 className="text-4xl sm:text-7xl lg:text-8xl font-heading font-black tracking-normal leading-[0.9] uppercase italic text-white mix-blend-difference break-words">
               HOLA, <span className="text-primary">{user?.email?.split('@')[0]}</span>
             </h1>
-            <p className="text-xl text-text-dim max-w-xl font-bold uppercase tracking-normal mt-4 border-l-4 border-primary pl-6 py-2">
+            <p className="text-base sm:text-xl text-text-dim max-w-xl font-bold uppercase tracking-normal mt-4 border-l-4 border-primary pl-4 sm:pl-6 py-2">
               {liga 
                 ? `COMANDANDO LA LIGA ` 
                 : 'PREPARADO PARA EL DESPEGUE. '}
@@ -52,14 +52,14 @@ export default function DashboardHome() {
           </div>
         </div>
         
-        <div className="flex shrink-0">
+        <div className="flex shrink-0 w-full lg:w-auto">
           <Button 
             variant="primary"
             size="lg"
             onClick={() => setShowNewLiga(true)} 
-            className="h-20 px-12 text-xl shadow-[0_20px_50px_rgba(206,222,11,0.2)]"
+            className="h-16 sm:h-20 px-8 sm:px-12 text-lg sm:text-xl shadow-[0_20px_50px_rgba(206,222,11,0.2)] w-full lg:w-auto"
           >
-            <Plus className="w-8 h-8 mr-3 stroke-[3]" /> 
+            <Plus className="w-6 h-6 sm:w-8 sm:h-8 mr-3 stroke-[3]" /> 
             {liga ? 'Nueva Liga' : 'Crear mi primera Liga'}
           </Button>
         </div>
@@ -139,13 +139,13 @@ export default function DashboardHome() {
                 {alerts.map(alert => (
                   <GlassCard key={alert.id} className="!p-0 border-none ring-1 ring-white/5 bg-bg-surface group hover:ring-danger/40 transition-all relative overflow-hidden rounded-2xl">
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-danger opacity-80" />
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6">
-                      <div className="flex gap-5 items-start">
-                        <div className="w-12 h-12 rounded-2xl bg-danger/10 flex items-center justify-center shrink-0 border border-danger/20 shadow-lg group-hover:scale-110 transition-transform">
-                          <AlertCircle className="w-6 h-6 text-danger" />
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
+                      <div className="flex gap-4 sm:gap-5 items-start">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-danger/10 flex items-center justify-center shrink-0 border border-danger/20 shadow-lg group-hover:scale-110 transition-transform">
+                          <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-danger" />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-base font-black text-text-primary italic uppercase tracking-normal leading-tight">{alert.mensaje}</p>
+                          <p className="text-sm sm:text-base font-black text-text-primary italic uppercase tracking-normal leading-tight">{alert.mensaje}</p>
                           <div className="flex flex-wrap items-center gap-3">
                              <span className="text-[9px] font-black bg-danger/10 text-danger px-2 py-0.5 rounded uppercase tracking-widest">
                                {alert.tipo.replace(/_/g, ' ')}
@@ -194,15 +194,15 @@ export default function DashboardHome() {
                 { to: '/admin/premios',  icon: Trophy,     label: 'Premios',      sub: 'Escrutinio', color: 'text-accent-gold',bg: 'bg-accent-gold/5',border: 'hover:ring-accent-gold/40' },
               ].map(a => (
                 <Link key={a.to} to={a.to}
-                  className={`flex flex-col gap-6 p-8 rounded-[2rem] bg-bg-surface ring-1 ring-white/5 ${a.border} transition-all duration-500 group relative overflow-hidden shadow-xl hover:-translate-y-2`}>
+                  className={`flex flex-col gap-6 p-6 sm:p-8 rounded-2xl sm:rounded-[2rem] bg-bg-surface ring-1 ring-white/5 ${a.border} transition-all duration-500 group relative overflow-hidden shadow-xl hover:-translate-y-2`}>
                   <div className={`absolute -bottom-8 -right-8 w-32 h-32 ${a.bg} blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
                   
-                  <div className={`w-16 h-16 rounded-[1.5rem] ${a.bg} flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg`}>
-                    <a.icon className={`w-8 h-8 ${a.color}`} />
+                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-[1.5rem] sm:rounded-[1.5rem] ${a.bg} flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg`}>
+                    <a.icon className={`w-6 h-6 sm:w-8 sm:h-8 ${a.color}`} />
                   </div>
                   
                   <div>
-                    <p className="text-2xl font-heading font-black tracking-wide text-text-primary uppercase italic leading-none mb-2">{a.label}</p>
+                    <p className="text-xl sm:text-2xl font-heading font-black tracking-wide text-text-primary uppercase italic leading-none mb-2">{a.label}</p>
                     <div className="flex items-center justify-between">
                        <p className="text-[10px] text-text-dim font-black uppercase tracking-[0.2em]">{a.sub}</p>
                        <RefreshCw className="w-3 h-3 text-text-dim group-hover:text-primary group-hover:rotate-180 transition-all duration-700" />

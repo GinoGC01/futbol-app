@@ -27,51 +27,63 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Decorative Blobs */}
-      <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-primary/3 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-secondary/3 rounded-full blur-[150px] pointer-events-none" />
-
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-bg-deep">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/5 skew-x-[-15deg] translate-x-1/4 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-1/4 h-1/2 bg-secondary/5 skew-x-[15deg] -translate-x-1/4 pointer-events-none" />
+      
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm glass-heavy rounded-2xl p-8 relative z-10"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="w-full max-w-md bg-bg-surface border-l-8 border-primary shadow-[20px_20px_60px_rgba(0,0,0,0.5)] p-10 relative z-10 rounded-none"
       >
         {!success ? (
           <>
-            <div className="text-center mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-7 h-7 text-primary" />
+            <div className="mb-10">
+              <div className="inline-flex items-center gap-3 px-3 py-1 bg-primary text-bg-deep text-[10px] font-black uppercase tracking-[0.2em] skew-x-[-12deg] mb-6">
+                <span className="skew-x-[12deg] flex items-center gap-2">
+                  <Mail className="w-3 h-3" /> Security Protocol
+                </span>
               </div>
-              <h1 className="text-xl font-heading font-bold">¿Olvidaste tu contraseña?</h1>
-              <p className="text-sm text-text-dim mt-1">
-                Ingresá tu email y te enviaremos un link para restablecerla.
+              <h1 className="text-4xl sm:text-5xl font-heading font-black tracking-wide leading-none uppercase italic text-white mb-4">
+                ¿OLVIDASTE TU <span className="text-primary">CONTRASEÑA?</span>
+              </h1>
+              <p className="text-xs text-text-dim font-bold uppercase tracking-widest border-l-2 border-white/10 pl-4 py-1">
+                Ingresá tu email y enviaremos el código de acceso táctico.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <label className="text-xs font-medium text-text-dim">
-                Email
-                <div className="relative mt-1.5">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2 group">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-dim group-focus-within:text-primary transition-colors">
+                  Email de Recuperación
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim group-focus-within:text-primary transition-colors" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="tu@email.com"
-                    className="w-full pl-9 pr-4 py-2.5 bg-bg-input border border-border-default rounded-xl text-sm text-text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="TU@EMAIL.COM"
+                    className="w-full pl-12 pr-4 h-14 bg-bg-deep border border-white/5 rounded-none text-sm text-text-primary outline-none focus:border-primary transition-all font-bold tracking-widest placeholder:text-text-dim/30"
                   />
                 </div>
-              </label>
+              </div>
 
               {error && (
-                <p className="text-xs text-danger bg-danger-dim rounded-lg px-3 py-2">
-                  {error}
-                </p>
+                <div className="bg-danger/10 border border-danger/20 p-4 skew-x-[-8deg]">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-danger skew-x-[8deg]">
+                    ERROR: {error}
+                  </p>
+                </div>
               )}
 
-              <Button type="submit" loading={loading} className="w-full mt-2">
+              <Button 
+                type="submit" 
+                loading={loading} 
+                className="w-full h-16 text-lg font-black italic uppercase tracking-wide shadow-2xl shadow-primary/20"
+              >
                 Enviar link de recuperación
               </Button>
             </form>
@@ -80,30 +92,34 @@ export default function ForgotPassword() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-4"
+            className="py-4"
           >
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8 text-primary" />
+            <div className="w-20 h-20 bg-primary/10 flex items-center justify-center mb-8 skew-x-[-15deg] border border-primary/20 shadow-glow-primary">
+              <CheckCircle2 className="w-10 h-10 text-primary skew-x-[15deg]" />
             </div>
-            <h2 className="text-xl font-heading font-bold mb-2">Email enviado</h2>
-            <p className="text-sm text-text-dim mb-8">
+            <h2 className="text-4xl font-heading font-black mb-4 uppercase italic tracking-wide text-white leading-none">
+              EMAIL <span className="text-primary">ENVIADO</span>
+            </h2>
+            <p className="text-xs text-text-dim font-bold uppercase tracking-widest leading-relaxed mb-10 border-l-2 border-primary pl-6">
               Si el email está registrado, recibirás instrucciones en unos instantes. No olvides revisar tu carpeta de spam.
             </p>
             <Link 
               to="/admin/login" 
-              className="inline-flex items-center justify-center gap-2 font-semibold font-heading tracking-wide transition-all duration-200 active:scale-[0.97] p-2 rounded-xl bg-transparent text-text-secondary border border-border-default hover:bg-bg-hover hover:text-text-primary w-full px-5 py-2.5 text-sm"
+              className="w-full h-14 bg-white/5 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary hover:bg-white/10 transition-all border border-white/5 skew-x-[-12deg] group"
             >
-              <ArrowLeft className="w-4 h-4" /> Volver al Login
+              <div className="skew-x-[12deg] flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Login
+              </div>
             </Link>
           </motion.div>
         )}
 
         {!success && (
-          <p className="text-center text-sm text-text-dim mt-8">
-            <Link to="/admin/login" className="inline-flex items-center gap-2 hover:text-primary transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Volver al login
+          <div className="mt-12 pt-8 border-t border-white/5">
+            <Link to="/admin/login" className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-text-dim hover:text-primary transition-all group">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al inicio de sesión
             </Link>
-          </p>
+          </div>
         )}
       </motion.div>
     </div>

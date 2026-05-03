@@ -22,7 +22,7 @@ export default function StatCard({ icon: Icon, value, label, trend, className = 
             {label}
           </p>
           <div className="space-y-1 pt-1">
-            <h3 className={`text-2xl sm:text-3xl font-heading font-black tracking-wide uppercase italic leading-[1.1] truncate ${
+            <h3 className={`text-xl sm:text-3xl font-heading font-black tracking-wide uppercase italic leading-[1.1] truncate ${
               isAlert ? 'text-danger' : 'text-text-primary'
             }`}>
               {value}
@@ -38,10 +38,10 @@ export default function StatCard({ icon: Icon, value, label, trend, className = 
         </div>
         
         {Icon && (
-          <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:rotate-6 group-hover:scale-110 shrink-0 ${
+          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:rotate-6 group-hover:scale-110 shrink-0 ${
             isAlert ? 'bg-danger/10 border-danger/20' : 'bg-white/5 border-white/10'
           }`}>
-            <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${isAlert ? 'text-danger' : 'text-primary'}`} />
+            <Icon className={`w-5 h-5 sm:w-7 sm:h-7 ${isAlert ? 'text-danger' : 'text-primary'}`} />
           </div>
         )}
       </div>

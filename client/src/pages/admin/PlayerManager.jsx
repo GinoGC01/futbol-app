@@ -17,7 +17,7 @@ export default function PlayerManager() {
   const { liga } = useLigaActiva()
   const [globalPage, setGlobalPage] = useState(1)
   const { data: jugadores, isLoading } = useJugadoresLiga(liga?.id)
-  const { data: allJugadoresRaw } = useJugadoresOrganizador(globalPage, 12)
+  const { data: allJugadoresRaw, isFetching: isFetchingMarket } = useJugadoresOrganizador(globalPage, 12)
   const allJugadores = allJugadoresRaw?.list || []
   const totalPages = allJugadoresRaw?.totalPages || 1
   const totalCount = allJugadoresRaw?.count || 0
@@ -69,91 +69,107 @@ export default function PlayerManager() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-fade-in pb-32 px-4 sm:px-0">
-      {/* Header Sección */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-white/5 pb-10">
-        <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
-            <Trophy className="w-3.5 h-3.5" /> Talent Portal
+      {/* Full Screen Loader for Market Transitions */}
+      {isFetchingMarket && (
+        <Loader fullScreen text="SINCRONIZANDO MERCADO GLOBAL..." size="xl" />
+      )}
+      {/* Header Sección - Optimized for Mobile */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/5 pb-6 sm:pb-10">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]">
+            <Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Talent Portal
           </div>
-          <div className="relative pt-2">
-            <h1 className="text-4xl sm:text-6xl font-heading font-black tracking-wide leading-[1.1] uppercase italic">
+          <div className="relative pt-1 sm:pt-2">
+            <h1 className="text-3xl sm:text-6xl font-heading font-black tracking-wide leading-none uppercase italic">
               Gestión de <span className="text-primary">Jugadores</span>
             </h1>
             <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-full bg-primary/30 skew-x-[-15deg] hidden lg:block" />
           </div>
-          <p className="text-base text-text-dim max-w-md font-medium leading-tight italic uppercase tracking-normal">
+          <p className="text-xs sm:text-base text-text-dim max-w-md font-medium leading-tight italic uppercase tracking-normal">
             Descubre, ficha y asigna talento a los clubes de {liga?.nombre}.
           </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          <Button 
-            variant="ghost" 
-            onClick={() => {
-              setSelectionMode(!selectionMode)
-              if (selectionMode) setSelectedPlayers([])
-            }}
-            className={`flex-1 sm:flex-none h-14 px-6 font-black uppercase italic tracking-wide border transition-all ${
-              selectionMode ? 'bg-primary text-bg-deep border-primary' : 'bg-white/5 border-white/10 text-text-dim hover:text-primary'
-            }`}
-          >
-            <CheckSquare className="w-5 h-5 mr-2" /> {selectionMode ? 'Cancelar' : 'Fichar en Bloque'}
-          </Button>
-
-          {!selectionMode && (
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+          {!selectionMode ? (
             <>
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowAdd({ open: true, mode: 'create' })}
-                className="flex-1 sm:flex-none h-14 px-6 bg-white/5 border border-white/10 text-text-dim hover:text-primary font-black uppercase italic tracking-wide"
-              >
-                <UserPlus className="w-5 h-5 mr-2" /> Crear
-              </Button>
               <Button 
                 variant="primary" 
                 onClick={() => setShowAdd({ open: true, mode: 'search' })}
-                className="flex-1 sm:flex-none h-14 px-8 font-black uppercase italic tracking-wide shadow-xl shadow-primary/20"
+                className="col-span-2 h-14 sm:h-16 px-8 font-black uppercase italic tracking-widest shadow-xl shadow-primary/20 order-first lg:order-last sm:flex-1 lg:flex-none"
               >
-                <Search className="w-6 h-6 mr-2 stroke-[4]" /> Fichar Global
+                <Search className="w-5 h-5 sm:w-6 sm:h-6 mr-2 stroke-[4]" /> Fichar Global
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setShowAdd({ open: true, mode: 'create' })}
+                className="h-12 sm:h-14 px-4 bg-white/5 border border-white/10 text-text-dim hover:text-primary font-black uppercase italic tracking-wide text-[10px] sm:text-xs"
+              >
+                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Crear
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  setSelectionMode(true)
+                  setSelectedPlayers([])
+                }}
+                className="h-12 sm:h-14 px-4 bg-white/5 border border-white/10 text-text-dim hover:text-primary font-black uppercase italic tracking-wide text-[10px] sm:text-xs"
+              >
+                <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> En Bloque
               </Button>
             </>
+          ) : (
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                setSelectionMode(false)
+                setSelectedPlayers([])
+              }}
+              className="col-span-2 h-14 sm:h-16 px-6 font-black uppercase italic tracking-widest border bg-primary text-bg-deep border-primary shadow-lg shadow-primary/20"
+            >
+              <X className="w-5 h-5 mr-2 stroke-[3]" /> Cancelar Selección
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Floating Selection Bar */}
+      {/* Floating Selection Bar - Refined Aggressive Style */}
       {selectionMode && selectedPlayers.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-2xl animate-slide-up">
-          <div className="bg-bg-surface/80 backdrop-blur-2xl border border-primary/30 rounded-[2.5rem] p-4 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(206,222,11,0.1)]">
-            <div className="flex items-center gap-6 pl-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary blur-lg opacity-20 animate-pulse-live" />
-                <div className="relative w-12 h-12 bg-primary text-bg-deep rounded-2xl flex items-center justify-center font-black italic shadow-lg">
-                  {selectedPlayers.length}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-lg animate-slide-up">
+          <div className="bg-bg-deep/80 backdrop-blur-3xl border border-white/10 rounded-3xl p-2 sm:p-3 flex items-center justify-between shadow-[0_25px_60px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+            {/* Background accent line */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            
+            <div className="flex items-center gap-3 sm:gap-5 pl-2 sm:pl-4">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-primary blur-md opacity-30 animate-pulse-live" />
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-primary text-bg-deep rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-xl italic shadow-lg skew-x-[-10deg]">
+                  <span className="skew-x-[10deg]">{selectedPlayers.length}</span>
                 </div>
               </div>
-              <div className="hidden sm:block">
-                <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-0.5 italic">Talentos Elegidos</p>
-                <p className="text-xs font-bold text-text-dim uppercase tracking-wide italic">Listos para el fichaje masivo</p>
+              <div className="hidden xs:block">
+                <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] mb-0.5 italic leading-none">Seleccionados</p>
+                <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider italic leading-none">Roster en espera</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 pr-2">
-              <Button 
-                variant="ghost" 
+            <div className="flex items-center gap-2 pr-1">
+              <button 
                 onClick={() => {
                   setSelectionMode(false)
                   setSelectedPlayers([])
                 }}
-                className="h-14 px-6 border border-white/5 font-black uppercase italic tracking-wide text-text-dim hover:text-white"
+                className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl font-black uppercase italic tracking-widest text-[9px] sm:text-[10px] text-text-dim hover:text-white hover:bg-white/5 transition-all"
               >
                 Cancelar
-              </Button>
+              </button>
               <Button 
                 onClick={() => setShowBatchFichaje(true)}
-                className="h-14 px-10 bg-primary text-bg-deep font-black uppercase italic tracking-wide shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                className="h-11 sm:h-12 px-6 sm:px-8 bg-primary text-bg-deep font-black uppercase italic tracking-widest text-[10px] sm:text-xs shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all skew-x-[-15deg] group/btn"
               >
-                Continuar <ChevronRight className="w-5 h-5 ml-2 stroke-[3]" />
+                <div className="flex items-center gap-2 skew-x-[15deg]">
+                  Continuar <ChevronRight className="w-4 h-4 stroke-[4] group-hover:translate-x-1 transition-transform" />
+                </div>
               </Button>
             </div>
           </div>
@@ -174,16 +190,16 @@ export default function PlayerManager() {
           />
         </div>
         
-        <div className="flex gap-4">
-          <div className="flex-1 lg:w-40 p-4 rounded-3xl bg-bg-surface border border-white/5 relative overflow-hidden group">
+        <div className="flex gap-3 sm:gap-4">
+          <div className="flex-1 lg:w-40 p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-bg-surface border border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-12 h-full bg-primary/5 skew-x-[-20deg] translate-x-6 pointer-events-none" />
-            <p className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] mb-1">Total Liga</p>
-            <p className="text-3xl font-heading font-black text-primary italic leading-none">{jugadores?.length || 0}</p>
+            <p className="text-[9px] sm:text-[10px] font-black text-text-dim uppercase tracking-[0.2em] mb-0.5 sm:mb-1">Total Liga</p>
+            <p className="text-2xl sm:text-3xl font-heading font-black text-primary italic leading-none">{jugadores?.length || 0}</p>
           </div>
-          <div className="flex-1 lg:w-40 p-4 rounded-3xl bg-bg-surface border border-white/5 relative overflow-hidden group">
+          <div className="flex-1 lg:w-40 p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-bg-surface border border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-12 h-full bg-secondary/5 skew-x-[-20deg] translate-x-6 pointer-events-none" />
-            <p className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] mb-1">Filtrados</p>
-            <p className="text-3xl font-heading font-black text-text-primary italic leading-none">{filtered.length}</p>
+            <p className="text-[9px] sm:text-[10px] font-black text-text-dim uppercase tracking-[0.2em] mb-0.5 sm:mb-1">Filtrados</p>
+            <p className="text-2xl sm:text-3xl font-heading font-black text-text-primary italic leading-none">{filtered.length}</p>
           </div>
         </div>
       </div>
@@ -229,36 +245,25 @@ export default function PlayerManager() {
               )}
             </h4>
             
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isSearching ? 'opacity-50' : 'opacity-100'}`}>
-              {globalMatches.map(jugador => (
-                <PlayerCard 
-                  key={jugador.id} 
-                  jugador={jugador} 
-                  isGlobal={true}
-                  onEnroll={() => setSelectedForEnroll(jugador)} 
-                  selectionMode={selectionMode}
-                  isSelected={selectedPlayers.some(p => p.id === jugador.id)}
-                  onToggle={() => toggleSelection(jugador)}
-                />
-              ))}
-            </div>
-
-            {/* Pagination Controls (Only in Default Market view) */}
+            {/* Pagination Controls - Moved to top for better Mobile UX */}
             {debouncedQuery.length < 2 && totalPages > 1 && (
-              <div className="flex items-center justify-between px-2 py-4 border-t border-border-subtle mt-6">
-                <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider">
-                  Mostrando {(globalPage - 1) * 12 + 1} - {Math.min(globalPage * 12, totalCount)} de {totalCount}
-                </p>
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 sm:py-6 border-b sm:border-t border-white/5 mb-2 sm:mb-0 sm:mt-6">
+                <div className="text-center sm:text-left order-2 sm:order-1">
+                  <p className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] italic">
+                    Mostrando <span className="text-primary">{(globalPage - 1) * 12 + 1} - {Math.min(globalPage * 12, totalCount)}</span> de {totalCount}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2 order-1 sm:order-2">
                   <Button 
                     variant="outline" 
                     size="xs" 
                     onClick={() => setGlobalPage(p => Math.max(1, p - 1))}
                     disabled={globalPage === 1}
-                    className="h-8 w-8 p-0"
+                    className="h-10 w-10 sm:h-8 sm:w-8 p-0 border-white/10 hover:border-primary/50"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
                   </Button>
+                  
                   <div className="flex items-center gap-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
@@ -271,35 +276,50 @@ export default function PlayerManager() {
                         <button
                           key={pageNum}
                           onClick={() => setGlobalPage(pageNum)}
-                          className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
+                          className={`w-9 h-9 sm:w-8 sm:h-8 rounded-xl text-xs font-black transition-all ${
                             globalPage === pageNum 
-                              ? 'bg-primary text-secondary' 
-                              : 'text-text-dim hover:bg-bg-surface'
+                              ? 'bg-primary text-bg-deep skew-x-[-12deg]' 
+                              : 'text-text-dim hover:bg-white/5'
                           }`}
                         >
-                          {pageNum}
+                          <span className={globalPage === pageNum ? 'skew-x-[12deg] block' : ''}>{pageNum}</span>
                         </button>
                       );
                     })}
                   </div>
+
                   <Button 
                     variant="outline" 
                     size="xs" 
                     onClick={() => setGlobalPage(p => Math.min(totalPages, p + 1))}
                     disabled={globalPage === totalPages}
-                    className="h-8 w-8 p-0"
+                    className="h-10 w-10 sm:h-8 sm:w-8 p-0 border-white/10 hover:border-primary/50"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
                   </Button>
                 </div>
               </div>
             )}
+            
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isSearching || isFetchingMarket ? 'opacity-50' : 'opacity-100'}`}>
+              {globalMatches.map(jugador => (
+                <PlayerCard 
+                  key={jugador.id} 
+                  jugador={jugador} 
+                  isGlobal={true}
+                  onEnroll={() => setSelectedForEnroll(jugador)} 
+                  selectionMode={selectionMode}
+                  isSelected={selectedPlayers.some(p => p.id === jugador.id)}
+                  onToggle={() => toggleSelection(jugador)}
+                />
+              ))}
+            </div>
           </div>
         )}
 
         {/* Empty Search State */}
-        {((query && filtered.length === 0 && globalMatches.length === 0 && !isSearching) || 
-          (!query && totalCount === 0)) && (
+        {((query && filtered.length === 0 && globalMatches.length === 0 && !isSearching && !isFetchingMarket) || 
+          (!query && totalCount === 0 && !isFetchingMarket)) && (
           <div className="py-24 text-center space-y-8 animate-fade-in">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full animate-pulse-live" />
@@ -363,7 +383,7 @@ export default function PlayerManager() {
 function PlayerCard({ jugador, onEnroll, isGlobal = false, selectionMode = false, isSelected = false, onToggle }) {
   return (
     <GlassCard 
-      className={`relative overflow-hidden group border-none ring-1 transition-all duration-500 p-6 cursor-pointer ${
+      className={`relative overflow-hidden group border-none ring-1 transition-all duration-500 p-4 sm:p-6 cursor-pointer ${
         isSelected 
           ? 'ring-2 ring-primary bg-primary/5 shadow-[0_0_40px_rgba(206,222,11,0.1)] grayscale-0' 
           : isGlobal 
@@ -374,45 +394,45 @@ function PlayerCard({ jugador, onEnroll, isGlobal = false, selectionMode = false
     >
       {/* Selection Overlay Checkbox */}
       {selectionMode && (
-        <div className={`absolute top-4 right-4 z-20 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+        <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-6 h-6 sm:w-7 sm:h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
           isSelected ? 'bg-primary border-primary rotate-0 scale-110' : 'border-white/20 bg-black/40 rotate-12'
         }`}>
-          {isSelected && <CheckSquare className="w-5 h-5 text-bg-deep" />}
+          {isSelected && <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-bg-deep" />}
         </div>
       )}
 
       {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/[0.03] to-transparent rounded-bl-[80px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-white/[0.03] to-transparent rounded-bl-[80px] pointer-events-none" />
       <User 
-        className="absolute -right-4 -bottom-4 w-32 h-32 opacity-[0.02] group-hover:opacity-[0.05] transition-all duration-700 pointer-events-none group-hover:scale-125 group-hover:-rotate-12" 
+        className="absolute -right-4 -bottom-4 w-24 h-24 sm:w-32 sm:h-32 opacity-[0.01] sm:opacity-[0.02] group-hover:opacity-[0.05] transition-all duration-700 pointer-events-none group-hover:scale-125 group-hover:-rotate-12" 
         style={{ color: isGlobal ? 'var(--color-primary)' : 'var(--color-primary)' }} 
       />
 
-      <div className="flex flex-col gap-5 relative z-10">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:gap-5 relative z-10">
+        <div className="flex items-center gap-3 sm:gap-4">
           {/* Avatar */}
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary border-2 border-white/5 shadow-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shrink-0 relative overflow-hidden">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary border-2 border-white/5 shadow-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shrink-0 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
             {jugador.foto_url ? (
               <img src={jugador.foto_url} alt={jugador.nombre} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl font-heading font-black italic">{jugador.nombre[0]}{jugador.apellido[0]}</span>
+              <span className="text-xl sm:text-2xl font-heading font-black italic">{jugador.nombre[0]}{jugador.apellido[0]}</span>
             )}
           </div>
           
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-heading font-black text-text-primary leading-[1.1] uppercase italic tracking-wide truncate group-hover:text-primary transition-colors">
+            <h3 className="text-lg sm:text-xl font-heading font-black text-text-primary leading-[1.1] uppercase italic tracking-wide truncate group-hover:text-primary transition-colors">
               {jugador.nombre} {jugador.apellido}
             </h3>
-            <div className="flex flex-col gap-1 mt-1.5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 sm:mt-1.5">
               {jugador.fecha_nacimiento && (
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase italic tracking-widest">
-                  <Calendar className="w-3 h-3" /> 
+                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black text-primary uppercase italic tracking-widest">
+                  <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 
                   {new Date(jugador.fecha_nacimiento).toLocaleDateString('es-AR', { year: 'numeric', month: 'short', day: '2-digit' })}
                 </div>
               )}
-              <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-dim uppercase tracking-[0.2em] font-bold">
-                <span className="w-1 h-2 bg-white/20 skew-x-[-15deg]" /> DNI: {jugador.dni || 'NO REGISTRADO'}
+              <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] font-mono text-text-dim uppercase tracking-[0.2em] font-bold">
+                <span className="w-1 h-2 bg-white/20 skew-x-[-15deg]" /> DNI: {jugador.dni || '—'}
               </div>
             </div>
           </div>
@@ -429,22 +449,22 @@ function PlayerCard({ jugador, onEnroll, isGlobal = false, selectionMode = false
         </div>
 
         {!selectionMode && (
-          <div className="flex items-center gap-2 pt-2">
+          <div className="flex items-center gap-2 pt-1 sm:pt-2">
             <Button 
               onClick={(e) => { e.stopPropagation(); onEnroll(); }} 
-              className={`flex-1 h-12 font-black uppercase italic tracking-wide text-xs transition-all ${
+              className={`flex-1 h-11 sm:h-12 font-black uppercase italic tracking-wide text-[10px] sm:text-xs transition-all ${
                 isGlobal 
                   ? 'bg-primary text-bg-deep shadow-lg shadow-primary/20 hover:scale-[1.02]' 
                   : 'bg-white/5 border border-white/10 text-text-primary hover:bg-primary/10 hover:border-primary/30'
               }`}
             >
-              <UserCheck className="w-4 h-4 mr-2 stroke-[3]" /> Asignar Equipo
+              <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 stroke-[3]" /> Asignar Equipo
             </Button>
             <button 
               onClick={(e) => { e.stopPropagation(); /* delete logic */ }}
-              className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 text-text-dim hover:text-danger hover:bg-danger/10 hover:border-danger/20 transition-all active:scale-90 shrink-0 group/del"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 text-text-dim hover:text-danger hover:bg-danger/10 hover:border-danger/20 transition-all active:scale-90 shrink-0 group/del"
             >
-              <Trash2 className="w-5 h-5 transition-transform group-hover/del:scale-110" />
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover/del:scale-110" />
             </button>
           </div>
         )}

@@ -85,7 +85,7 @@ export default function Home() {
       </section>
 
       {/* Featured Section */}
-      <section className="max-w-7xl mx-auto px-8 pb-32">
+      {/* <section className="max-w-7xl mx-auto px-8 pb-32">
         <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
           <h2 className="text-3xl font-heading font-black italic text-primary tracking-wide uppercase">
             LIGAS DESTACADAS
@@ -118,7 +118,7 @@ export default function Home() {
             cta="VER POSICIONES"
           />
         </div>
-      </section>
+      </section> */}
 
       {/* Stats Section */}
       <section className="border-y border-white/10 bg-white/[0.02]">

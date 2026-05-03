@@ -49,13 +49,10 @@ function AdminLayoutContent() {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-white/5 bg-bg-surface/80 backdrop-blur-xl sticky top-0 z-30 shadow-2xl">
+        <header className="h-16 flex items-center justify-between px-2 sm:px-4 lg:px-6 border-b border-white/5 bg-bg-surface/80 backdrop-blur-xl sticky top-0 z-30 shadow-2xl">
           <div className="flex items-center gap-4">
             <div className="lg:hidden flex items-center gap-2 mr-2">
               <img src="/images/isotipo.png" alt="" className="h-8 w-8 object-contain" />
-              <span className="text-xl font-heading font-bold text-primary tracking-wide uppercase italic">
-                C<span className="text-text-primary">L</span>
-              </span>
             </div>
             
             {/* Liga Selector */}
@@ -63,8 +60,8 @@ function AdminLayoutContent() {
               <div className="relative group">
                 <button className="flex items-center gap-3 px-4 py-2 bg-bg-deep/50 border border-white/5 hover:border-primary/50 transition-all skew-x-[-12deg] group">
                   <div className="skew-x-[12deg] flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[120px] sm:max-w-none">
+                    <Shield className="w-4 h-4 text-primary group-hover:scale-110 transition-transform shrink-0" />
+                    <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[90px] sm:max-w-[120px] lg:max-w-none">
                       {liga?.nombre || 'Seleccionar Liga'}
                     </span>
                     <ChevronDown className="w-3 h-3 text-text-dim group-hover:text-primary transition-colors" />
@@ -94,14 +91,14 @@ function AdminLayoutContent() {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative">
               <Link
                 to="/admin"
-                className="w-10 h-10 bg-white/5 flex items-center justify-center text-text-dim hover:text-primary transition-all skew-x-[-12deg] group"
+                className="w-9 h-9 sm:w-10 sm:h-10 bg-white/5 flex items-center justify-center text-text-dim hover:text-primary transition-all skew-x-[-12deg] group"
                 title="Alertas"
               >
-                <Bell className="w-5 h-5 skew-x-[12deg] group-hover:scale-110" />
+                <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5 skew-x-[12deg] group-hover:scale-110" />
               </Link>
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-danger text-[10px] font-black text-white flex items-center justify-center rounded-none border-2 border-bg-surface animate-pulse">
@@ -112,10 +109,10 @@ function AdminLayoutContent() {
 
             <Link
               to="/"
-              className="w-10 h-10 bg-white/5 flex items-center justify-center text-text-dim hover:text-primary transition-all skew-x-[-12deg] group"
+              className="w-9 h-9 sm:w-10 sm:h-10 bg-white/5 flex items-center justify-center text-text-dim hover:text-primary transition-all skew-x-[-12deg] group"
               title="Ver portal público"
             >
-              <Globe className="w-5 h-5 skew-x-[12deg] group-hover:scale-110" />
+              <Globe className="w-4.5 h-4.5 sm:w-5 sm:h-5 skew-x-[12deg] group-hover:scale-110" />
             </Link>
 
             <div className="hidden md:flex flex-col items-end gap-0.5">
@@ -125,10 +122,10 @@ function AdminLayoutContent() {
 
             <button
               onClick={signOut}
-              className="w-10 h-10 bg-danger/10 flex items-center justify-center text-danger hover:bg-danger hover:text-white transition-all skew-x-[-12deg] group"
+              className="w-9 h-9 sm:w-10 sm:h-10 bg-danger/10 flex items-center justify-center text-danger hover:bg-danger hover:text-white transition-all skew-x-[-12deg] group"
               title="Cerrar sesión"
             >
-              <LogOut className="w-5 h-5 skew-x-[12deg] group-hover:scale-110" />
+              <LogOut className="w-4.5 h-4.5 sm:w-5 sm:h-5 skew-x-[12deg] group-hover:scale-110" />
             </button>
           </div>
         </header>
