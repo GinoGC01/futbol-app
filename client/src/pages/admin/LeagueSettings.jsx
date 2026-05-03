@@ -8,6 +8,7 @@ import { Settings, Trash2, AlertTriangle, Save, Image as ImageIcon, MapPin, Trop
 import { useNavigate } from 'react-router-dom'
 
 import Loader from '../../components/ui/Loader'
+import HelpSection from '../../components/admin/HelpSection'
 
 export default function LeagueSettings() {
   const { liga, isLoading } = useLigaActiva()
@@ -226,6 +227,9 @@ export default function LeagueSettings() {
           </div>
         </div>
       </div>
+
+      {/* Help Section */}
+      <HelpSection />
 
       {/* Danger Zone */}
       <div className="pt-10">
