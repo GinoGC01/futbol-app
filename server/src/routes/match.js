@@ -28,7 +28,7 @@ router.patch(
   '/partidos/:id/estado',
   [
     param('id').isUUID().withMessage('ID de partido inválido'),
-    body('estado').isIn(['programado', 'en_juego', 'finalizado', 'postergado', 'suspendido'])
+    body('estado').isIn(['programado', 'en_juego', 'entre_tiempo', 'finalizado', 'postergado', 'suspendido'])
       .withMessage('Estado no válido')
   ],
   MatchController.cambiarEstado
@@ -60,6 +60,14 @@ router.get(
     param('jornadaId').isUUID().withMessage('ID de jornada inválido')
   ],
   MatchController.getFixture
+)
+
+router.get(
+  '/partidos/live/:temporadaId',
+  [
+    param('temporadaId').isUUID().withMessage('ID de temporada inválido')
+  ],
+  MatchController.getLiveMatches
 )
 
 router.post(

@@ -89,7 +89,7 @@ export default function LeagueArena() {
   )
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 min-h-screen">
+    <div className="max-w-4xl mx-auto px-4 py-6">
       <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-text-dim hover:text-primary mb-4 transition-colors">
         <ArrowLeft className="w-3.5 h-3.5" /> Volver
       </Link>

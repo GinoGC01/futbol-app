@@ -9,14 +9,16 @@ import AppError from '../../utils/AppError.js'
  *   programado → en_juego → finalizado
  *   programado → postergado
  *   en_juego → suspendido
+ *   en_juego → entre_tiempo → en_juego  (pausa de entretiempo)
  * Transiciones inválidas lanzan AppError.
  */
 const TRANSICIONES_VALIDAS = {
-  programado:  ['en_juego', 'postergado'],
-  en_juego:    ['finalizado', 'suspendido'],
-  postergado:  ['programado'],
-  suspendido:  ['programado'],
-  finalizado:  []  // Terminal — inmutable
+  programado:     ['en_juego', 'postergado'],
+  en_juego:       ['finalizado', 'suspendido', 'entre_tiempo'],
+  entre_tiempo:   ['en_juego'],
+  postergado:     ['programado'],
+  suspendido:     ['programado'],
+  finalizado:     []  // Terminal — inmutable
 }
 
 class PartidoService {
@@ -182,9 +184,9 @@ class PartidoService {
       throw new AppError('La jornada está cerrada: no se pueden editar resultados', 403)
     }
 
-    if (!['en_juego', 'finalizado'].includes(partido.estado)) {
+    if (!['en_juego', 'entre_tiempo', 'finalizado'].includes(partido.estado)) {
       throw new AppError(
-        `No se pueden registrar goles con el partido en estado "${partido.estado}". Debe estar "en_juego" o "finalizado".`,
+        `No se pueden registrar goles con el partido en estado "${partido.estado}". Debe estar "en_juego", "entre_tiempo" o "finalizado".`,
         400
       )
     }
@@ -240,6 +242,46 @@ class PartidoService {
       jornada: { id: jornada.id, numero: jornada.numero, estado: jornada.estado, fecha_tentativa: jornada.fecha_tentativa },
       partidos: partidos || []
     }
+  }
+
+  /**
+   * Returns all live/halftime matches for a temporada in a single query.
+   * Minimal payload for the live widget — no stats, no players, no history.
+   */
+  async getLiveMatches(temporadaId, organizadorId) {
+    // Verify ownership through temporada → liga
+    const { data: temporada, error: tErr } = await supabaseAdmin
+      .from('temporada')
+      .select('id, liga_id')
+      .eq('id', temporadaId)
+      .maybeSingle()
+
+    if (tErr || !temporada) throw new AppError('Temporada no encontrada', 404)
+    await LigaService.verifyOwnership(temporada.liga_id, organizadorId)
+
+    const { data: partidos, error: pErr } = await supabaseAdmin
+      .from('partido')
+      .select(`
+        id, estado, goles_local, goles_visitante,
+        equipo_local:equipo!equipo_local_id(id, nombre),
+        equipo_visitante:equipo!equipo_visitante_id(id, nombre)
+      `)
+      .in('estado', ['en_juego', 'entre_tiempo'])
+      .in('jornada_id',
+        supabaseAdmin
+          .from('jornada')
+          .select('id')
+          .in('fase_id',
+            supabaseAdmin
+              .from('fase')
+              .select('id')
+              .eq('temporada_id', temporadaId)
+          )
+      )
+
+    if (pErr) throw new AppError(`Error obteniendo partidos en vivo: ${pErr.message}`, 500)
+
+    return partidos || []
   }
 
   /**

@@ -61,21 +61,7 @@ export default function LeagueExplorer() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white selection:bg-primary selection:text-black">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto border-b border-white/5">
-        <Link to="/" className="flex items-center gap-3">
-          <img src="/images/isotipo.png" alt="Cancha Libre" className="md:h-20 h-16" />
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link to="/admin/login" className="px-6 py-2 border border-white text-xs font-bold hover:bg-white hover:text-black transition-all">
-            INGRESAR
-          </Link>
-          <Link to="/admin/register" className="px-6 py-2 bg-primary text-black text-xs font-bold hover:bg-primary/90 transition-all">
-            ORGANIZAR
-          </Link>
-        </div>
-      </nav>
+    <div className="text-white">
 
       <main className="max-w-7xl mx-auto px-8 py-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
@@ -225,30 +211,6 @@ export default function LeagueExplorer() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="max-w-7xl mx-auto px-8 py-12 border-t border-white/5">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex flex-col items-center md:items-start gap-4">
-            <img src="/images/logotipo.png" alt="Cancha Libre" className="h-10" />
-            <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
-              © {new Date().getFullYear()} CANCHA LIBRE. RENDIMIENTO SIN COMPROMISO.
-            </p>
-          </div>
-
-          <div className="flex gap-8 text-[10px] font-bold tracking-widest text-white/40 uppercase">
-            <button className="hover:text-white transition-all">PRIVACIDAD</button>
-            <button className="hover:text-white transition-all">TÉRMINOS</button>
-            <button className="hover:text-white transition-all">SOPORTE</button>
-            <button className="hover:text-white transition-all">API</button>
-          </div>
-
-          <div className="flex gap-6">
-            <button className="text-white/60 hover:text-primary transition-all"><Share2 className="w-5 h-5" /></button>
-            <button className="text-white/60 hover:text-primary transition-all"><Rss className="w-5 h-5" /></button>
-            <button className="text-white/60 hover:text-primary transition-all"><Users className="w-5 h-5" /></button>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

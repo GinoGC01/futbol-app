@@ -9,7 +9,7 @@ import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
-import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock as LockIcon, Shield } from 'lucide-react'
+import { Swords, Play, Square, Target, AlertTriangle, Clock, X, User, Lock as LockIcon, Shield, Pause, Timer, ChevronRight } from 'lucide-react'
 
 import { useLigaActiva } from '../../context/LigaContext'
 import Loader from '../../components/ui/Loader'
@@ -47,6 +47,9 @@ export default function MatchEdgeBox() {
   const { data: playersLocal, isLoading: loadingLocal } = useInscripcionesEquipo(liga?.id, partido?.equipo_local?.id)
   const { data: playersVisit, isLoading: loadingVisit } = useInscripcionesEquipo(liga?.id, partido?.equipo_visitante?.id)
 
+  // D-03: Live matches tracking
+  const liveMatches = partidos.filter(p => p.estado === 'en_juego' || p.estado === 'entre_tiempo')
+
   // Timer Logic
   useEffect(() => {
     if (!selectedPartido) {
@@ -65,9 +68,14 @@ export default function MatchEdgeBox() {
         setTimer(elapsed > 0 ? elapsed : 0)
         setIsRunning(true)
       } else {
-        // Si está en juego pero no hay timer guardado, empezamos en 0
         setTimer(0)
         setIsRunning(true)
+      }
+    } else if (p?.estado === 'entre_tiempo') {
+      setIsRunning(false)
+      if (saved) {
+        const { pausedAt } = JSON.parse(saved)
+        setTimer(pausedAt || 0)
       }
     } else if (p?.estado === 'finalizado') {
       setIsRunning(false)
@@ -97,6 +105,11 @@ export default function MatchEdgeBox() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const formatTimeParts = (seconds) => ({
+    mins: String(Math.floor(seconds / 60)).padStart(2, '0'),
+    secs: String(seconds % 60).padStart(2, '0')
+  })
+
   const handleStartMatch = () => {
     const startTime = Date.now()
     localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ startTime }))
@@ -104,6 +117,29 @@ export default function MatchEdgeBox() {
       onSuccess: () => {
         setIsRunning(true)
         toast.success('¡Partido Iniciado! Cronómetro en marcha.')
+      }
+    })
+  }
+
+  // D-02: Pause → entre_tiempo
+  const handlePauseMatch = () => {
+    cambiarEstado.mutate({ id: partido.id, estado: 'entre_tiempo' }, {
+      onSuccess: () => {
+        setIsRunning(false)
+        localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ pausedAt: timer }))
+        toast.info('⏸ Entre Tiempo — Cronómetro pausado.')
+      }
+    })
+  }
+
+  // D-02: Resume from entre_tiempo
+  const handleResumeMatch = () => {
+    const startTime = Date.now() - (timer * 1000)
+    localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ startTime }))
+    cambiarEstado.mutate({ id: partido.id, estado: 'en_juego' }, {
+      onSuccess: () => {
+        setIsRunning(true)
+        toast.success('▶ Segundo Tiempo — ¡Vamos!')
       }
     })
   }
@@ -128,6 +164,9 @@ export default function MatchEdgeBox() {
     if (partido.estado === 'programado') {
       toast.error('Partido no iniciado. Inicia el partido para cargar eventos.')
       return
+    }
+    if (partido.estado === 'entre_tiempo' && type !== 'GOL') {
+      // Allow all event types during halftime for corrections
     }
     setEntryMode({ type })
   }
@@ -204,6 +243,29 @@ export default function MatchEdgeBox() {
         </div>
       )}
 
+      {/* D-03: Live Matches Quick-Switch Bar */}
+      {liveMatches.length > 0 && !selectedPartido && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary">En Vivo — {liveMatches.length} {liveMatches.length === 1 ? 'Partido' : 'Partidos'}</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {liveMatches.map(lm => (
+              <button key={lm.id} onClick={() => setSelectedPartido(lm.id)}
+                className="flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all active:scale-95 live-ring">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase truncate max-w-[60px]">{lm.equipo_local?.nombre}</span>
+                  <span className="text-xs font-black text-primary">{lm.goles_local ?? 0}-{lm.goles_visitante ?? 0}</span>
+                  <span className="text-[10px] font-black uppercase truncate max-w-[60px]">{lm.equipo_visitante?.nombre}</span>
+                </div>
+                <ChevronRight className="w-3 h-3 text-primary" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Match list */}
       {!selectedPartido ? (
         loadingFixture ? (
@@ -224,7 +286,7 @@ export default function MatchEdgeBox() {
                    <div className="p-5">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${p.estado === 'en_juego' ? 'bg-primary animate-pulse' : 'bg-text-dim'}`} />
+                        <div className={`w-2 h-2 rounded-full ${p.estado === 'en_juego' ? 'bg-primary animate-pulse' : p.estado === 'entre_tiempo' ? 'bg-warning animate-pulse' : 'bg-text-dim'}`} />
                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-text-dim">{p.estado.replace('_', ' ')}</span>
                       </div>
                       {p.cancha && (
@@ -269,45 +331,104 @@ export default function MatchEdgeBox() {
               <X className="w-4 h-4" /> Cerrar Box
             </button>
             
+            <div className="flex items-center gap-2">
             {partido.estado === 'programado' ? (
               <button 
                 onClick={handleStartMatch}
                 disabled={cambiarEstado.isPending}
                 className="bg-primary text-bg-deep px-6 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(206,222,11,0.2)]"
               >
-                Iniciar Partido
+                <Play className="w-3.5 h-3.5 inline mr-1" /> Iniciar
               </button>
             ) : partido.estado === 'en_juego' ? (
-              <button 
-                onClick={handleEndMatch}
-                disabled={cambiarEstado.isPending}
-                className="bg-danger text-white px-6 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all"
-              >
-                Finalizar
-              </button>
+              <>
+                <button 
+                  onClick={handlePauseMatch}
+                  disabled={cambiarEstado.isPending}
+                  className="bg-warning text-bg-deep px-5 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(245,158,11,0.2)]"
+                >
+                  <Pause className="w-3.5 h-3.5 inline mr-1" /> Pausa
+                </button>
+                <button 
+                  onClick={handleEndMatch}
+                  disabled={cambiarEstado.isPending}
+                  className="bg-danger text-white px-5 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all"
+                >
+                  <Square className="w-3 h-3 inline mr-1" /> Fin
+                </button>
+              </>
+            ) : partido.estado === 'entre_tiempo' ? (
+              <>
+                <button 
+                  onClick={handleResumeMatch}
+                  disabled={cambiarEstado.isPending}
+                  className="bg-primary text-bg-deep px-5 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(206,222,11,0.2)] animate-pulse"
+                >
+                  <Play className="w-3.5 h-3.5 inline mr-1" /> Reanudar
+                </button>
+                <button 
+                  onClick={handleEndMatch}
+                  disabled={cambiarEstado.isPending}
+                  className="bg-danger text-white px-5 py-2 rounded-lg font-black uppercase italic tracking-wide text-xs hover:scale-105 active:scale-95 transition-all"
+                >
+                  <Square className="w-3 h-3 inline mr-1" /> Fin
+                </button>
+              </>
             ) : null}
+            </div>
           </div>
 
           {partido && (
             <>
-              {/* Premium Scoreboard */}
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded-[22px] blur-sm opacity-50" />
-                <GlassCard hover={false} className="relative !p-6 ring-2 ring-primary/20 bg-bg-surface/80">
+              {/* D-01: Premium Scoreboard with GIANT Stopwatch */}
+              <div className={`relative group ${partido.estado === 'entre_tiempo' ? 'halftime-stripes rounded-[22px]' : ''}`}>
+                <div className={`absolute -inset-1 rounded-[22px] blur-sm opacity-50 ${
+                  partido.estado === 'entre_tiempo' 
+                    ? 'bg-gradient-to-r from-warning/20 via-warning/5 to-warning/20'
+                    : 'bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20'
+                }`} />
+                <GlassCard hover={false} className={`relative !p-6 bg-bg-surface/80 ${
+                  partido.estado === 'entre_tiempo' ? 'ring-2 ring-warning/30' : 'ring-2 ring-primary/20'
+                }`}>
                   <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-[0.2em] ${
-                        partido.estado === 'en_juego' ? 'bg-primary text-bg-deep animate-pulse' : 'bg-white/10 text-text-dim'
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5 ${
+                        partido.estado === 'en_juego' ? 'bg-primary text-bg-deep animate-pulse' 
+                        : partido.estado === 'entre_tiempo' ? 'bg-warning text-bg-deep'
+                        : 'bg-white/10 text-text-dim'
                       }`}>
-                        {partido.estado === 'en_juego' ? 'Live' : partido.estado}
+                        {partido.estado === 'en_juego' && <><div className="w-1.5 h-1.5 rounded-full bg-bg-deep" /> Live</>}
+                        {partido.estado === 'entre_tiempo' && <><Pause className="w-3 h-3" /> Entre Tiempo</>}
+                        {partido.estado === 'finalizado' && 'Finalizado'}
+                        {partido.estado === 'programado' && 'Programado'}
+                        {partido.estado === 'suspendido' && 'Suspendido'}
+                        {partido.estado === 'postergado' && 'Postergado'}
                       </div>
-                      {partido.estado === 'en_juego' && (
-                        <div className="flex items-center gap-1.5 text-xs font-mono font-black text-primary">
-                          <Clock className="w-3 h-3" />
-                          {formatTime(timer)}'
-                        </div>
-                      )}
                     </div>
+
+                    {/* D-01: GIANT Stopwatch */}
+                    {(partido.estado === 'en_juego' || partido.estado === 'entre_tiempo') && (
+                      <div className={`mb-4 px-6 py-3 rounded-2xl border ${
+                        partido.estado === 'entre_tiempo' 
+                          ? 'bg-warning/5 border-warning/20' 
+                          : 'bg-primary/5 border-primary/20 live-ring'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <Timer className={`w-5 h-5 md:w-6 md:h-6 ${
+                            partido.estado === 'entre_tiempo' ? 'text-warning' : 'text-primary'
+                          }`} />
+                          <span className={`stopwatch-display text-4xl md:text-6xl font-black ${
+                            partido.estado === 'entre_tiempo' ? 'text-warning' : 'text-primary'
+                          }`}>
+                            {formatTimeParts(timer).mins}<span className="stopwatch-colon">:</span>{formatTimeParts(timer).secs}
+                          </span>
+                          <span className={`text-lg md:text-2xl font-heading italic ${
+                            partido.estado === 'entre_tiempo' ? 'text-warning/60' : 'text-primary/60'
+                          }`}>'</span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="w-full flex items-center justify-between gap-4">
                       <div className="flex-1 text-center space-y-2 min-w-0">
@@ -337,7 +458,7 @@ export default function MatchEdgeBox() {
               </div>
 
               {/* Main Incident Buttons - Aggressive Skewed Style */}
-              {!entryMode && (partido.estado === 'en_juego' || partido.estado === 'finalizado') && (
+              {!entryMode && (partido.estado === 'en_juego' || partido.estado === 'entre_tiempo' || partido.estado === 'finalizado') && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button 
                     onClick={() => handleIncident('GOL')}

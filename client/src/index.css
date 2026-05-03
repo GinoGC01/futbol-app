@@ -197,7 +197,7 @@
   /* Aggressive Shapes */
   .skew-card {
     position: relative;
-    clip-path: polygon(0% 0%, 100% 0%, 98% 100%, 2% 100%);
+    clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
   }
 
   .aggressive-btn {
@@ -209,7 +209,7 @@
     text-transform: uppercase;
     background: var(--color-primary);
     color: var(--color-bg-deep);
-    clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+    clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
     transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
@@ -239,5 +239,41 @@
     border-color: var(--color-primary);
     box-shadow: 0 0 15px var(--color-primary-glow);
     transform: translateY(-2px);
+  }
+
+  /* Match Edge — Giant Stopwatch */
+  .stopwatch-display {
+    font-family: 'Bebas Neue', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+  }
+
+  .stopwatch-colon {
+    animation: blink-colon 1s step-end infinite;
+  }
+
+  @keyframes blink-colon {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Live ring pulse */
+  .live-ring {
+    animation: ring-pulse 2s ease-in-out infinite;
+  }
+  @keyframes ring-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(206, 222, 11, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(206, 222, 11, 0); }
+  }
+
+  /* Halftime stripe animation */
+  .halftime-stripes {
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 8px,
+      rgba(245, 158, 11, 0.08) 8px,
+      rgba(245, 158, 11, 0.08) 16px
+    );
   }
 }

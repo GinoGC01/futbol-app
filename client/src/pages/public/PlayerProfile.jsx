@@ -29,7 +29,7 @@ export default function PlayerProfile() {
   const { jugador, equipo, stats } = data
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 min-h-screen">
+    <div className="mx-auto max-w-5xl px-4 py-8">
       <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-text-dim hover:text-primary mb-6 transition-colors">
         <ArrowLeft className="w-3.5 h-3.5" /> Volver
       </Link>

@@ -49,6 +49,15 @@ class MatchController {
     } catch (error) { next(error) }
   }
 
+  async getLiveMatches(req, res, next) {
+    try {
+      const { temporadaId } = req.params
+      const matches = await PartidoService.getLiveMatches(temporadaId, req.organizador.id)
+
+      res.status(200).json({ status: 'success', data: matches })
+    } catch (error) { next(error) }
+  }
+
   async updateLogistica(req, res, next) {
     try {
       const updated = await PartidoService.updateLogistica(

@@ -48,8 +48,8 @@ class EventoService {
       throw new AppError('Temporada finalizada: no se pueden registrar goles (Modo Bóveda)', 403)
     }
 
-    // 2. Máquina de estados: solo en_juego o finalizado
-    if (!['en_juego', 'finalizado'].includes(partido.estado)) {
+    // 2. Máquina de estados: solo en_juego, entre_tiempo o finalizado
+    if (!['en_juego', 'entre_tiempo', 'finalizado'].includes(partido.estado)) {
       throw new AppError(
         `No se pueden registrar goles con el partido en estado "${partido.estado}"`,
         400
@@ -153,7 +153,7 @@ class EventoService {
       throw new AppError('Temporada finalizada: no se pueden registrar tarjetas (Modo Bóveda)', 403)
     }
 
-    if (!['en_juego', 'finalizado'].includes(partido.estado)) {
+    if (!['en_juego', 'entre_tiempo', 'finalizado'].includes(partido.estado)) {
       throw new AppError(
         `No se pueden registrar tarjetas con el partido en estado "${partido.estado}"`,
         400

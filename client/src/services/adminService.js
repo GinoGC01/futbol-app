@@ -68,6 +68,8 @@ export const adminService = {
     api.patch(`/match/partidos/${id}/logistica`, data),
   getFixtureAdmin: (jornadaId) =>
     api.get(`/match/partidos/jornada/${jornadaId}`),
+  getLiveMatches: (temporadaId) =>
+    api.get(`/match/partidos/live/${temporadaId}`),
   registrarGol: (partidoId, data) =>
     api.post(`/match/partidos/${partidoId}/goles`, data),
   registrarTarjeta: (partidoId, data) =>

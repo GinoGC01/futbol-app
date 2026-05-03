@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { Search, Trophy, ArrowRight, Share2, Rss, Users } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
-import Badge from '../../components/ui/Badge'
+import { Search, Trophy, ArrowRight, Target, Zap, Users, MapPin } from 'lucide-react'
 
 export default function Home() {
   const [query, setQuery] = useState('')
@@ -17,202 +15,102 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white selection:bg-primary selection:text-black">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-12">
-          <Link to="/" className="flex items-center gap-3">
-            <img src="/images/isotipo.png" alt="Cancha Libre" className="h-20" />
-          </Link>
-          <div className="hidden md:flex items-center gap-8">
-            <NavLink to="/" active>LIGAS</NavLink>
-            <NavLink to="/ligas">TORNEOS</NavLink>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/admin/login" className="px-6 py-2 border border-white text-xs font-bold hover:bg-white hover:text-black transition-all">
-            INGRESAR
-          </Link>
-          <Link to="/admin/register" className="px-6 py-2 bg-primary text-black text-xs font-bold hover:bg-primary/90 transition-all">
-            ORGANIZAR
-          </Link>
-        </div>
-      </nav>
-
-      {/* Hero */}
-      <section className="relative pt-32 pb-48 px-6 text-center overflow-hidden">
-        {/* Background Isotipo */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] opacity-[0.03] pointer-events-none z-0">
-          <img src="/images/isotipo.png" alt="" className="w-full h-full object-contain" />
-        </div>
-
+    <div className="text-text-primary">
+      {/* Hero Section */}
+      <section className="relative pb-32 md:pt-12 md:pb-56 px-6 text-center flex flex-col justify-center min-h-[80vh]">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-4xl mx-auto relative z-10"
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-5xl mx-auto relative z-10"
         >
-          <h1 className="text-6xl md:text-8xl font-heading font-black mb-6 tracking-wide leading-[0.9] uppercase">
-            TU TORNEO,<br />
-            <span className="text-primary italic">NIVEL PROFESIONAL</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
+            <Zap className="w-3.5 h-3.5 text-primary fill-primary" />
+            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-white/60">Plataforma #1 para Gestión de Ligas</span>
+          </div>
+
+          <h1 className="text-6xl sm:text-7xl md:text-9xl font-heading font-black mb-8 tracking-tight leading-[0.85] uppercase">
+            TU TORNEO<br />
+            <span className="text-primary italic drop-shadow-[0_0_15px_rgba(206,222,11,0.3)]">NIVEL PROFESIONAL</span>
           </h1>
 
-          <p className="text-text-secondary text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-12 max-w-2xl mx-auto opacity-70">
-            Tabla de posiciones, fixture, goleadores y premios en tiempo real. Organiza como un profesional.
+          <p className="text-text-secondary text-[10px] md:text-sm font-black uppercase tracking-widest mb-12 max-w-2xl mx-auto opacity-60 leading-relaxed">
+            Estadísticas, fixtures y resultados en tiempo real. <br className="hidden md:block" />
+            Diseñado para los que no aceptan menos que la excelencia.
           </p>
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="flex max-w-2xl mx-auto border-2 border-white/10 bg-black/40 backdrop-blur-md overflow-hidden p-1 focus-within:border-primary/50 transition-all">
-            <div className="flex-1 flex items-center px-4">
-              <Search className="w-5 h-5 text-white/40 mr-4" />
-              <input
-                type="text"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="BUSCAR LIGA, CLUB O CIUDAD..."
-                className="w-full bg-transparent border-none outline-none text-sm font-bold uppercase tracking-widest placeholder:text-white/20"
-              />
-            </div>
-            <button 
-              type="submit" 
-              disabled={searching}
-              className="bg-primary text-black px-10 py-3 text-sm font-black uppercase tracking-widest hover:bg-primary/90 transition-all"
+          {/* Premium Search Architecture */}
+          <div className="relative mx-auto max-w-4xl group mt-8 px-4 md:px-8">
+            {/* Ambient Background Glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 rounded-full" />
+            
+            {/* Skewed Form Container */}
+            <form 
+              onSubmit={handleSearch}
+              className="relative -skew-x-6 md:-skew-x-12 bg-black/40 backdrop-blur-xl border border-white/10 p-1.5 md:p-2 group-focus-within:border-primary/40 group-focus-within:bg-black/60 transition-all duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-stretch h-16 md:h-20"
             >
-              {searching ? '...' : 'BUSCAR'}
-            </button>
-          </form>
+              {/* Unskewed Content Wrapper for Input */}
+              <div className="flex-1 flex items-center pl-6 md:pl-10 relative skew-x-6 md:skew-x-12">
+                <Search className="w-5 h-5 md:w-6 md:h-6 text-white/30 group-focus-within:text-primary transition-colors duration-300 drop-shadow-[0_0_8px_rgba(206,222,11,0)] group-focus-within:drop-shadow-[0_0_8px_rgba(206,222,11,0.5)]" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="EXPLORAR LIGAS, EQUIPOS O CIUDADES..."
+                  className="w-full bg-transparent border-none py-2 px-4 md:px-6 outline-none text-[10px] md:text-sm font-black uppercase tracking-[0.2em] text-white placeholder:text-white/20"
+                />
+              </div>
+
+              {/* Action Button */}
+              <button 
+                type="submit"
+                disabled={searching}
+                className="relative overflow-hidden bg-primary text-black px-6 md:px-12 flex items-center justify-center gap-3 hover:bg-[#d8eb0c] hover:shadow-[0_0_20px_rgba(206,222,11,0.4)] transition-all active:scale-95 group/btn"
+              >
+                {/* Button shine effect */}
+                <div className="absolute top-0 -left-[100%] h-full w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-30 group-hover/btn:left-[200%] transition-all duration-700 ease-in-out skew-x-12" />
+                
+                <div className="flex items-center gap-2 md:gap-3 skew-x-6 md:skew-x-12">
+                  {searching ? (
+                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span className="font-heading italic font-black text-sm md:text-lg tracking-widest mt-0.5">BUSCAR</span>
+                      <ArrowRight className="w-4 h-4 md:w-6 md:h-6 group-hover/btn:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </div>
+              </button>
+            </form>
+          </div>
         </motion.div>
       </section>
 
-      {/* Featured Section */}
-      {/* <section className="max-w-7xl mx-auto px-8 pb-32">
-        <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
-          <h2 className="text-3xl font-heading font-black italic text-primary tracking-wide uppercase">
-            LIGAS DESTACADAS
-          </h2>
-          <Link to="/ligas" className="flex items-center gap-2 text-xs font-bold tracking-widest hover:text-primary transition-all uppercase group">
-            Ver todas las ligas <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <LeagueCard 
-            title="COPA DE CAMPEONES"
-            subtitle="32 EQUIPOS • PREMIO $500K"
-            badge="LIVE"
-            badgeColor="activa"
-            cta="VER TORNEO"
-          />
-          <LeagueCard 
-            title="METROPOLITAN ELITE"
-            subtitle="16 EQUIPOS • F8 AMATEUR"
-            badge="REGISTRO ABIERTO"
-            badgeColor="parcial"
-            cta="INSCRIBIRSE"
-          />
-          <LeagueCard 
-            title="LIGA NOCTURNA PRO"
-            subtitle="24 EQUIPOS • ESTADIO ÚNICO"
-            badge="FINAL DE TEMPORADA"
-            badgeColor="finalizada"
-            cta="VER POSICIONES"
-          />
-        </div>
-      </section> */}
-
       {/* Stats Section */}
-      <section className="border-y border-white/10 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto px-8 py-16 flex flex-wrap justify-between gap-12">
-          <StatItem label="PARTIDOS/MES" value="+2,400" />
-          <div className="hidden md:block w-px h-12 bg-white/10" />
-          <StatItem label="TORNEOS ACTIVOS" value="150" />
-          <div className="hidden md:block w-px h-12 bg-white/10" />
-          <StatItem label="ATLETAS REGISTRADOS" value="50K" />
-          <div className="hidden md:block w-px h-12 bg-white/10" />
-          <StatItem label="CIUDADES" value="12" />
+      <section className="border-t border-white/5 bg-white/[0.01] backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-8">
+          <StatItem label="PARTIDOS / MES" value="+2.4K" icon={<Target className="w-4 h-4" />} />
+          <StatItem label="LIGAS ACTIVAS" value="150+" icon={<Trophy className="w-4 h-4" />} />
+          <StatItem label="ATLETAS" value="50K" icon={<Users className="w-4 h-4" />} />
+          <StatItem label="CIUDADES" value="12" icon={<MapPin className="w-4 h-4" />} />
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="max-w-7xl mx-auto px-8 py-12">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex flex-col items-center md:items-start gap-4">
-            <img src="/images/logotipo.png" alt="Cancha Libre" className="h-12" />
-            <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold text-center md:text-left">
-              © {new Date().getFullYear()} CANCHA LIBRE. RENDIMIENTO SIN COMPROMISO.
-            </p>
-          </div>
-          
-          <div className="flex gap-8">
-            <FooterLink>PRIVACIDAD</FooterLink>
-            <FooterLink>TÉRMINOS</FooterLink>
-            <FooterLink>SOPORTE</FooterLink>
-            <FooterLink>API</FooterLink>
-          </div>
-
-          <div className="flex gap-6">
-            <button className="text-white/60 hover:text-primary transition-all"><Share2 className="w-5 h-5" /></button>
-            <button className="text-white/60 hover:text-primary transition-all"><Rss className="w-5 h-5" /></button>
-            <button className="text-white/60 hover:text-primary transition-all"><Users className="w-5 h-5" /></button>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
 
-function NavLink({ to, children, active }) {
+function StatItem({ label, value, icon }) {
   return (
-    <Link to={to} className={`text-xs font-bold tracking-[0.2em] transition-all hover:text-primary ${active ? 'text-primary border-b-2 border-primary pb-1' : 'text-white'}`}>
-      {children}
-    </Link>
-  )
-}
-
-function LeagueCard({ title, subtitle, badge, badgeColor, cta }) {
-  return (
-    <div className="relative aspect-[4/5] bg-[#1A1A1A] overflow-hidden group cursor-pointer border border-white/5 hover:border-primary/50 transition-all">
-      {/* Background Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
-      <div className="absolute inset-0 bg-[#222] transition-transform duration-700 group-hover:scale-110" />
-      
-      {/* Content */}
-      <div className="absolute inset-0 z-20 p-8 flex flex-col justify-end">
-        <div className="mb-4">
-          <Badge status={badgeColor} label={badge} className="scale-90 origin-left" />
-        </div>
-        <h3 className="text-2xl font-heading font-black italic leading-tight mb-1 group-hover:text-primary transition-colors uppercase tracking-normal">
-          {title}
-        </h3>
-        <p className="text-[10px] font-bold text-white/40 tracking-widest mb-8 uppercase">
-          {subtitle}
-        </p>
-        
-        <button className="w-full py-4 border border-white text-[11px] font-black tracking-[0.3em] uppercase hover:bg-white hover:text-black transition-all">
-          {cta}
-        </button>
+    <div className="text-center group">
+      <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 mb-4 group-hover:border-primary/40 transition-all">
+        <span className="text-text-secondary group-hover:text-primary transition-colors">{icon}</span>
       </div>
-    </div>
-  )
-}
-
-function StatItem({ label, value }) {
-  return (
-    <div className="text-center flex-1">
-      <p className="text-4xl font-heading font-black text-primary italic tracking-wide mb-1">
+      <p className="text-4xl md:text-5xl font-heading font-black text-primary italic tracking-tight mb-1 group-hover:scale-110 transition-transform">
         {value}
       </p>
-      <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase">
+      <p className="text-[9px] font-black text-text-dim tracking-[0.3em] uppercase">
         {label}
       </p>
     </div>
-  )
-}
-
-function FooterLink({ children }) {
-  return (
-    <button className="text-[10px] font-bold tracking-widest text-white/40 hover:text-white transition-all uppercase">
-      {children}
-    </button>
   )
 }

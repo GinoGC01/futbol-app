@@ -5,6 +5,8 @@ import { useAuth } from '../hooks/useAuth'
 import { LogOut, Globe, ChevronDown, Shield, Bell } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { LigaProvider, useLigaActiva } from '../context/LigaContext'
+import { LiveMatchProvider } from '../context/LiveMatchContext'
+import { LiveMatchHeaderWidget, LiveMatchBubble } from '../components/layout/LiveMatchWidgets'
 import { useAlertas } from '../hooks/useAdmin'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../components/ui/Toast'
@@ -91,6 +93,9 @@ function AdminLayoutContent() {
             )}
           </div>
 
+          {/* E-01: Live Match Header Widget */}
+          <LiveMatchHeaderWidget />
+
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative">
               <Link
@@ -137,6 +142,9 @@ function AdminLayoutContent() {
       </div>
 
       <BottomNav />
+
+      {/* E-02: Live Match Floating Bubble */}
+      <LiveMatchBubble />
     </div>
   )
 }
@@ -144,7 +152,9 @@ function AdminLayoutContent() {
 export default function AdminLayout() {
   return (
     <LigaProvider>
-      <AdminLayoutContent />
+      <LiveMatchProvider>
+        <AdminLayoutContent />
+      </LiveMatchProvider>
     </LigaProvider>
   )
 }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Shield, Mail, Lock as LockIcon, User, MapPin, FileText, RefreshCw, Share2, Rss, Users as UsersIcon } from 'lucide-react'
 import { api } from '../../lib/api'
-
+import GoogleAuthButton from '../../components/auth/GoogleAuthButton'
 export default function Register() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({ email: '', password: '', nombre: '', telefono: '', ligaNombre: '', slug: '', tipoFutbol: 'f7', zona: '' })
@@ -120,7 +120,8 @@ export default function Register() {
             key={step}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="border-2 border-primary bg-black/40 backdrop-blur-md p-6 md:p-10"
+            className="glass-heavy p-8 sm:p-10 relative"
+            style={{ clipPath: 'polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%)' }}
           >
             {step === 1 && (
               <form onSubmit={handleStep1} className="flex flex-col gap-6">
@@ -154,7 +155,9 @@ export default function Register() {
                   </div>
                 </div>
 
-                <button type="submit" className="w-full bg-primary text-black py-5 text-lg font-black italic uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-3 group">
+                {error && <p className="text-xs text-danger bg-danger-dim p-4 font-bold uppercase tracking-widest text-center">{error}</p>}
+
+                <button type="submit" disabled={loading} className="w-full bg-primary text-black py-5 text-lg font-black italic uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-3 group disabled:opacity-50">
                   CONTINUAR
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M13 10V3L4 14H11V21L20 10H13Z" />
@@ -164,6 +167,18 @@ export default function Register() {
                 <p className="text-[9px] font-bold text-center text-white/30 uppercase tracking-widest mt-4">
                   AL CONTINUAR ACEPTAS NUESTROS <Link to="/" className="text-white hover:text-primary underline">TÉRMINOS DE SERVICIO</Link>
                 </p>
+
+                <div className="flex items-center gap-4 my-6">
+                  <div className="flex-1 h-px bg-white/5" />
+                  <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em]">O ACCESO RÁPIDO</span>
+                  <div className="flex-1 h-px bg-white/5" />
+                </div>
+
+                <GoogleAuthButton 
+                  onError={setError} 
+                  onLoadingChange={setLoading} 
+                  text="signup_with" 
+                />
               </form>
             )}
 

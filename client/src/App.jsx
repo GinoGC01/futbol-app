@@ -43,6 +43,8 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+import PublicLayout from './layouts/PublicLayout'
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -50,12 +52,14 @@ export default function App() {
         <BrowserRouter>
         <Omnisearch />
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/ligas" element={<LeagueExplorer />} />
-          <Route path="/liga/:slug" element={<LeagueArena />} />
-          <Route path="/equipo/:id" element={<TeamProfile />} />
-          <Route path="/jugador/:id" element={<PlayerProfile />} />
+          {/* Public Routes Wrapped in PublicLayout */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/ligas" element={<LeagueExplorer />} />
+            <Route path="/liga/:slug" element={<LeagueArena />} />
+            <Route path="/equipo/:id" element={<TeamProfile />} />
+            <Route path="/jugador/:id" element={<PlayerProfile />} />
+          </Route>
 
           {/* Auth Routes */}
           <Route path="/admin/login" element={<Login />} />
