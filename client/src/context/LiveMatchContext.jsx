@@ -33,7 +33,7 @@ export function LiveMatchProvider({ children }) {
 
     try {
       const response = await adminService.getLiveMatches(temporadaActiva.id)
-      setLiveMatches(response.data || [])
+      setLiveMatches(Array.isArray(response) ? response : (response?.data || []))
     } catch {
       // Silently fail — non-critical
     }

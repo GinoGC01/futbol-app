@@ -259,6 +259,19 @@ class PartidoService {
     if (tErr || !temporada) throw new AppError('Temporada no encontrada', 404)
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId)
 
+    // Fetch all jornadas for this temporada
+    const { data: fases, error: fErr } = await supabaseAdmin
+      .from('fase')
+      .select('id, jornada(id)')
+      .eq('temporada_id', temporadaId)
+
+    if (fErr) throw new AppError(`Error resolviendo jornadas: ${fErr.message}`, 500)
+
+    const jornadaIds = fases?.flatMap(f => f.jornada?.map(j => j.id) || []) || []
+
+    if (jornadaIds.length === 0) return []
+
+    // Fetch live matches using the array of jornadaIds
     const { data: partidos, error: pErr } = await supabaseAdmin
       .from('partido')
       .select(`
@@ -267,17 +280,7 @@ class PartidoService {
         equipo_visitante:equipo!equipo_visitante_id(id, nombre)
       `)
       .in('estado', ['en_juego', 'entre_tiempo'])
-      .in('jornada_id',
-        supabaseAdmin
-          .from('jornada')
-          .select('id')
-          .in('fase_id',
-            supabaseAdmin
-              .from('fase')
-              .select('id')
-              .eq('temporada_id', temporadaId)
-          )
-      )
+      .in('jornada_id', jornadaIds)
 
     if (pErr) throw new AppError(`Error obteniendo partidos en vivo: ${pErr.message}`, 500)
 

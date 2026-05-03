@@ -16,27 +16,27 @@ export function LiveMatchHeaderWidget() {
   if (location.pathname === '/admin/partidos' || liveMatches.length === 0) return null
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto scrollbar-none max-w-[280px] sm:max-w-[400px]">
+    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none max-w-[110px] sm:max-w-[200px] lg:max-w-[400px]">
       {liveMatches.map(p => (
         <button
           key={p.id}
           onClick={() => navigate('/admin/partidos')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wide whitespace-nowrap transition-all active:scale-95 shrink-0 ${
+          className={`flex items-center gap-1.5 px-2 py-1 lg:px-3 lg:py-1.5 rounded-lg text-[8px] lg:text-[9px] font-black uppercase tracking-wide whitespace-nowrap transition-all active:scale-95 shrink-0 ${
             p.estado === 'entre_tiempo'
               ? 'bg-warning/15 border border-warning/30 text-warning hover:bg-warning/25'
               : 'bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 live-ring'
           }`}
         >
           {p.estado === 'entre_tiempo'
-            ? <Pause className="w-3 h-3" />
+            ? <Pause className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
             : <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           }
-          <span className="truncate max-w-[40px]">{p.equipo_local?.nombre?.slice(0, 4)}</span>
-          <span className="font-mono font-black text-[10px]">
+          <span className="truncate max-w-[25px] lg:max-w-[40px]">{p.equipo_local?.nombre?.slice(0, 3)}</span>
+          <span className="font-mono font-black text-[9px] lg:text-[10px]">
             {p.goles_local ?? 0}-{p.goles_visitante ?? 0}
           </span>
-          <span className="truncate max-w-[40px]">{p.equipo_visitante?.nombre?.slice(0, 4)}</span>
-          <span className="font-mono text-[10px] opacity-70">{formatTime(timers[p.id])}'</span>
+          <span className="truncate max-w-[25px] lg:max-w-[40px]">{p.equipo_visitante?.nombre?.slice(0, 3)}</span>
+          <span className="font-mono text-[9px] lg:text-[10px] opacity-70">{formatTime(timers[p.id])}'</span>
         </button>
       ))}
     </div>
@@ -68,7 +68,7 @@ export function LiveMatchBubble() {
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 
+        className="fixed bottom-28 right-4 lg:bottom-6 lg:right-6 z-50 
           w-14 h-14 rounded-2xl 
           bg-primary text-bg-deep 
           flex items-center justify-center 
@@ -89,7 +89,7 @@ export function LiveMatchBubble() {
 
   // Expanded panel
   return (
-    <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 w-72 sm:w-80 animate-fade-in">
+    <div className="fixed bottom-28 right-4 lg:bottom-6 lg:right-6 z-50 w-72 sm:w-80 animate-fade-in">
       {/* Glow */}
       <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded-[22px] blur-sm opacity-60" />
 

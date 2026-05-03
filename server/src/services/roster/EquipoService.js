@@ -52,7 +52,13 @@ class EquipoService {
         id, nombre, escudo_url, color_principal, created_at,
         inscripciones:inscripcion_equipo(
           id, 
+          temporada_id,
           temporada:temporada(id, nombre, estado, deleted_at)
+        ),
+        planteles:plantel(
+          id,
+          temporada_id,
+          inscripciones:inscripcion_jugador(id)
         )
       `)
       .eq('liga_id', ligaId)
@@ -60,7 +66,23 @@ class EquipoService {
       .order('nombre', { ascending: true })
 
     if (error) throw new AppError(`Error al listar equipos: ${error.message}`, 500)
-    return data || []
+
+    const equiposMap = data.map(eq => {
+      const inscripcionesConPlantel = (eq.inscripciones || []).map(ins => {
+        const plantel = (eq.planteles || []).find(p => p.temporada_id === ins.temporada_id)
+        return {
+          ...ins,
+          plantel: plantel || null
+        }
+      })
+      const { planteles, ...resto } = eq
+      return {
+        ...resto,
+        inscripciones: inscripcionesConPlantel
+      }
+    })
+
+    return equiposMap || []
   }
 
   /**
