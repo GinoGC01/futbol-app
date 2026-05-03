@@ -114,11 +114,12 @@ class StatService {
 
     if (eqErr || !equipo) throw new AppError('Equipo no encontrado', 404)
 
-    // 2. Obtener la inscripción más reciente para saber la temporada actual del equipo
+    // 2. Obtener la inscripción más reciente para saber la temporada actual del equipo (excluyendo archivadas)
     const { data: latestInscripcion } = await supabaseAdmin
       .from('inscripcion_equipo')
-      .select('id, temporada_id, plantel_id')
+      .select('id, temporada_id, plantel_id, temporada!inner(deleted_at)')
       .eq('equipo_id', equipoId)
+      .is('temporada.deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()

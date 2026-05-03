@@ -30,9 +30,20 @@ export default function LeagueArena() {
   const { data: temporada } = useQuery({
     queryKey: ['temporada-activa', liga?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('temporada').select('id, nombre, estado')
-        .eq('liga_id', liga.id).eq('estado', 'activa').maybeSingle()
+      const { data, error } = await supabase
+        .from('temporada')
+        .select('id, nombre, estado')
+        .eq('liga_id', liga.id)
+        .neq('estado', 'borrador')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        
+      if (error) {
+        console.error('Error fetching temporada:', error)
+        return null
+      }
       return data
     },
     enabled: !!liga?.id
