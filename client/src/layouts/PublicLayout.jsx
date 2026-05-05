@@ -36,9 +36,9 @@ export default function PublicLayout() {
           </p>
           
           <div className="mt-8 flex justify-center gap-8 text-[9px] font-black text-text-dim tracking-widest uppercase">
-            <Link to="/privacidad" className="hover:text-primary transition-colors">Privacidad</Link>
-            <Link to="/terminos" className="hover:text-primary transition-colors">Términos</Link>
-            <Link to="/ayuda" className="hover:text-primary transition-colors">Soporte</Link>
+            <Link to="/privacidad" viewTransition className="hover:text-primary transition-colors">Privacidad</Link>
+            <Link to="/terminos" viewTransition className="hover:text-primary transition-colors">Términos</Link>
+            <Link to="/ayuda" viewTransition className="hover:text-primary transition-colors">Soporte</Link>
           </div>
         </div>
       </footer>

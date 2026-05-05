@@ -23,6 +23,7 @@ export default function BottomNav() {
         <NavLink
           key={to}
           to={to}
+          viewTransition
           end={to === '/admin'}
           className={({ isActive }) => `
             flex flex-col items-center justify-center gap-0.5

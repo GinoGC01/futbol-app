@@ -12,7 +12,7 @@ export default function PublicNavbar() {
         
         {/* LOGO SECTION */}
         <div className="flex items-center gap-12">
-          <Link to="/" className="relative group">
+          <Link to="/" viewTransition className="relative group">
             <motion.div 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -37,12 +37,14 @@ export default function PublicNavbar() {
         <div className="flex items-center gap-4">
           <Link 
             to="/admin/login" 
+            viewTransition
             className="hidden sm:block px-5 py-2 text-[10px] font-black tracking-widest text-text-dim hover:text-primary transition-colors uppercase border border-white/5 hover:border-primary/20"
           >
             INGRESAR
           </Link>
           <Link 
             to="/admin/register" 
+            viewTransition
             className="aggressive-btn !py-2 !px-6 !text-[11px] shadow-glow-primary active:scale-95"
           >
             ORGANIZAR
@@ -102,6 +104,7 @@ function NavLink({ to, children, icon }) {
   return (
     <Link 
       to={to} 
+      viewTransition
       className="flex items-center gap-2 text-[10px] font-black tracking-[0.3em] text-text-secondary hover:text-primary transition-all uppercase relative group"
     >
       {icon && <span className="opacity-40 group-hover:opacity-100 transition-opacity">{icon}</span>}

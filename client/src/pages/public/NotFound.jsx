@@ -40,7 +40,7 @@ export default function NotFound() {
             className="mb-8 relative inline-block"
           >
             <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-            <h2 className="text-[120px] md:text-[200px] font-heading font-black italic tracking-tighter leading-none uppercase mb-0 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/20 relative z-10">
+            <h2 className="text-[120px] md:text-[200px] font-heading font-black leading-none uppercase mb-0 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/20 relative z-10">
               404
             </h2>
             <motion.div 

@@ -100,6 +100,7 @@ function AdminLayoutContent() {
             <div className="relative">
               <Link
                 to="/admin"
+                viewTransition
                 className="w-9 h-9 sm:w-10 sm:h-10 bg-white/5 flex items-center justify-center text-text-dim hover:text-primary transition-all skew-x-[-12deg] group"
                 title="Alertas"
               >
@@ -114,6 +115,7 @@ function AdminLayoutContent() {
 
             <Link
               to="/"
+              viewTransition
               className="w-9 h-9 sm:w-10 sm:h-10 bg-white/5 flex items-center justify-center text-text-dim hover:text-primary transition-all skew-x-[-12deg] group"
               title="Ver portal público"
             >

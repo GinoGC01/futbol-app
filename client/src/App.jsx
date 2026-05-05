@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from './hooks/useAuth'
 import { ToastProvider } from './components/ui/Toast'
@@ -10,6 +10,7 @@ import LeagueArena from './pages/public/LeagueArena'
 import TeamProfile from './pages/public/TeamProfile'
 import PlayerProfile from './pages/public/PlayerProfile'
 import Omnisearch from './components/ui/Omnisearch'
+import NotFound from './pages/public/NotFound'
 
 // Admin Pages
 import Login from './pages/admin/Login'
@@ -25,8 +26,8 @@ import LeagueSettings from './pages/admin/LeagueSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import ResetPassword from './pages/admin/ResetPassword'
 import VerifyEmail from './pages/admin/VerifyEmail'
-import NotFound from './pages/public/NotFound'
 import Loader from './components/ui/Loader'
+import PublicLayout from './layouts/PublicLayout'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,7 @@ const queryClient = new QueryClient({
     }
   }
 })
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <Loader fullScreen text="Verificando sesión..." />
@@ -44,50 +46,69 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-import PublicLayout from './layouts/PublicLayout'
+// ============================================
+// ROUTER CONFIGURATION (v7 Data Router)
+// ============================================
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: (
+      <>
+        <Omnisearch />
+        <Outlet />
+      </>
+    ),
+    children: [
+      {
+        element: <PublicLayout />,
+        children: [
+          { index: true, element: <Home /> },
+          { path: "ligas", element: <LeagueExplorer /> },
+          { path: "liga/:slug", element: <LeagueArena /> },
+          { path: "equipo/:id", element: <TeamProfile /> },
+          { path: "jugador/:id", element: <PlayerProfile /> },
+        ]
+      },
+      { path: "admin/login", element: <Login /> },
+      { path: "admin/register", element: <Register /> },
+      { path: "admin/forgot-password", element: <ForgotPassword /> },
+      { path: "admin/reset-password", element: <ResetPassword /> },
+      { path: "admin/verify", element: <VerifyEmail /> },
+      {
+        path: "admin",
+        element: (
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          { index: true, element: <DashboardHome /> },
+          { path: "torneo", element: <TournamentArchitect /> },
+          { path: "roster", element: <RosterManager /> },
+          { path: "jugadores", element: <PlayerManager /> },
+          { path: "partidos", element: <MatchEdgeBox /> },
+          { path: "premios", element: <AwardScrutinyTool /> },
+          { path: "settings", element: <LeagueSettings /> },
+        ]
+      },
+      { path: "*", element: <NotFound /> }
+    ]
+  }
+], {
+  future: {
+    v7_relativeSplatPath: true,
+    v7_fetcherPersist: true,
+    v7_normalizeFormMethod: true,
+    v7_partialHydration: true,
+    v7_skipActionErrorRevalidation: true
+  }
+})
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider> 
-        <BrowserRouter>
-        <Omnisearch />
-        <Routes>
-          {/* Public Routes Wrapped in PublicLayout */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/ligas" element={<LeagueExplorer />} />
-            <Route path="/liga/:slug" element={<LeagueArena />} />
-            <Route path="/equipo/:id" element={<TeamProfile />} />
-            <Route path="/jugador/:id" element={<PlayerProfile />} />
-          </Route>
-
-          {/* Auth Routes */}
-          <Route path="/admin/login" element={<Login />} />
-          <Route path="/admin/register" element={<Register />} />
-          <Route path="/admin/forgot-password" element={<ForgotPassword />} />
-          <Route path="/admin/reset-password" element={<ResetPassword />} />
-          <Route path="/admin/verify" element={<VerifyEmail />} />
-
-          {/* Admin Protected Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<DashboardHome />} />
-            <Route path="torneo" element={<TournamentArchitect />} />
-            <Route path="roster" element={<RosterManager />} />
-            <Route path="jugadores" element={<PlayerManager />} />
-            <Route path="partidos" element={<MatchEdgeBox />} />
-            <Route path="premios" element={<AwardScrutinyTool />} />
-            <Route path="settings" element={<LeagueSettings />} />
-          </Route>
-
-          {/* Fallback */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+        <RouterProvider router={router} />
       </ToastProvider>
     </QueryClientProvider>
   )

@@ -41,6 +41,7 @@ export default function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            viewTransition
             end={to === '/admin'}
             className={({ isActive }) => `
               flex items-center gap-3 px-3 py-3 rounded-lg
