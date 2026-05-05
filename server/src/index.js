@@ -12,6 +12,7 @@ import matchRouter from './routes/match.js'
 import statsRouter from './routes/stats.js'
 import awardsRouter from './routes/awards.js'
 import alertsRouter from './routes/alerts.js'
+import healthRouter from './routes/health.js'
 
 import { errorHandler } from './middleware/errorHandler.js'
 import { startCleanupJob } from './jobs/cleanupTokens.js'
@@ -36,10 +37,8 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(express.json())
 app.use(cookieParser())
 
-// Health check — usado por cron-job.org para mantener Render activo
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', env: process.env.NODE_ENV })
-})
+// Health check — usado por monitoreo y para mantener Render activo
+app.use('/health', healthRouter)
 
 app.use('/api/identity', identityRouter)
 app.use('/api/competition', competitionRouter)
