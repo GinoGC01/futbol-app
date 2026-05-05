@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import express from 'express'
-import cors from 'cors'
+import { corsMiddleware } from './middleware/cors.js'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
@@ -25,10 +25,7 @@ startCleanupJob()
 const PORT = process.env.PORT || 3001
 
 app.use(helmet())
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
-}))
+app.use(corsMiddleware)
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'))
