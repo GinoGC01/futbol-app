@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { useLigaActiva } from './LigaContext'
 import { useTemporadas } from '../hooks/useAdmin'
 import { adminService } from '../services/adminService'
+import { useAuth } from '../hooks/useAuth'
 
 const LiveMatchContext = createContext()
 
@@ -13,6 +14,7 @@ const LiveMatchContext = createContext()
  *  - refreshLive(): manual refetch
  */
 export function LiveMatchProvider({ children }) {
+  const { user } = useAuth()
   const { liga } = useLigaActiva()
   const { data: temporadas } = useTemporadas(liga?.id)
   const temporadaActiva = temporadas?.find(t => t.estado === 'activa')
@@ -26,34 +28,46 @@ export function LiveMatchProvider({ children }) {
 
   // Scan for live matches (Optimized: single endpoint)
   const scanForLive = useCallback(async () => {
-    if (!temporadaActiva?.id || !isTabVisible.current) {
-      if (!temporadaActiva?.id) setLiveMatches([])
+    // CRITICAL: Stop all requests if user is not authenticated or tab is hidden
+    if (!user || !temporadaActiva?.id || !isTabVisible.current) {
+      if (!user || !temporadaActiva?.id) setLiveMatches([])
       return
     }
 
     try {
       const response = await adminService.getLiveMatches(temporadaActiva.id)
-      setLiveMatches(Array.isArray(response) ? response : (response?.data || []))
+      const matches = Array.isArray(response) ? response : (response?.data || [])
+      setLiveMatches(matches)
     } catch {
       // Silently fail — non-critical
     }
-  }, [temporadaActiva?.id])
+  }, [user, temporadaActiva?.id])
 
-  // Manage SCAN cycle (15s) and Page Visibility API
+  // Manage SCAN cycle (Variable interval: 15s if live, 60s if none)
   useEffect(() => {
+    if (!user) {
+      setLiveMatches([])
+      if (scanIntervalRef.current) clearInterval(scanIntervalRef.current)
+      return
+    }
+
     scanForLive() // Initial scan
     
-    // Start interval
-    scanIntervalRef.current = setInterval(scanForLive, 15_000)
+    // Determine interval speed based on current matches
+    // Note: To make it truly dynamic, we would need to recreate the interval when liveMatches change.
+    // However, a 60s check for "discovery" is reasonable.
+    const intervalTime = liveMatches.length > 0 ? 15_000 : 60_000
+    
+    scanIntervalRef.current = setInterval(scanForLive, intervalTime)
 
     const handleVisibilityChange = () => {
       isTabVisible.current = document.visibilityState === 'visible'
       
-      if (isTabVisible.current) {
+      if (isTabVisible.current && user) {
         // Tab became visible -> immediate scan & resume interval
         scanForLive()
         if (scanIntervalRef.current) clearInterval(scanIntervalRef.current)
-        scanIntervalRef.current = setInterval(scanForLive, 15_000)
+        scanIntervalRef.current = setInterval(scanForLive, intervalTime)
       } else {
         // Tab hidden -> pause interval to save resources
         if (scanIntervalRef.current) {
@@ -69,7 +83,7 @@ export function LiveMatchProvider({ children }) {
       if (scanIntervalRef.current) clearInterval(scanIntervalRef.current)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [scanForLive])
+  }, [scanForLive, user, liveMatches.length]) // Added liveMatches.length to re-adjust interval speed
 
   const formatTime = (seconds) => {
     const m = String(Math.floor((seconds || 0) / 60)).padStart(2, '0')
@@ -81,7 +95,7 @@ export function LiveMatchProvider({ children }) {
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
 
-    if (liveMatches.length === 0) {
+    if (!user || liveMatches.length === 0) {
       setTimers({})
       document.title = "Cancha Libre | Torneos de Fútbol" // Restore original title
       return
@@ -132,7 +146,7 @@ export function LiveMatchProvider({ children }) {
       clearInterval(intervalRef.current)
       document.title = "Cancha Libre | Torneos de Fútbol"
     }
-  }, [liveMatches])
+  }, [liveMatches, user])
 
   return (
     <LiveMatchContext.Provider value={{ liveMatches, timers, formatTime, refreshLive: scanForLive }}>

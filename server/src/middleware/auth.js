@@ -62,7 +62,15 @@ export async function requireOrganizador(req, res, next) {
       .eq('id', req.user.sub)
       .single()
 
-    if (error || !data) {
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows found
+        throw new AppError('No tienes permisos de organizador o el perfil no existe', 403)
+      }
+      console.error('Error in requireOrganizador DB check:', error)
+      throw new AppError('Error interno al verificar permisos', 500)
+    }
+
+    if (!data) {
       throw new AppError('No tienes permisos de organizador o el perfil no existe', 403)
     }
 
