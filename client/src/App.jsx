@@ -25,6 +25,7 @@ import LeagueSettings from './pages/admin/LeagueSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import ResetPassword from './pages/admin/ResetPassword'
 import VerifyEmail from './pages/admin/VerifyEmail'
+import NotFound from './pages/public/NotFound'
 import Loader from './components/ui/Loader'
 
 const queryClient = new QueryClient({
@@ -84,7 +85,7 @@ export default function App() {
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
       </ToastProvider>
