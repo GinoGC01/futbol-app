@@ -19,9 +19,9 @@ class AuthController {
 
   setTokenCookie(res, token) {
     const cookieOptions = {
-      // httpOnly: true, // Comentado por pedido para estado de desarrollo
+      httpOnly: true, // Habilitado para mayor seguridad
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 2 * 60 * 60 * 1000 // 2 horas
     }
     res.cookie('token', token, cookieOptions)
@@ -93,7 +93,11 @@ class AuthController {
    * POST /api/identity/logout
    */
   async logout(req, res) {
-    res.clearCookie('token')
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    })
     res.status(200).json({ status: 'success' })
   }
 

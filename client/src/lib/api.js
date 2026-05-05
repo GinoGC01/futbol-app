@@ -1,11 +1,14 @@
 async function request(path, options = {}) {
   const BASE = import.meta.env.VITE_API_URL
 
+  const token = localStorage.getItem('token')
+  
   const res = await fetch(`${BASE}${path}`, {
     ...options,
     credentials: 'include', // Importante para enviar cookies
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options.headers
     }
   })

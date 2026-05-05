@@ -27,7 +27,8 @@ export function useAuth() {
     // Si la cookie ya se seteó en la respuesta del login, 
     // solo necesitamos actualizar el estado local del usuario.
     setUser(userData)
-    // Guardamos metadata del user (opcional) para carga rápida inicial
+    // Guardamos token y metadata del user para persistencia y fallback
+    if (token) localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(userData))
   }
 
