@@ -31,6 +31,12 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'))
 }
 
+// Header para permitir popups de Google Auth en contextos cross-origin
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  next();
+});
+
 app.use(express.json())
 app.use(cookieParser())
 
