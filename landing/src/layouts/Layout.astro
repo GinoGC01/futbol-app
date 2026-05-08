@@ -1,0 +1,58 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = "Organizá tu torneo amateur como un profesional. Tabla de posiciones, fixture, goleadores y premios en tiempo real." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title} | Cancha Libre</title>
+		<meta name="description" content={description} />
+		
+		<!-- Google Fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+	</head>
+	<body class="bg-dark text-white selection:bg-primary selection:text-dark">
+		<Header />
+		<slot />
+		<Footer />
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		--primary: #CEDE0B;
+		--primary-dim: #83990E;
+		--primary-glow: rgba(206, 222, 11, 0.15);
+		--dark: #0D0D0D;
+		--surface: #1A1A1A;
+		--text-muted: #A3A3A3;
+	}
+
+	body {
+		font-family: 'Inter', sans-serif;
+	}
+
+	.font-heading {
+		font-family: 'Bebas Neue', sans-serif;
+	}
+
+	.font-subheading {
+		font-family: 'Space Grotesk', sans-serif;
+	}
+</style>
+

@@ -1,0 +1,416 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// SVG Decorative Strips (Aggressive/Sharp)
+const StripAccent = `
+  <svg viewBox="0 0 1000 100" preserveAspectRatio="none" class="w-full h-16 md:h-32 fill-primary rotate-1 shadow-2xl">
+    <path d="M0,20 L1000,0 L1000,80 L0,100 Z" />
+  </svg>
+`;
+
+const faqItems = [
+  { q: "¿Cómo accedo a la beta?", a: "Actualmente estamos en fase de beta cerrada. Podés solicitar tu acceso exclusivo para probar la plataforma antes que nadie y ser parte de la élite." },
+  { q: "¿Tengo que descargar algo?", a: "Nada. Es 100% web. Los jugadores entran con un link y ven todo al instante desde cualquier celular." },
+  { q: "¿Qué pasa si se corta internet?", a: "La app guarda los cambios localmente y sincroniza apenas recuperes señal. No perdés ni un gol." },
+  { q: "¿Sirve para torneos relámpago?", a: "Ideal. Configurás el fixture en 2 minutos, compartís el link y que empiece a rodar la redonda." },
+  { q: "¿Puedo cobrar inscripciones?", a: "Cancha Libre te ayuda a gestionar los pagos de cada equipo para que no andes persiguiendo a nadie con la billetera." },
+  { q: "¿Cómo aviso los resultados?", a: "Apenas cargás un gol, la tabla se actualiza. Podés compartir el 'Placa' del partido directo a WhatsApp." }
+];
+---
+
+<Layout title="Organizá tu torneo como un profesional">
+	<main class="overflow-x-hidden bg-dark">
+		<!-- 1. HERO SPORTS-TECH -->
+		<section class="relative min-h-screen flex items-center justify-center pt-24 pb-12 overflow-hidden">
+			<!-- High-Impact Background -->
+			<div class="absolute inset-0 z-0">
+				<img 
+					src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=1600" 
+					alt="Fútbol Amateur" 
+					class="w-full h-full object-cover opacity-30 grayscale contrast-125"
+				/>
+				<div class="absolute inset-0 bg-gradient-to-b from-dark via-dark/40 to-dark"></div>
+                <!-- Radial Glow -->
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_65%)] opacity-10"></div>
+			</div>
+
+			<div class="container mx-auto px-6 relative z-10 text-center">
+				<!-- <div class="reveal inline-flex items-center gap-3 glass border-primary/30 px-6 py-2 rounded-lg font-space font-bold text-sm tracking-[0.2em] mb-10 text-primary">
+					<img src="/images/isotipo.png" alt="Icon" class="h-5" />
+					SPORTS-TECH ELITE
+				</div> -->
+				
+				<h1 class="font-display text-6xl md:text-[140px] lg:text-[180px] leading-[0.8] mb-10 text-white tracking-tighter uppercase">
+					<span class="block hero-line-1 italic">DOMINÁ EL</span>
+					<span class="block hero-line-2 text-primary neon-glow">POTRERO</span>
+				</h1>
+
+				<p class="hero-sub text-xl md:text-3xl text-muted max-w-3xl mx-auto mb-16 font-space font-medium leading-tight">
+					Dejá de pelear con el Excel. Cancha Libre arma el fixture, actualiza la tabla y avisa los goles por vos. <span class="text-white font-bold italic">En tiempo real.</span>
+				</p>
+
+				<div class="hero-ctas flex flex-col md:flex-row gap-6 justify-center items-center">
+					<a href="https://app.canchalibre.pro" class="aggressive-btn px-16 py-8">
+						EMPEZÁ AHORA
+					</a>
+					<a href="#como-funciona" class="text-white border-b-2 border-primary/20 hover:border-primary px-4 py-2 font-space text-xl font-bold transition-all uppercase tracking-widest">
+						CÓMO FUNCIONA
+					</a>
+				</div>
+			</div>
+
+			<!-- Decorative Isotype Background -->
+            <img src="/images/isotipo.png" alt="" class="absolute -bottom-20 -right-20 h-[500px] opacity-[0.02] rotate-12 pointer-events-none" />
+		</section>
+
+		<!-- 2. MARQUEE DE CONVERSIÓN (Provincias) -->
+		<section class="bg-primary py-8 md:py-12 overflow-hidden border-y-8 border-dark/30 relative">
+            <div class="absolute inset-0 bg-[linear-gradient(90deg,var(--color-dark)_0%,transparent_10%,transparent_90%,var(--color-dark)_100%)] z-10 pointer-events-none"></div>
+			<div class="marquee-content flex gap-20 text-dark font-display text-4xl md:text-8xl tracking-tighter uppercase italic items-center whitespace-nowrap font-black">
+				{Array(4).fill(0).map(() => (
+					<>
+						<span>BUENOS AIRES</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>CÓRDOBA</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>ROSARIO</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>SANTA FE</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>MENDOZA</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>LA PLATA</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>TUCUMÁN</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>MAR DEL PLATA</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+						<span>SALTA</span>
+						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
+					</>
+				))}
+			</div>
+		</section>
+
+		<!-- 3. EL PROBLEMA & SOLUCIÓN -->
+		<section class="bg-dark py-32 px-6 relative overflow-hidden" id="para-quien">
+            <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,_rgba(206,222,11,0.05)_0%,_transparent_50%)]"></div>
+            
+			<div class="container mx-auto max-w-7xl relative z-10">
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+					<div class="reveal reveal-left">
+						<h2 class="text-white text-6xl md:text-9xl font-display leading-[0.85] mb-12 uppercase italic">
+							BASTA DE<br /><span class="text-primary underline decoration-white/10">LÍOS.</span>
+						</h2>
+						<p class="text-2xl text-muted font-inter leading-relaxed mb-10 max-w-xl">
+							Organizar un torneo no debería ser un trabajo de tiempo completo. Cancha Libre es la herramienta definitiva para que vos solo te encargues de que la pelota ruede.
+						</p>
+                        
+                        <div class="grid grid-cols-1 gap-6">
+                            {[
+                                "Fixture automático en segundos.",
+                                "Tablas que se actualizan solas.",
+                                "Resultados en vivo para los hinchas.",
+                                "Control total de pagos y deudas."
+                            ].map(benefit => (
+                                <div class="flex items-center gap-4 glass p-6 rounded-2xl border-l-4 border-primary shadow-2xl transition-transform hover:scale-105">
+                                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-dark font-black rotate-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-xl font-bold text-white font-space tracking-tight uppercase italic">{benefit}</span>
+                                </div>
+                            ))}
+                        </div>
+					</div>
+
+					<div class="relative">
+                        <!-- Aggressive Collage -->
+						<div class="grid grid-cols-12 gap-4">
+							<div class="col-span-8 reveal reveal-delay-1 -rotate-3 skew-y-1">
+								<img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800" alt="Pasión" class="rounded-3xl shadow-2xl border border-white/10 aspect-square object-cover" />
+							</div>
+							<div class="col-span-6 col-start-7 -mt-20 reveal reveal-delay-2 rotate-6 relative z-10 skew-y-[-1]">
+								<img src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=600" alt="Victoria" class="rounded-3xl shadow-2xl border border-white/10 aspect-square object-cover" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 4. CÓMO FUNCIONA -->
+		<section class="bg-surface pt-20 pb-32 md:pt-32 md:pb-48 px-6 relative overflow-hidden" id="como-funciona">
+			<div class="container mx-auto max-w-7xl relative z-10">
+				<div class="text-center mb-20 md:mb-32">
+					<h2 class="text-white text-5xl md:text-8xl lg:text-[140px] font-display leading-none mb-6 uppercase italic reveal tracking-tighter">ASÍ SE <span class="text-primary underline decoration-primary/20">GANA.</span></h2>
+					<p class="text-primary text-lg md:text-2xl font-space font-black reveal reveal-delay-1 uppercase tracking-[0.2em] md:tracking-[0.3em] italic">EL CAMINO AL ÉXITO EN 3 PASOS</p>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+					{[
+						{ 
+                            step: "01", 
+                            title: "ARMÁ EL TORNEO", 
+                            desc: "Poné el nombre, cargá los equipos y elegí el formato. Nosotros nos encargamos del resto.", 
+                            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-list"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>`
+                        },
+						{ 
+                            step: "02", 
+                            title: "CARGÁ LOS GOLES", 
+                            desc: "Desde el borde de la cancha, con un click. La tabla se actualiza al instante.", 
+                            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trophy"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`
+                        },
+						{ 
+                            step: "03", 
+                            title: "COMPARTÍ LA GLORIA", 
+                            desc: "Mandá el link por WhatsApp. Jugadores e hinchas ven todo en tiempo real.", 
+                            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>`
+                        }
+					].map((item, i) => (
+						<div class={`reveal reveal-delay-${i+1} group relative`}>
+                            <!-- Aggressive Background Shape -->
+                            <div class="absolute inset-0 bg-primary/5 -skew-x-6 translate-x-2 translate-y-2 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform duration-500 rounded-3xl"></div>
+                            
+                            <div class="relative glass p-8 md:p-12 rounded-3xl border-white/5 group-hover:border-primary/50 transition-all duration-500 h-full overflow-hidden">
+                                <div class="font-display text-[100px] md:text-[150px] absolute -top-5 md:-top-10 -right-4 opacity-5 group-hover:opacity-10 transition-opacity leading-none italic font-black text-white">{item.step}</div>
+                                
+                                <div class="text-primary mb-8 md:mb-12 transform group-hover:scale-110 transition-transform duration-500 inline-block bg-primary/10 p-4 md:p-6 rounded-2xl border border-primary/20">
+                                    <Fragment set:html={item.icon} />
+                                </div>
+                                
+                                <h3 class="text-white text-3xl md:text-5xl font-display mb-6 md:mb-8 italic tracking-tighter uppercase leading-none">{item.title}</h3>
+                                <p class="text-muted text-lg md:text-xl leading-relaxed font-space font-medium">{item.desc}</p>
+                            </div>
+						</div>
+					))}
+				</div>
+
+				<!-- Visual Proof (Comentado por ahora) -->
+				<!--
+				<div class="mt-40 reveal text-center">
+                    <div class="inline-block relative w-full max-w-6xl group">
+                        <div class="absolute -inset-24 bg-primary/20 blur-[180px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                        <div class="relative z-10 glass p-3 md:p-6 rounded-[40px] border-2 border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.8)] overflow-hidden">
+                            <div class="absolute inset-0 border-4 border-primary/30 rounded-[40px] pointer-events-none z-20 m-2"></div>
+					        <img src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1200" alt="Mockup" class="rounded-[25px] w-full object-cover shadow-2xl grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700" />
+                            
+                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 bg-dark/40 backdrop-blur-sm rounded-[40px] cursor-pointer z-30">
+                                <div class="group/play relative">
+                                    <div class="absolute inset-0 bg-primary blur-2xl opacity-50 group-hover/play:opacity-80 transition-opacity"></div>
+                                    <div class="relative w-28 h-28 bg-primary rounded-full flex items-center justify-center pl-2 shadow-2xl transform group-hover/play:scale-110 transition-transform">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="currentColor" class="text-dark"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+				</div>
+				-->
+			</div>
+
+
+            
+            <div class="absolute bottom-0 left-0 w-full translate-y-1/2">
+                <Fragment set:html={StripAccent} />
+            </div>
+		</section>
+
+		<!-- 5. BENEFICIOS -->
+		<section class="bg-primary py-24 md:py-48 px-6 relative overflow-hidden" id="beneficios">
+			<div class="container mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-stretch">
+				<!-- Organizadores -->
+				<div class="reveal reveal-left bg-dark p-10 md:p-16 rounded-[40px] md:rounded-[50px] text-white shadow-2xl relative overflow-hidden flex flex-col justify-between border border-white/5">
+                    <div class="absolute top-0 right-0 p-8 opacity-10">
+                        <img src="/images/isotipo.png" alt="" class="h-32" />
+                    </div>
+                    <div>
+					    <h3 class="text-4xl md:text-7xl font-display mb-10 md:mb-12 italic uppercase leading-none tracking-tighter">PARA EL QUE<br /><span class="text-primary">MANDA.</span></h3>
+					    <ul class="flex flex-col gap-6 md:gap-8 text-xl md:text-2xl font-space font-bold uppercase italic">
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary skew-x-[-12deg]"></div> Fixture automático</li>
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary skew-x-[-12deg]"></div> Control de tarjetas</li>
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary skew-x-[-12deg]"></div> Gestión de premios</li>
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary skew-x-[-12deg]"></div> Reportes de deudas</li>
+					    </ul>
+                    </div>
+                    <a href="https://app.canchalibre.pro" class="mt-12 md:mt-16 bg-white text-dark py-4 md:py-6 rounded-2xl font-display text-2xl md:text-3xl font-black text-center hover:scale-105 transition-transform uppercase tracking-widest shadow-2xl">CREAR MI LIGA</a>
+				</div>
+
+				<!-- Jugadores -->
+				<div class="reveal reveal-right glass p-10 md:p-16 rounded-[40px] md:rounded-[50px] text-white shadow-2xl relative overflow-hidden flex flex-col justify-between border-white/10">
+					<div>
+                        <h3 class="text-4xl md:text-7xl font-display mb-10 md:mb-12 italic uppercase leading-none text-white tracking-tighter">PARA EL QUE<br /><span class="text-primary drop-shadow-glow-primary">SUEÑA.</span></h3>
+					    <ul class="flex flex-col gap-6 md:gap-8 text-xl md:text-2xl font-space font-bold uppercase italic">
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary/30 skew-x-[-12deg]"></div> Resultados al instante</li>
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary/30 skew-x-[-12deg]"></div> Tabla de goleadores</li>
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary/30 skew-x-[-12deg]"></div> Perfil de jugador</li>
+						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary/30 skew-x-[-12deg]"></div> Sin registrarse</li>
+					    </ul>
+                    </div>
+                    <div class="mt-12 md:mt-16 text-center">
+                        <p class="font-space text-xs md:text-sm tracking-[0.4em] text-muted uppercase font-black mb-6 md:mb-8">LA ELITE DEL FÚTBOL AMATEUR</p>
+                        <div class="flex justify-center -space-x-6">
+                            {[1,2,3,4,5].map(i => (
+                                <img src={`https://i.pravatar.cc/100?u=${i+10}`} alt="" class="w-20 h-20 rounded-full border-4 border-dark shadow-3xl hover:-translate-y-2 transition-transform cursor-pointer" />
+                            ))}
+                        </div>
+                    </div>
+				</div>
+			</div>
+		</section>
+
+
+		<!-- 6. FAQ -->
+		<section class="bg-dark py-32 px-6" id="faq">
+			<div class="container mx-auto max-w-4xl">
+				<h2 class="text-7xl md:text-9xl font-display text-center mb-24 uppercase italic reveal">DESPEJÁ LAS <span class="text-primary">DUDAS.</span></h2>
+				
+				<div class="flex flex-col gap-6">
+					{faqItems.map((item, index) => (
+						<div class={`faq-item reveal glass border-white/5 rounded-3xl overflow-hidden shadow-2xl hover:border-primary/20 transition-all duration-300`}>
+							<button class="faq-question w-full px-10 py-8 flex items-center justify-between text-left group">
+								<span class="text-2xl md:text-3xl font-display uppercase tracking-tight group-hover:text-primary transition-colors">{item.q}</span>
+								<div class="faq-arrow w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-dark transition-all">
+									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+									</svg>
+								</div>
+							</button>
+							<div class="faq-answer px-10">
+								<div class="pb-10 text-xl text-muted leading-relaxed font-inter font-medium">
+									{item.a}
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<!-- 7. CTA FINAL -->
+		<section class="bg-dark py-40 px-6 relative overflow-hidden">
+			<div class="absolute inset-0 z-0 opacity-20">
+                <img 
+					src="https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=1600" 
+					alt="Cancha" 
+					class="w-full h-full object-cover grayscale scale-110"
+				/>
+            </div>
+
+			<div class="container mx-auto max-w-5xl text-center relative z-10">
+				<h2 class="text-white text-7xl md:text-[140px] leading-[0.8] font-display italic mb-16 reveal drop-shadow-2xl">
+					¿listo para<br />
+					<span class="text-primary underline decoration-primary/20">comenzar?</span>
+				</h2>
+				
+				<p class="text-muted text-2xl md:text-3xl mb-20 max-w-2xl mx-auto reveal reveal-delay-1 font-space font-bold italic">
+					No pierdas más tiempo. Poné tu liga en el mapa hoy mismo. <span class="text-white">Acceso exclusivo. Beta cerrada. Es Cancha Libre.</span>
+				</p>
+
+				<div class="flex flex-col items-center gap-10 reveal reveal-delay-2">
+					<a href="https://app.canchalibre.pro" class="aggressive-btn px-24 py-10 text-4xl">
+						SOLICITAR MI ACCESO BETA
+					</a>
+					<p class="text-white/40 text-lg uppercase tracking-[0.4em] font-bold font-space">
+						CERO COMISIONES · CERO COMPLICACIONES
+					</p>
+				</div>
+			</div>
+
+            <!-- Decorative Logo Bottom -->
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 opacity-20 pointer-events-none">
+                <img src="/images/logotipo.png" alt="" class="h-10 invert brightness-0" />
+            </div>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	/* Reveal Animations */
+	.reveal {
+		opacity: 0;
+		transform: translateY(60px);
+		transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.reveal.visible {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.reveal-left {
+		transform: translateX(-100px);
+	}
+	.reveal-right {
+		transform: translateX(100px);
+	}
+	.reveal-left.visible, .reveal-right.visible {
+		transform: translateX(0);
+	}
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+	/* Marquee */
+	@keyframes marquee {
+		0% { transform: translateX(0); }
+		100% { transform: translateX(-50%); }
+	}
+	.marquee-content {
+		animation: marquee 40s linear infinite;
+	}
+
+	/* FAQ */
+	.faq-answer {
+		max-height: 0;
+		overflow: hidden;
+		transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.faq-item.open .faq-answer {
+		max-height: 500px;
+	}
+	.faq-item.open .faq-arrow {
+		transform: rotate(180deg);
+		background-color: var(--primary);
+        color: var(--dark);
+	}
+    .faq-item.open {
+        border-color: rgba(206, 222, 11, 0.3);
+        box-shadow: 0 0 40px rgba(206, 222, 11, 0.1);
+    }
+
+    .neon-glow {
+        text-shadow: 0 0 20px rgba(206, 222, 11, 0.3);
+    }
+</style>
+
+<script>
+	// Reveal Observer
+	const revealObserver = new IntersectionObserver((entries) => {
+		entries.forEach(entry => {
+			if (entry.isIntersecting) {
+				entry.target.classList.add('visible');
+			}
+		});
+	}, { threshold: 0.1 });
+
+	document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+	// FAQ Accordion
+	document.querySelectorAll('.faq-item').forEach(item => {
+		const question = item.querySelector('.faq-question');
+		question?.addEventListener('click', () => {
+			const isOpen = item.classList.contains('open');
+			
+			// Close all others
+			document.querySelectorAll('.faq-item').forEach(i => {
+				i.classList.remove('open');
+			});
+
+			// Toggle current
+			if (!isOpen) {
+				item.classList.add('open');
+			}
+		});
+	});
+</script>
+
+
