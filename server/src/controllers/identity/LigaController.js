@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { supabaseAdmin } from "../../lib/supabase.js";
-import { sendVerificationEmail } from "../../utils/emails/mailer.js";
+import { sendVerificationEmail, sendWaitlistEmail } from "../../utils/emails/mailer.js";
 import AuthController from "./AuthController.js";
 import OrganizadorService from "../../services/identity/OrganizadorService.js";
 import LigaService from "../../services/identity/LigaService.js";
@@ -83,8 +83,9 @@ class LigaController {
         );
       }
 
-      // 6. Enviar email
+      // 6. Enviar emails
       await sendVerificationEmail(email, token);
+      await sendWaitlistEmail(email, nombre_organizador);
 
       res.status(201).json({
         status: "success",

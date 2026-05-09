@@ -199,8 +199,7 @@ class AuthController {
         .update({ used: true })
         .eq("id", pr.id);
 
-      // 5. Enviar email de lista de espera
-      await sendWaitlistEmail(pr.email, pr.nombre_organizador);
+      // 5. El email de lista de espera ya fue enviado al momento del registro.
 
       res.json({
         status: "success",
