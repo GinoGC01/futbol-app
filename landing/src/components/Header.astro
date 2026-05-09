@@ -1,100 +1,192 @@
 ---
+
 ---
 
 <header class="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
-  <nav id="navbar" class="w-full max-w-6xl glass border-white/10 rounded-2xl px-8 py-5 flex items-center justify-between transition-all duration-500">
+  <nav
+    id="navbar"
+    class="w-full max-w-6xl glass border-white/10 rounded-2xl px-8 py-5 flex items-center justify-between transition-all duration-500"
+  >
     <a href="/" class="flex items-center gap-2 group">
-      <img src="/images/logotipo.png" alt="Cancha Libre Logo" class="h-10 md:h-12 object-contain group-hover:scale-105 transition-transform" />
+      <img
+        src="/images/logotipo.png"
+        alt="Cancha Libre Logo"
+        class="h-10 md:h-12 object-contain group-hover:scale-105 transition-transform"
+      />
     </a>
 
     <!-- Desktop Menu -->
-    <div class="hidden lg:flex items-center gap-12 font-space text-sm tracking-[0.2em] font-bold">
-      <a href="#como-funciona" class="text-white hover:text-primary transition-colors relative group uppercase">
+    <div
+      class="hidden lg:flex items-center gap-12 font-space text-sm tracking-[0.2em] font-bold"
+    >
+      <a
+        href="/#como-funciona"
+        class="text-white hover:text-primary transition-colors relative group uppercase"
+      >
         CÓMO FUNCIONA
-        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"></span>
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"
+        ></span>
       </a>
-      <a href="#beneficios" class="text-white hover:text-primary transition-colors relative group uppercase">
+      <a
+        href="/#beneficios"
+        class="text-white hover:text-primary transition-colors relative group uppercase"
+      >
         BENEFICIOS
-        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"></span>
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"
+        ></span>
       </a>
-      <a href="#para-quien" class="text-white hover:text-primary transition-colors relative group uppercase">
+      <a
+        href="/#para-quien"
+        class="text-white hover:text-primary transition-colors relative group uppercase"
+      >
         PARA QUIÉN
-        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"></span>
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"
+        ></span>
       </a>
-      <a href="#faq" class="text-white hover:text-primary transition-colors relative group uppercase">
+      <a
+        href="/#faq"
+        class="text-white hover:text-primary transition-colors relative group uppercase"
+      >
         FAQ
-        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"></span>
+        <span
+          class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all"
+        ></span>
       </a>
     </div>
 
     <!-- CTA -->
     <div class="flex items-center gap-6">
-      <a href="https://app.canchalibre.pro" class="hidden md:block aggressive-btn !py-3 !px-8 !text-base">
+      <a
+        href="https://app.canchalibre.pro"
+        class="hidden md:block aggressive-btn !py-3 !px-8 !text-base"
+      >
         ENTRAR
       </a>
-      
+
       <!-- Mobile Toggle -->
-      <button id="menu-toggle" class="lg:hidden text-white hover:text-primary transition-colors p-2" aria-label="Menu">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      <button
+        id="menu-toggle"
+        class="lg:hidden text-white hover:text-primary transition-colors p-2"
+        aria-label="Menu"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
       </button>
     </div>
   </nav>
 
   <!-- Mobile Menu Overlay -->
-  <div id="mobile-menu" class="fixed inset-0 bg-dark/95 backdrop-blur-2xl z-[60] flex flex-col items-center justify-center gap-10 translate-x-full transition-transform duration-500 lg:hidden">
-    <button id="menu-close" class="absolute top-10 right-10 text-white hover:text-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+  <div
+    id="mobile-menu"
+    class="fixed inset-0 bg-dark/95 backdrop-blur-2xl z-[60] flex flex-col items-center justify-center gap-10 translate-x-full transition-transform duration-500 lg:hidden"
+  >
+    <button
+      id="menu-close"
+      class="absolute top-10 right-10 text-white hover:text-primary"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-12 w-12"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </button>
-    
+
     <img src="/images/isotipo.png" alt="Icon" class="h-20 mb-10 opacity-50" />
-    
-    <a href="#como-funciona" class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase">CÓMO FUNCIONA</a>
-    <a href="#beneficios" class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase">BENEFICIOS</a>
-    <a href="#para-quien" class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase">PARA QUIÉN</a>
-    <a href="#faq" class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase">FAQ</a>
-    
-    <a href="https://app.canchalibre.pro" class="aggressive-btn mt-10 px-12 py-6 text-3xl">
+
+    <a
+      href="#como-funciona"
+      class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase"
+      >CÓMO FUNCIONA</a
+    >
+    <a
+      href="#beneficios"
+      class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase"
+      >BENEFICIOS</a
+    >
+    <a
+      href="#para-quien"
+      class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase"
+      >PARA QUIÉN</a
+    >
+    <a
+      href="#faq"
+      class="text-white font-display text-5xl hover:text-primary mobile-link italic uppercase"
+      >FAQ</a
+    >
+
+    <a
+      href="https://app.canchalibre.pro"
+      class="aggressive-btn mt-10 px-12 py-6 text-3xl"
+    >
       EMPEZÁ AHORA
     </a>
   </div>
 </header>
 
 <script>
-  const navbar = document.getElementById('navbar');
-  const menuToggle = document.getElementById('menu-toggle');
-  const menuClose = document.getElementById('menu-close');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const mobileLinks = document.querySelectorAll('.mobile-link');
+  const navbar = document.getElementById("navbar");
+  const menuToggle = document.getElementById("menu-toggle");
+  const menuClose = document.getElementById("menu-close");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const mobileLinks = document.querySelectorAll(".mobile-link");
 
   // Navbar Scroll Effect
-  window.addEventListener('scroll', () => {
+  window.addEventListener("scroll", () => {
     if (window.scrollY > 50) {
-      navbar?.classList.add('!py-4', '!max-w-5xl', 'shadow-primary/10', 'border-primary/20');
-      navbar?.classList.remove('!py-5', '!max-w-6xl');
+      navbar?.classList.add(
+        "!py-4",
+        "!max-w-5xl",
+        "shadow-primary/10",
+        "border-primary/20",
+      );
+      navbar?.classList.remove("!py-5", "!max-w-6xl");
     } else {
-      navbar?.classList.remove('!py-4', '!max-w-5xl', 'shadow-primary/10', 'border-primary/20');
-      navbar?.classList.add('!py-5', '!max-w-6xl');
+      navbar?.classList.remove(
+        "!py-4",
+        "!max-w-5xl",
+        "shadow-primary/10",
+        "border-primary/20",
+      );
+      navbar?.classList.add("!py-5", "!max-w-6xl");
     }
   });
 
   // Mobile Menu Logic
   const openMenu = () => {
-    mobileMenu?.classList.remove('translate-x-full');
-    document.body.style.overflow = 'hidden';
-  };
-  
-  const closeMenu = () => {
-    mobileMenu?.classList.add('translate-x-full');
-    document.body.style.overflow = '';
+    mobileMenu?.classList.remove("translate-x-full");
+    document.body.style.overflow = "hidden";
   };
 
-  menuToggle?.addEventListener('click', openMenu);
-  menuClose?.addEventListener('click', closeMenu);
-  mobileLinks.forEach(link => link.addEventListener('click', closeMenu));
+  const closeMenu = () => {
+    mobileMenu?.classList.add("translate-x-full");
+    document.body.style.overflow = "";
+  };
+
+  menuToggle?.addEventListener("click", openMenu);
+  menuClose?.addEventListener("click", closeMenu);
+  mobileLinks.forEach((link) => link.addEventListener("click", closeMenu));
 </script>
 
 <style>
