@@ -13,6 +13,7 @@ import statsRouter from './routes/stats.js'
 import awardsRouter from './routes/awards.js'
 import alertsRouter from './routes/alerts.js'
 import healthRouter from './routes/health.js'
+import webhooksRouter from './routes/webhooks.js'
 
 import { errorHandler } from './middleware/errorHandler.js'
 import { startCleanupJob } from './jobs/cleanupTokens.js'
@@ -50,6 +51,9 @@ app.use('/api/match', matchRouter)
 app.use('/api/stats', statsRouter)     // Público — sin auth
 app.use('/api/awards', awardsRouter)   // Admin — requireAuth + requireOrganizador
 app.use('/api/alerts', alertsRouter)   // Admin — requireAuth + requireOrganizador
+
+// Webhooks (Sin /api prefix para facilitar config en servicios externos)
+app.use('/webhooks', webhooksRouter)
 
 // 404
 app.use((_req, res) => {

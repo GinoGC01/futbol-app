@@ -1,11 +1,14 @@
 import { Router } from 'express'
 import { supabaseAdmin } from '../lib/supabase.js'
-import { requireAuth, requireOrganizador } from '../middleware/auth.js'
+import { requireAuth, requireOrganizador, requireActiveStatus } from '../middleware/auth.js'
 
 const router = Router()
 
+// Todas las rutas de alertas requieren ser organizador y tener status activo
+router.use(requireAuth, requireOrganizador, requireActiveStatus)
+
 // GET /api/alerts?liga_id=...
-router.get('/', requireAuth, requireOrganizador, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const { liga_id } = req.query
     if (!liga_id) return res.status(400).json({ error: 'liga_id es requerido' })
@@ -25,7 +28,7 @@ router.get('/', requireAuth, requireOrganizador, async (req, res, next) => {
 })
 
 // PATCH /api/alerts/:id/resolve
-router.patch('/:id/resolve', requireAuth, requireOrganizador, async (req, res, next) => {
+router.patch('/:id/resolve', async (req, res, next) => {
   try {
     const { id } = req.params
     const { error } = await supabaseAdmin
@@ -41,7 +44,7 @@ router.patch('/:id/resolve', requireAuth, requireOrganizador, async (req, res, n
 })
 
 // POST /api/alerts/evaluate (Manual trigger)
-router.post('/evaluate', requireAuth, requireOrganizador, async (req, res, next) => {
+router.post('/evaluate', async (req, res, next) => {
   try {
     const { error } = await supabaseAdmin.rpc('evaluar_alertas')
     if (error) throw error

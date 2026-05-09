@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { body, param } from 'express-validator'
-import { requireAuth, requireOrganizador, requireVerified } from '../middleware/auth.js'
+import { requireAuth, requireOrganizador, requireVerified, requireActiveStatus } from '../middleware/auth.js'
 import OrganizadorController from '../controllers/identity/OrganizadorController.js'
 import LigaController from '../controllers/identity/LigaController.js'
 import AuthController from '../controllers/identity/AuthController.js'
@@ -30,7 +30,7 @@ router.post(
   LigaController.register
 )
 
-// Nuevas rutas de pass y email
+// --- Auth Endpoints ---
 router.post('/verify-email', AuthController.verifyEmail.bind(AuthController))
 router.post('/resend-verification', AuthController.resendVerification.bind(AuthController))
 router.post('/forgot-password', AuthController.forgotPassword.bind(AuthController))
@@ -66,12 +66,13 @@ router.put(
 )
 
 // --- Ligas del Organizador ---
-router.get('/ligas', requireAuth, requireOrganizador, requireVerified, LigaController.getMyLigas)
+router.get('/ligas', requireAuth, requireOrganizador, requireActiveStatus, requireVerified, LigaController.getMyLigas)
 
 router.post(
   '/ligas',
   requireAuth,
   requireOrganizador,
+  requireActiveStatus,
   requireVerified,
   [
     body('nombre').isLength({ min: 3, max: 100 }).withMessage('Nombre de liga inválido'),
@@ -87,6 +88,7 @@ router.put(
   '/ligas/:id',
   requireAuth,
   requireOrganizador,
+  requireActiveStatus,
   requireVerified,
   [
     param('id').isUUID().withMessage('ID de liga no válido'),
@@ -99,12 +101,13 @@ router.put(
   LigaController.updateLiga
 )
 
-router.get('/ligas/:id/stats', requireAuth, requireOrganizador, requireVerified, LigaController.getDashboardStats)
+router.get('/ligas/:id/stats', requireAuth, requireOrganizador, requireActiveStatus, requireVerified, LigaController.getDashboardStats)
 
 router.delete(
   '/ligas/:id',
   requireAuth,
   requireOrganizador,
+  requireActiveStatus,
   requireVerified,
   [
     param('id').isUUID().withMessage('ID de liga no válido')

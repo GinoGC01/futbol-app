@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { requireAuth, requireOrganizador } from "../middleware/auth.js";
+import { requireAuth, requireOrganizador, requireActiveStatus } from "../middleware/auth.js";
 import EquipoController from "../controllers/roster/EquipoController.js";
 import JugadorController from "../controllers/roster/JugadorController.js";
 import InscripcionController from "../controllers/roster/InscripcionController.js";
 
 const router = Router();
 
-// Todas las rutas de roster requieren ser organizador
-router.use(requireAuth, requireOrganizador);
+// Todas las rutas de roster requieren ser organizador y tener status activo
+router.use(requireAuth, requireOrganizador, requireActiveStatus);
 
 // ============================================
 // EQUIPOS

@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import { body, param, query } from 'express-validator'
-import { requireAuth, requireOrganizador } from '../middleware/auth.js'
+import { requireAuth, requireOrganizador, requireActiveStatus } from '../middleware/auth.js'
 import CompetitionController from '../controllers/competition/CompetitionController.js'
 
 const router = Router()
 
-// Todas las rutas de competencia requieren ser organizador
-router.use(requireAuth, requireOrganizador)
+// Todas las rutas de competencia requieren ser organizador y tener status activo
+router.use(requireAuth, requireOrganizador, requireActiveStatus)
 
 // ============================================
 // TEMPORADAS

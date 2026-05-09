@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{subject}}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0D0D0D;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #EDEDED;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            height: 50px;
+            width: auto;
+        }
+        
+        .card {
+            background-color: #141414;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .status-bar {
+            height: 4px;
+            width: 100%;
+        }
+        
+        /* Status Colors */
+        .status-success { background-color: #CEDE0B; }
+        .status-warning { background-color: #F59E0B; }
+        .status-error { background-color: #EF4444; }
+        
+        .content {
+            padding: 50px 40px;
+            text-align: center;
+        }
+        
+        .title {
+            font-family: 'Bebas Neue', 'Impact', sans-serif;
+            font-size: 52px;
+            line-height: 0.95;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-style: italic;
+        }
+        
+        .title-success { color: #CEDE0B; }
+        .title-warning { color: #F59E0B; }
+        .title-error { color: #EF4444; }
+        
+        .divider {
+            width: 80px;
+            height: 2px;
+            margin: 0 auto 30px;
+        }
+        
+        .divider-success { background: linear-gradient(90deg, transparent, #CEDE0B, transparent); }
+        .divider-warning { background: linear-gradient(90deg, transparent, #F59E0B, transparent); }
+        .divider-error { background: linear-gradient(90deg, transparent, #EF4444, transparent); }
+        
+        .message {
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            color: #B0B0B0;
+            font-weight: 400;
+        }
+        
+        .message strong {
+            color: #FFFFFF;
+        }
+        
+        .cta-container {
+            margin-bottom: 30px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 20px 45px;
+            font-family: 'Bebas Neue', 'Impact', sans-serif;
+            font-size: 22px;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: bold;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .cta-success { background-color: #CEDE0B; color: #0D0D0D !important; }
+        .cta-warning { background-color: #F59E0B; color: #0D0D0D !important; }
+        .cta-error { background-color: #EF4444; color: #FFFFFF !important; }
+        
+        .footer-note {
+            font-size: 11px;
+            color: #555555;
+            max-width: 400px;
+            margin: 30px auto 0;
+            line-height: 1.5;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #444444;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .content { padding: 40px 25px; }
+            .title { font-size: 42px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://app.canchalibre.pro/images/logotipo.webp" alt="CANCHA LIBRE" class="logo">
+        </div>
+        
+        <div class="card">
+            <div class="status-bar status-{{status}}"></div>
+            <div class="content">
+                <div class="title title-{{status}}">{{title}}</div>
+                <div class="divider divider-{{status}}"></div>
+                <div class="message">
+                    {{body}}
+                </div>
+                
+                {{#if ctaLink}}
+                <div class="cta-container">
+                    <a href="{{ctaLink}}" class="cta-button cta-{{status}}">{{ctaText}}</a>
+                </div>
+                {{/if}}
+                
+                {{#if footerNote}}
+                <div class="footer-note">
+                    {{footerNote}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        
+        <div class="footer">
+            © {{year}} CANCHA LIBRE. RENDIMIENTO SIN COMPROMISO.
+        </div>
+    </div>
+</body>
+</html>

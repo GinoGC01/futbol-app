@@ -8,7 +8,27 @@ class LigaService {
   async createLiga(organizadorId, data) {
     const { nombre, slug, zona, tipo_futbol, descripcion, logo_url } = data
 
-    // 1. Validar nombre
+    // 1. Validar límite de ligas activas
+    const { data: org, error: orgErr } = await supabaseAdmin
+      .from('organizador')
+      .select('active_leagues_limit')
+      .eq('id', organizadorId)
+      .single()
+
+    if (orgErr) throw new AppError('Error al validar capacidad', 500)
+
+    const { count, error: countErr } = await supabaseAdmin
+      .from('liga')
+      .select('*', { count: 'exact', head: true })
+      .eq('organizador_id', organizadorId)
+
+    if (countErr) throw new AppError('Error al contar ligas', 500)
+
+    if (count >= org.active_leagues_limit) {
+      throw new AppError('Alcanzaste el límite de ligas activas de tu plan.', 403)
+    }
+
+    // 2. Validar nombre
     if (!nombre || nombre.trim().length < 3) {
       throw new AppError('El nombre de la liga debe tener al menos 3 caracteres', 400)
     }

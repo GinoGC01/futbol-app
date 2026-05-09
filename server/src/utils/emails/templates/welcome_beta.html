@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700&display=swap');
+        body { margin: 0; padding: 0; background-color: #0D0D0D; font-family: 'Inter', sans-serif; color: #EDEDED; }
+        .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+        .header { 
+            text-align: center; 
+            margin-bottom: 0; 
+            background: linear-gradient(90deg, #CEDE0B, #A3B108);
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        .logo { height: 60px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .card { background-color: #141414; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .status-bar { height: 4px; background: linear-gradient(90deg, #CEDE0B, #A3B108); }
+        .content { padding: 50px 40px; text-align: center; }
+        .title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 0.95; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; font-style: italic; color: #CEDE0B; }
+        .divider { width: 80px; height: 2px; margin: 0 auto 30px; background: linear-gradient(90deg, transparent, #CEDE0B, transparent); }
+        .message { font-size: 16px; line-height: 1.7; margin-bottom: 40px; color: #B0B0B0; }
+        .message strong { color: #FFFFFF; }
+        .cta-button { display: inline-block; padding: 20px 45px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; text-decoration: none; text-transform: uppercase; letter-spacing: 1.5px; font-weight: bold; border-radius: 4px; background-color: #CEDE0B; color: #0D0D0D !important; box-shadow: 0 10px 20px rgba(206, 222, 11, 0.2); }
+        .footer-note { font-size: 11px; color: #555555; margin-top: 30px; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; }
+        .footer { 
+            margin-top: 20px; 
+            text-align: center; 
+            font-size: 10px; 
+            color: #0D0D0D; 
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+            background: linear-gradient(90deg, #CEDE0B, #A3B108);
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <img src="https://app.canchalibre.pro/images/logotipo.webp" alt="CANCHA LIBRE" class="logo">
+            </div>
+            <div class="status-bar"></div>
+            <div class="content">
+                <div class="title">¡ESTÁS ADENTRO!</div>
+                <div class="divider"></div>
+                <div class="message">
+                    <strong>{{nombre}}</strong>, tu cuenta fue activada. Ya podés crear tu liga y empezar a gestionar tu torneo como un profesional.
+                </div>
+                <a href="{{link}}" class="cta-button">IR AL PANEL</a>
+                <div class="footer-note">
+                    Bienvenido a la beta de Cancha Libre.
+                </div>
+            </div>
+            <div class="footer">
+                © {{year}} CANCHA LIBRE. RENDIMIENTO SIN COMPROMISO.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

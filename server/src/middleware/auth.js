@@ -58,7 +58,7 @@ export async function requireOrganizador(req, res, next) {
 
     const { data, error } = await supabaseAdmin
       .from('organizador')
-      .select('id, nombre, email, email_verified')
+      .select('id, nombre, email, email_verified, status, active_leagues_limit')
       .eq('id', req.user.sub)
       .single()
 
@@ -75,6 +75,39 @@ export async function requireOrganizador(req, res, next) {
     }
 
     req.organizador = data
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Middleware para validar que el organizador tenga un status activo.
+ */
+export async function requireActiveStatus(req, res, next) {
+  try {
+    if (!req.organizador) {
+      throw new AppError('Se requiere perfil de organizador', 403)
+    }
+
+    const { status } = req.organizador
+
+    if (status === 'pending') {
+      return res.status(403).json({
+        status: 'fail',
+        code: 'ACCOUNT_PENDING',
+        message: 'Tu cuenta está en lista de espera.'
+      })
+    }
+
+    if (status === 'suspended') {
+      return res.status(403).json({
+        status: 'fail',
+        code: 'ACCOUNT_SUSPENDED',
+        message: 'Tu cuenta fue suspendida.'
+      })
+    }
+
     next()
   } catch (error) {
     next(error)

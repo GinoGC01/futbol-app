@@ -53,7 +53,7 @@ class OrganizadorService {
   async getProfile(id) {
     const { data, error } = await supabaseAdmin
       .from('organizador')
-      .select('id, nombre, email, telefono, created_at')
+      .select('id, nombre, email, telefono, status, active_leagues_limit, created_at')
       .eq('id', id)
       .single()
 

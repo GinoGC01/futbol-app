@@ -7,5 +7,6 @@ build/
 coverage/
 .DS_Store
 supabase/.temp/
-./scratch
+/scratch
+ngrok.exe
 backups/

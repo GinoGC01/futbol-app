@@ -1,13 +1,13 @@
 import { Router } from 'express'
 import { body, param } from 'express-validator'
-import { requireAuth, requireOrganizador } from '../middleware/auth.js'
+import { requireAuth, requireOrganizador, requireActiveStatus } from '../middleware/auth.js'
 import MatchController from '../controllers/match/MatchController.js'
 import IncidentController from '../controllers/match/IncidentController.js'
 
 const router = Router()
 
-// Todas las rutas del dominio de partidos requieren ser organizador
-router.use(requireAuth, requireOrganizador)
+// Todas las rutas del dominio de partidos requieren ser organizador y tener status activo
+router.use(requireAuth, requireOrganizador, requireActiveStatus)
 
 // ============================================
 // PARTIDOS — Gestión y Agenda
