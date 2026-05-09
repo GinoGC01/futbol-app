@@ -26,6 +26,8 @@ import LeagueSettings from './pages/admin/LeagueSettings'
 import ForgotPassword from './pages/admin/ForgotPassword'
 import ResetPassword from './pages/admin/ResetPassword'
 import VerifyEmail from './pages/admin/VerifyEmail'
+import WaitlistScreen from './pages/admin/WaitlistScreen'
+import SuspendedScreen from './pages/admin/SuspendedScreen'
 import Loader from './components/ui/Loader'
 import PublicLayout from './layouts/PublicLayout'
 
@@ -43,6 +45,11 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <Loader fullScreen text="Verificando sesión..." />
   if (!user) return <Navigate to="/admin/login" replace />
+
+  // Control de acceso Beta
+  if (user.status === 'pending') return <WaitlistScreen />
+  if (user.status === 'suspended') return <SuspendedScreen />
+
   return children
 }
 

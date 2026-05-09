@@ -28,6 +28,12 @@ async function request(path, options = {}) {
   }
 
   if (!res.ok) {
+    // 2.1 Beta access control & capacity
+    if (res.status === 403 && json.code) {
+      const event = new CustomEvent('org-status-block', { detail: json })
+      window.dispatchEvent(event)
+    }
+
     if (res.status === 401) {
       localStorage.removeItem('user')
       const isAuthPage = window.location.pathname.includes('/login') || window.location.pathname.includes('/register')

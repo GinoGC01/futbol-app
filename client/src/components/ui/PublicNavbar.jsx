@@ -21,7 +21,7 @@ export default function PublicNavbar() {
               <img src="/images/isotipo.png" alt="Cancha Libre" className="h-10 w-auto" />
               <div className="h-6 w-px bg-white/10 hidden sm:block" />
               <span className="hidden sm:block font-heading italic font-black text-lg tracking-tighter text-white group-hover:text-primary transition-colors">
-                CANCHA LIBRE
+                CANCHA <span className="text-primary">LIBRE</span>
               </span>
             </motion.div>
           </Link>
