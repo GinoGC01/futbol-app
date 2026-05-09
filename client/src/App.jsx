@@ -11,6 +11,9 @@ import TeamProfile from './pages/public/TeamProfile'
 import PlayerProfile from './pages/public/PlayerProfile'
 import Omnisearch from './components/ui/Omnisearch'
 import NotFound from './pages/public/NotFound'
+import Terms from './pages/public/Terms'
+import Privacy from './pages/public/Privacy'
+import Support from './pages/public/Support'
 
 // Admin Pages
 import Login from './pages/admin/Login'
@@ -74,6 +77,9 @@ const router = createBrowserRouter([
           { path: "liga/:slug", element: <LeagueArena /> },
           { path: "equipo/:id", element: <TeamProfile /> },
           { path: "jugador/:id", element: <PlayerProfile /> },
+          { path: "terminos", element: <Terms /> },
+          { path: "privacidad", element: <Privacy /> },
+          { path: "soporte", element: <Support /> },
         ]
       },
       { path: "admin/login", element: <Login /> },

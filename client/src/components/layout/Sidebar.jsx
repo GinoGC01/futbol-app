@@ -26,13 +26,13 @@ export default function Sidebar() {
       <div className="h-16 flex items-center justify-center border-b border-border-subtle px-4 bg-bg-deep/50">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <img src="/images/isotipo.png" alt="" className="h-8 w-8 object-contain" />
+            <img src="/images/isotipo.webp" alt="" className="h-8 w-8 object-contain" />
             <span className="text-xl font-heading font-bold text-primary tracking-wider uppercase italic">
               Cancha<span className="text-text-primary">Libre</span>
             </span>
           </div>
         )}
-        {collapsed && <img src="/images/isotipo.png" alt="C" className="h-8 w-8 object-contain" />}
+        {collapsed && <img src="/images/isotipo.webp" alt="C" className="h-8 w-8 object-contain" />}
       </div>
 
       {/* Nav Links */}

@@ -38,7 +38,7 @@ export default function Login() {
         <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full" />
         <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-secondary/5 blur-[120px] rounded-full" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.03] grayscale">
-          <img src="/images/isotipo.png" alt="" className="w-full h-full object-contain scale-150" />
+          <img src="/images/isotipo.webp" alt="" className="w-full h-full object-contain scale-150" />
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export default function Login() {
             VOLVER AL INICIO
           </span>
         </Link>
-        <img src="/images/isotipo.png" alt="Cancha Libre" className="h-10 md:h-12" />
+        <img src="/images/isotipo.webp" alt="Cancha Libre" className="h-10 md:h-12" />
         <div className="w-10 sm:w-24" /> {/* Spacer */}
       </header>
 

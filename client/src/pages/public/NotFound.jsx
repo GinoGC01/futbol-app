@@ -22,7 +22,7 @@ export default function NotFound() {
       {/* HEADER */}
       <header className="relative z-20 flex items-center justify-between p-6 md:px-12 md:py-8 w-full max-w-7xl mx-auto">
         <Link to="/" className="group flex items-center gap-2">
-          <img src="/images/isotipo.png" alt="Cancha Libre" className="h-8 md:h-10 group-hover:scale-110 transition-transform" />
+          <img src="/images/isotipo.webp" alt="Cancha Libre" className="h-8 md:h-10 group-hover:scale-110 transition-transform" />
           <span className="text-[10px] font-black tracking-[0.3em] uppercase text-text-secondary group-hover:text-primary transition-colors">
             CANCHA LIBRE
           </span>

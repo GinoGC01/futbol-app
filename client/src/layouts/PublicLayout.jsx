@@ -15,7 +15,7 @@ export default function PublicLayout() {
         <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full" />
         <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-secondary/5 blur-[120px] rounded-full" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.03] grayscale">
-          <img src="/images/isotipo.png" alt="" className="w-full h-full object-contain scale-150" />
+          <img src="/images/isotipo.webp" alt="" className="w-full h-full object-contain scale-150" />
         </div>
       </div>
 
@@ -29,7 +29,7 @@ export default function PublicLayout() {
       {/* SHARED PUBLIC FOOTER */}
       <footer className="relative z-10 py-12 text-center border-t border-white/5 bg-black/20 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6">
-          <img src="/images/logotipo.png" alt="Cancha Libre" className="h-6 opacity-30 mx-auto mb-6 grayscale" />
+          <img src="/images/logotipo.webp" alt="Cancha Libre" className="h-6 opacity-30 mx-auto mb-6 grayscale" />
           <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] leading-loose opacity-50">
             Cancha Libre v2.5 <br />
             "En el asfalto no hay excusas, solo resultados."
@@ -38,7 +38,7 @@ export default function PublicLayout() {
           <div className="mt-8 flex justify-center gap-8 text-[9px] font-black text-text-dim tracking-widest uppercase">
             <Link to="/privacidad" viewTransition className="hover:text-primary transition-colors">Privacidad</Link>
             <Link to="/terminos" viewTransition className="hover:text-primary transition-colors">Términos</Link>
-            <Link to="/ayuda" viewTransition className="hover:text-primary transition-colors">Soporte</Link>
+            <Link to="/soporte" viewTransition className="hover:text-primary transition-colors">Soporte</Link>
           </div>
         </div>
       </footer>

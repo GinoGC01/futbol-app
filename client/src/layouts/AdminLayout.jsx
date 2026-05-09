@@ -54,7 +54,7 @@ function AdminLayoutContent() {
         <header className="h-16 flex items-center justify-between px-2 sm:px-4 lg:px-6 border-b border-white/5 bg-bg-surface/80 backdrop-blur-xl sticky top-0 z-30 shadow-2xl">
           <div className="flex items-center gap-4">
             <div className="lg:hidden flex items-center gap-2 mr-2">
-              <img src="/images/isotipo.png" alt="" className="h-8 w-8 object-contain" />
+              <img src="/images/isotipo.webp" alt="" className="h-8 w-8 object-contain" />
             </div>
             
             {/* Liga Selector */}

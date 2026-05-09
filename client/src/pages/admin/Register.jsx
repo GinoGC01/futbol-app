@@ -79,7 +79,7 @@ export default function Register() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 md:px-8 py-6 max-w-7xl mx-auto w-full">
         <Link to="/" className="flex items-center gap-3">
-          <img src="/images/isotipo.png" alt="Cancha Libre" className="h-16 md:h-20" />
+          <img src="/images/isotipo.webp" alt="Cancha Libre" className="h-16 md:h-20" />
         </Link>
         <div className="flex items-center gap-4">
           <Link to="/admin/login" className="px-5 py-2 border border-white text-xs font-bold hover:bg-white hover:text-black transition-all">
@@ -94,7 +94,7 @@ export default function Register() {
       <main className="flex-1 flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
         {/* Watermark */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.02] pointer-events-none z-0">
-          <img src="/images/isotipo.png" alt="" className="w-full h-full object-contain" />
+          <img src="/images/isotipo.webp" alt="" className="w-full h-full object-contain" />
         </div>
 
         <div className="w-full max-w-lg relative z-10">
@@ -263,7 +263,7 @@ export default function Register() {
       <footer className="max-w-7xl mx-auto px-6 md:px-8 py-12 w-full">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex flex-col items-center md:items-start gap-4">
-            <img src="/images/logotipo.png" alt="Cancha Libre" className="h-10 md:h-12" />
+            <img src="/images/logotipo.webp" alt="Cancha Libre" className="h-10 md:h-12" />
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
               © {new Date().getFullYear()} CANCHA LIBRE. RENDIMIENTO SIN COMPROMISO.
             </p>
