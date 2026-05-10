@@ -25,11 +25,12 @@ import { startCleanupJob } from './jobs/cleanupTokens.js'
 
 const app = express()
 
-// Static files for emails - served directly from source for email client access
-app.use('/utils/emails/templates/images', express.static(path.join(__dirname, 'utils/emails/templates/images'), {
+// Static files - served from root public folder
+app.use('/static', express.static(path.join(__dirname, '../public'), {
   setHeaders: (res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Cache-Control', 'public, max-age=31536000'); // Cachear por un año
   }
 }))
 
