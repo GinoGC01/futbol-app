@@ -1,84 +1,87 @@
-import 'dotenv/config'
-import express from 'express'
-import { corsMiddleware } from './middleware/cors.js'
-import helmet from 'helmet'
-import morgan from 'morgan'
-import cookieParser from 'cookie-parser'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import "dotenv/config";
+import express from "express";
+import { corsMiddleware } from "./middleware/cors.js";
+import helmet from "helmet";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-import identityRouter from './routes/identity.js'
-import competitionRouter from './routes/competition.js'
-import rosterRouter from './routes/roster.js'
-import matchRouter from './routes/match.js'
-import statsRouter from './routes/stats.js'
-import awardsRouter from './routes/awards.js'
-import alertsRouter from './routes/alerts.js'
-import healthRouter from './routes/health.js'
-import webhooksRouter from './routes/webhooks.js'
+import identityRouter from "./routes/identity.js";
+import competitionRouter from "./routes/competition.js";
+import rosterRouter from "./routes/roster.js";
+import matchRouter from "./routes/match.js";
+import statsRouter from "./routes/stats.js";
+import awardsRouter from "./routes/awards.js";
+import alertsRouter from "./routes/alerts.js";
+import healthRouter from "./routes/health.js";
+import webhooksRouter from "./routes/webhooks.js";
 
-import { errorHandler } from './middleware/errorHandler.js'
-import { startCleanupJob } from './jobs/cleanupTokens.js'
+import { errorHandler } from "./middleware/errorHandler.js";
+import { startCleanupJob } from "./jobs/cleanupTokens.js";
 
-const app = express()
+const app = express();
 
 // Static files - served from root public folder
-app.use('/static', express.static(path.join(__dirname, '../public'), {
-  setHeaders: (res) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.set('Cache-Control', 'public, max-age=31536000'); // Cachear por un año
-  }
-}))
+app.use(
+  "/static",
+  express.static(path.join(__dirname, "../public"), {
+    setHeaders: (res) => {
+      res.set("Access-Control-Allow-Origin", "*");
+      res.set("Cross-Origin-Resource-Policy", "cross-origin");
+      res.set("Cache-Control", "public, max-age=31536000"); // Cachear por un año
+    },
+  }),
+);
 
 // Iniciar cron jobs
-startCleanupJob()
+startCleanupJob();
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3001;
 
-app.use(helmet())
-app.use(corsMiddleware)
+app.use(helmet());
+app.use(corsMiddleware);
 
-if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('dev'))
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan("dev"));
 }
 
 // Header para permitir popups de Google Auth en contextos cross-origin
 app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   next();
 });
 
-app.use(express.json())
-app.use(cookieParser())
+app.use(express.json());
+app.use(cookieParser());
 
 // Health check — usado por monitoreo y para mantener Render activo
-app.use('/health', healthRouter)
+app.use("/health", healthRouter);
 
-app.use('/api/identity', identityRouter)
-app.use('/api/competition', competitionRouter)
-app.use('/api/roster', rosterRouter)
-app.use('/api/match', matchRouter)
-app.use('/api/stats', statsRouter)     // Público — sin auth
-app.use('/api/awards', awardsRouter)   // Admin — requireAuth + requireOrganizador
-app.use('/api/alerts', alertsRouter)   // Admin — requireAuth + requireOrganizador
+app.use("/api/identity", identityRouter);
+app.use("/api/competition", competitionRouter);
+app.use("/api/roster", rosterRouter);
+app.use("/api/match", matchRouter);
+app.use("/api/stats", statsRouter); // Público — sin auth
+app.use("/api/awards", awardsRouter); // Admin — requireAuth + requireOrganizador
+app.use("/api/alerts", alertsRouter); // Admin — requireAuth + requireOrganizador
 
 // Webhooks (Sin /api prefix para facilitar config en servicios externos)
-app.use('/webhooks', webhooksRouter)
+app.use("/webhooks", webhooksRouter);
 
 // 404
 app.use((_req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' })
-})
+  res.status(404).json({ error: "Ruta no encontrada" });
+});
 
 // Error handler global
-app.use(errorHandler)
+app.use(errorHandler);
 
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`))
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
 }
 
-export default app
+export default app;

@@ -35,7 +35,7 @@ const loadTemplate = (templateName, data = {}) => {
     // Default template data
     const templateData = {
       year: new Date().getFullYear(),
-      logoUrl: `${API_URL}/static/emails/logo.png`,
+      logoUrl: `${API_URL}/static/emails/logo.png?v=1.1`,
       ...data,
     };
 
