@@ -32,7 +32,7 @@ const loadTemplate = (templateName, data = {}) => {
     // Default template data
     const templateData = {
       year: new Date().getFullYear(),
-      logoUrl: `${API_URL}/utils/emails/templates/images/logotipo.webp`,
+      logoUrl: `cid:logotipo`,
       ...data,
     };
 
@@ -71,11 +71,22 @@ const loadTemplate = (templateName, data = {}) => {
 // --- HELPER: enviar email via Resend ---
 const sendEmail = async ({ to, subject, html }) => {
   try {
+    // Leer logo para adjuntar como CID (esto permite verlo en local/ngrok y producción sin bloqueos)
+    const logoPath = path.join(__dirname, "templates", "images", "logotipo.webp");
+    const logoBuffer = fs.readFileSync(logoPath);
+
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to,
       subject,
       html,
+      attachments: [
+        {
+          filename: "logotipo.webp",
+          content: logoBuffer,
+          content_id: "logotipo", // Debe coincidir con cid:logotipo en el HTML
+        },
+      ],
     });
 
     if (error) {
