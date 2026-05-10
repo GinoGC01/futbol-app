@@ -10,49 +10,67 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #050505;
+            background-color: #000000;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #E0E0E0;
+            color: #FFFFFF;
             -webkit-font-smoothing: antialiased;
         }
         
         .wrapper {
             width: 100%;
             table-layout: fixed;
-            background-color: #050505;
-            padding-bottom: 40px;
+            background-color: #000000;
+            padding: 40px 0;
         }
         
         .main {
-            background-color: #050505;
+            background-color: #080808;
             margin: 0 auto;
             width: 100%;
             max-width: 600px;
             border-spacing: 0;
             font-family: 'Inter', sans-serif;
-            color: #E0E0E0;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
+        /* Header Section */
         .header {
-            padding: 40px 0;
+            background: linear-gradient(180deg, #111111 0%, #080808 100%);
+            padding: 60px 40px 40px;
             text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .logo {
-            height: 45px;
+            height: 120px; /* Mucho más grande como pidió el usuario */
             width: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(206, 222, 11, 0.2));
+        }
+
+        .system-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #888888;
+            text-transform: uppercase;
+            font-weight: 700;
         }
         
+        /* Card & Content */
         .card {
-            background-color: #0F0F0F;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            background-color: transparent;
+            padding: 0;
         }
         
         .accent-bar {
-            height: 4px;
+            height: 6px;
             width: 100%;
         }
         
@@ -61,17 +79,17 @@
         .accent-danger { background: linear-gradient(90deg, #EF4444, #991B1B); }
         
         .content {
-            padding: 60px 40px;
+            padding: 60px 50px;
             text-align: center;
         }
         
         .title {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 56px;
-            line-height: 0.9;
-            margin-bottom: 24px;
+            font-size: 64px;
+            line-height: 0.85;
+            margin-bottom: 30px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: -0.5px;
             font-style: italic;
         }
         
@@ -80,9 +98,9 @@
         .title-danger { color: #EF4444; }
         
         .divider {
-            width: 60px;
-            height: 3px;
-            margin: 0 auto 32px;
+            width: 80px;
+            height: 4px;
+            margin: 0 auto 40px;
             border-radius: 2px;
         }
         
@@ -91,112 +109,169 @@
         .divider-danger { background-color: #EF4444; }
         
         .message {
-            font-size: 17px;
-            line-height: 1.6;
-            margin-bottom: 45px;
-            color: #A0A0A0;
+            font-size: 18px;
+            line-height: 1.7;
+            margin-bottom: 50px;
+            color: #CCCCCC;
             font-weight: 400;
         }
         
         .message strong {
             color: #FFFFFF;
-            font-weight: 600;
+            font-weight: 700;
         }
         
+        /* CTA Button */
         .cta-container {
-            margin-bottom: 35px;
+            margin-bottom: 40px;
         }
         
         .cta-button {
             display: inline-block;
-            padding: 22px 50px;
+            padding: 24px 60px;
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 24px;
+            font-size: 28px;
             text-decoration: none;
             text-transform: uppercase;
             letter-spacing: 2px;
             font-weight: bold;
-            border-radius: 4px;
-            transition: transform 0.2s ease;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
         
         .cta-primary { background-color: #CEDE0B; color: #000000 !important; }
         .cta-warning { background-color: #F59E0B; color: #000000 !important; }
         .cta-danger { background-color: #EF4444; color: #FFFFFF !important; }
         
+        /* Footer Section */
         .footer-note {
-            font-size: 12px;
-            color: #555555;
-            max-width: 420px;
+            font-size: 13px;
+            color: #666666;
+            max-width: 450px;
             margin: 40px auto 0;
             line-height: 1.6;
-            padding-top: 30px;
+            padding: 30px 20px 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .footer {
-            margin-top: 50px;
+            background-color: #050505;
+            padding: 50px 40px;
             text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .footer-logo {
+            height: 30px;
+            opacity: 0.4;
+            margin-bottom: 20px;
+        }
+        
+        .social-links {
+            margin-bottom: 25px;
+        }
+        
+        .social-link {
+            color: #888888;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .copyright {
             font-size: 11px;
             color: #444444;
             text-transform: uppercase;
-            letter-spacing: 4px;
-            font-weight: 600;
+            letter-spacing: 3px;
+            font-weight: 700;
+            margin-bottom: 10px;
         }
         
         .legal {
-            margin-top: 15px;
             color: #333333;
-            font-size: 9px;
+            font-size: 10px;
             letter-spacing: 1px;
+            line-height: 1.5;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         @media only screen and (max-width: 600px) {
+            .wrapper { padding: 0; }
+            .main { border-radius: 0; border: none; }
             .content { padding: 45px 25px; }
-            .title { font-size: 44px; }
-            .cta-button { width: 100%; box-sizing: border-box; padding: 20px 20px; }
+            .title { font-size: 48px; }
+            .cta-button { width: 100%; box-sizing: border-box; padding: 22px 20px; }
+            .header { padding: 40px 20px 30px; }
+            .logo { height: 90px; }
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <table class="main" role="presentation">
+            <!-- HEADER -->
             <tr>
                 <td class="header">
                     <img src="{{logoUrl}}" alt="CANCHA LIBRE" class="logo">
+                    <br>
+                    <div class="system-badge">Elite Management System</div>
                 </td>
             </tr>
+            
+            <!-- ACCENT -->
             <tr>
                 <td>
-                    <div class="card">
-                        <div class="accent-bar accent-{{variant}}"></div>
-                        <div class="content">
-                            <div class="title title-{{variant}}">{{title}}</div>
-                            <div class="divider divider-{{variant}}"></div>
-                            
-                            <div class="message">
-                                {{body}}
-                            </div>
-                            
-                            {{#if ctaLink}}
-                            <div class="cta-container">
-                                <a href="{{ctaLink}}" class="cta-button cta-{{variant}}">{{ctaText}}</a>
-                            </div>
-                            {{/if}}
-                            
-                            {{#if footerNote}}
-                            <div class="footer-note">
-                                {{footerNote}}
-                            </div>
-                            {{/if}}
+                    <div class="accent-bar accent-{{variant}}"></div>
+                </td>
+            </tr>
+
+            <!-- CONTENT -->
+            <tr>
+                <td class="card">
+                    <div class="content">
+                        <div class="title title-{{variant}}">{{title}}</div>
+                        <div class="divider divider-{{variant}}"></div>
+                        
+                        <div class="message">
+                            {{body}}
                         </div>
+                        
+                        {{#if ctaLink}}
+                        <div class="cta-container">
+                            <a href="{{ctaLink}}" class="cta-button cta-{{variant}}">{{ctaText}}</a>
+                        </div>
+                        {{/if}}
+                        
+                        {{#if footerNote}}
+                        <div class="footer-note">
+                            {{footerNote}}
+                        </div>
+                        {{/if}}
                     </div>
                 </td>
             </tr>
+
+            <!-- FOOTER -->
             <tr>
                 <td class="footer">
-                    © {{year}} CANCHA LIBRE
-                    <div class="legal">ELITE TOURNAMENT MANAGEMENT SYSTEM</div>
+                    <div class="social-links">
+                        <a href="https://canchalibre.pro" class="social-link">Website</a>
+                        <a href="https://instagram.com/canchalibre" class="social-link">Instagram</a>
+                        <a href="mailto:soporte@canchalibre.pro" class="social-link">Soporte</a>
+                    </div>
+                    
+                    <div class="copyright">
+                        © {{year}} CANCHA LIBRE
+                    </div>
+                    
+                    <div class="legal">
+                        Este correo fue enviado automáticamente por el sistema de gestión Cancha Libre. 
+                        Si no esperabas este mensaje, por favor ignóralo o contáctanos.
+                    </div>
                 </td>
             </tr>
         </table>
