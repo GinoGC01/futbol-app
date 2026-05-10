@@ -10,7 +10,6 @@ const __dirname = path.dirname(__filename);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EMAIL_FROM = process.env.EMAIL_FROM || "ginociancia10@gmail.com";
-const API_URL = process.env.API_URL || "http://localhost:3000";
 
 const isMockMode = () => {
   return process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY;
