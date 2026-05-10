@@ -26,7 +26,12 @@ import { startCleanupJob } from './jobs/cleanupTokens.js'
 const app = express()
 
 // Static files for emails - served directly from source for email client access
-app.use('/utils/emails/templates/images', express.static(path.join(__dirname, 'utils/emails/templates/images')))
+app.use('/utils/emails/templates/images', express.static(path.join(__dirname, 'utils/emails/templates/images'), {
+  setHeaders: (res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}))
 
 // Iniciar cron jobs
 startCleanupJob()
