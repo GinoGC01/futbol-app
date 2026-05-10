@@ -11,6 +11,10 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EMAIL_FROM = process.env.EMAIL_FROM || "ginociancia10@gmail.com";
 
+// --- URL BASE DEL SERVIDOR (para assets estáticos en emails) ---
+const API_URL =
+  process.env.API_URL || `http://localhost:${process.env.PORT || 3000}`;
+
 const isMockMode = () => {
   return process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY;
 };
@@ -19,7 +23,7 @@ const isMockMode = () => {
 const loadTemplate = (templateName, data = {}) => {
   try {
     const templatesDir = path.join(__dirname, "templates");
-    
+
     // Load Master Layout
     const layoutPath = path.join(templatesDir, "layout.html");
     let layout = fs.readFileSync(layoutPath, "utf8");
@@ -31,7 +35,7 @@ const loadTemplate = (templateName, data = {}) => {
     // Default template data
     const templateData = {
       year: new Date().getFullYear(),
-      logoUrl: `cid:logotipo`,
+      logoUrl: `${API_URL}/utils/emails/templates/images/logotipo.webp`,
       ...data,
     };
 
@@ -42,7 +46,7 @@ const loadTemplate = (templateName, data = {}) => {
     });
 
     let finalHtml = layout;
-    
+
     // Replace layout placeholders
     Object.keys(templateData).forEach((key) => {
       const regex = new RegExp(`{{${key}}}`, "g");
@@ -55,9 +59,12 @@ const loadTemplate = (templateName, data = {}) => {
     }
 
     // Simple cleanup for the {{#if}} in layout
-    finalHtml = finalHtml.replace(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (match, p1, p2) => {
-      return templateData[p1] ? p2 : '';
-    });
+    finalHtml = finalHtml.replace(
+      /{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g,
+      (match, p1, p2) => {
+        return templateData[p1] ? p2 : "";
+      },
+    );
 
     return finalHtml;
   } catch (error) {
@@ -66,26 +73,14 @@ const loadTemplate = (templateName, data = {}) => {
   }
 };
 
-
 // --- HELPER: enviar email via Resend ---
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    // Leer logo para adjuntar como CID (esto permite verlo en local/ngrok y producción sin bloqueos)
-    const logoPath = path.join(__dirname, "templates", "images", "logotipo.webp");
-    const logoBuffer = fs.readFileSync(logoPath);
-
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to,
       subject,
       html,
-      attachments: [
-        {
-          filename: "logotipo.webp",
-          content: logoBuffer,
-          content_id: "logotipo", // Debe coincidir con cid:logotipo en el HTML
-        },
-      ],
     });
 
     if (error) {
@@ -93,7 +88,9 @@ const sendEmail = async ({ to, subject, html }) => {
       throw new Error(`Resend email failed: ${error.message}`);
     }
 
-    console.log(`✅ Email enviado desde ${EMAIL_FROM} a ${to} (id: ${data?.id})`);
+    console.log(
+      `✅ Email enviado desde ${EMAIL_FROM} a ${to} (id: ${data?.id})`,
+    );
     return data;
   } catch (err) {
     console.error("❌ Error en sendEmail:", err);
@@ -113,12 +110,12 @@ export const sendVerificationEmail = async (toEmail, token) => {
     return;
   }
 
-  const html = loadTemplate("verification", { 
-    variant: 'primary',
-    title: 'VERIFICÁ TU CUENTA',
+  const html = loadTemplate("verification", {
+    variant: "primary",
+    title: "VERIFICÁ TU CUENTA",
     ctaLink: link,
-    ctaText: 'VERIFICAR AHORA',
-    expires 
+    ctaText: "VERIFICAR AHORA",
+    expires,
   });
 
   await sendEmail({
@@ -139,12 +136,12 @@ export const sendWaitlistEmail = async (toEmail, nombre) => {
     return;
   }
 
-  const html = loadTemplate("waitlist", { 
-    variant: 'warning',
-    title: 'ESTÁS EN LA LISTA',
+  const html = loadTemplate("waitlist", {
+    variant: "warning",
+    title: "ESTÁS EN LA LISTA",
     ctaLink: link,
-    ctaText: 'CONOCER MÁS',
-    nombre 
+    ctaText: "CONOCER MÁS",
+    nombre,
   });
 
   await sendEmail({
@@ -165,12 +162,12 @@ export const sendWelcomeBetaEmail = async (toEmail, nombre) => {
     return;
   }
 
-  const html = loadTemplate("welcome_beta", { 
-    variant: 'primary',
-    title: 'ACCESO CONCEDIDO',
+  const html = loadTemplate("welcome_beta", {
+    variant: "primary",
+    title: "ACCESO CONCEDIDO",
     ctaLink: link,
-    ctaText: 'INGRESAR AL PANEL',
-    nombre 
+    ctaText: "INGRESAR AL PANEL",
+    nombre,
   });
 
   await sendEmail({
@@ -191,11 +188,11 @@ export const sendPasswordResetEmail = async (toEmail, token) => {
     return;
   }
 
-  const html = loadTemplate("password_reset", { 
-    variant: 'warning',
-    title: 'RESTABLECER CLAVE',
+  const html = loadTemplate("password_reset", {
+    variant: "warning",
+    title: "RESTABLECER CLAVE",
     ctaLink: link,
-    ctaText: 'CAMBIAR CONTRASEÑA'
+    ctaText: "CAMBIAR CONTRASEÑA",
   });
 
   await sendEmail({
@@ -220,13 +217,13 @@ export const sendSuspendedEmail = async (
     return;
   }
 
-  const html = loadTemplate("suspended", { 
-    variant: 'danger',
-    title: 'CUENTA SUSPENDIDA',
+  const html = loadTemplate("suspended", {
+    variant: "danger",
+    title: "CUENTA SUSPENDIDA",
     ctaLink: link,
-    ctaText: 'CONTACTAR SOPORTE',
-    nombre, 
-    motivo 
+    ctaText: "CONTACTAR SOPORTE",
+    nombre,
+    motivo,
   });
 
   await sendEmail({
@@ -246,12 +243,12 @@ export const sendReactivationEmail = async (toEmail, nombre) => {
     return;
   }
 
-  const html = loadTemplate("reactivation", { 
-    variant: 'primary',
-    title: 'CUENTA REACTIVADA',
+  const html = loadTemplate("reactivation", {
+    variant: "primary",
+    title: "CUENTA REACTIVADA",
     ctaLink: link,
-    ctaText: 'VOLVER A ENTRAR',
-    nombre 
+    ctaText: "VOLVER A ENTRAR",
+    nombre,
   });
 
   await sendEmail({
@@ -271,12 +268,12 @@ export const sendSubscriberEmail = async (toEmail, nombre) => {
     return;
   }
 
-  const html = loadTemplate("subscriber", { 
-    variant: 'primary',
-    title: 'SUSCRIPCIÓN ACTIVA',
+  const html = loadTemplate("subscriber", {
+    variant: "primary",
+    title: "SUSCRIPCIÓN ACTIVA",
     ctaLink: link,
-    ctaText: 'VER MI PLAN',
-    nombre 
+    ctaText: "VER MI PLAN",
+    nombre,
   });
 
   await sendEmail({
