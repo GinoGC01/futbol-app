@@ -11,10 +11,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EMAIL_FROM = process.env.EMAIL_FROM || "ginociancia10@gmail.com";
 
-// --- URL BASE DEL SERVIDOR (para assets estáticos en emails) ---
-const API_URL =
-  process.env.API_URL || `http://localhost:${process.env.PORT || 3000}`;
-
 const isMockMode = () => {
   return process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY;
 };
@@ -35,7 +31,7 @@ const loadTemplate = (templateName, data = {}) => {
     // Default template data
     const templateData = {
       year: new Date().getFullYear(),
-      logoUrl: `${API_URL}/static/emails/logo.png?v=1.1`,
+      logoUrl: "https://app.canchalibre.pro/images/logotipo.webp",
       ...data,
     };
 

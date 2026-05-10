@@ -25,18 +25,6 @@ import { startCleanupJob } from "./jobs/cleanupTokens.js";
 
 const app = express();
 
-// Static files - served from root public folder
-app.use(
-  "/static",
-  express.static(path.join(__dirname, "../public"), {
-    setHeaders: (res) => {
-      res.set("Access-Control-Allow-Origin", "*");
-      res.set("Cross-Origin-Resource-Policy", "cross-origin");
-      res.set("Cache-Control", "public, max-age=31536000"); // Cachear por un año
-    },
-  }),
-);
-
 // Iniciar cron jobs
 startCleanupJob();
 
