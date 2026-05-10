@@ -4,6 +4,11 @@ import { corsMiddleware } from './middleware/cors.js'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 import identityRouter from './routes/identity.js'
 import competitionRouter from './routes/competition.js'
@@ -19,6 +24,9 @@ import { errorHandler } from './middleware/errorHandler.js'
 import { startCleanupJob } from './jobs/cleanupTokens.js'
 
 const app = express()
+
+// Static files for emails - served directly from source for email client access
+app.use('/utils/emails/templates/images', express.static(path.join(__dirname, 'utils/emails/templates/images')))
 
 // Iniciar cron jobs
 startCleanupJob()

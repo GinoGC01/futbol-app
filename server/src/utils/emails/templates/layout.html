@@ -5,168 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{subject}}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
         
         body {
             margin: 0;
             padding: 0;
-            background-color: #0D0D0D;
+            background-color: #050505;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #EDEDED;
+            color: #E0E0E0;
             -webkit-font-smoothing: antialiased;
         }
         
-        .container {
-            max-width: 600px;
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #050505;
+            padding-bottom: 40px;
+        }
+        
+        .main {
+            background-color: #050505;
             margin: 0 auto;
-            padding: 40px 20px;
+            width: 100%;
+            max-width: 600px;
+            border-spacing: 0;
+            font-family: 'Inter', sans-serif;
+            color: #E0E0E0;
         }
         
         .header {
+            padding: 40px 0;
             text-align: center;
-            margin-bottom: 30px;
         }
         
         .logo {
-            height: 50px;
+            height: 45px;
             width: auto;
         }
         
         .card {
-            background-color: #141414;
-            border-radius: 4px;
+            background-color: #0F0F0F;
+            border-radius: 12px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
         }
         
-        .status-bar {
+        .accent-bar {
             height: 4px;
             width: 100%;
         }
         
-        /* Status Colors */
-        .status-success { background-color: #CEDE0B; }
-        .status-warning { background-color: #F59E0B; }
-        .status-error { background-color: #EF4444; }
+        .accent-primary { background: linear-gradient(90deg, #CEDE0B, #8E9908); }
+        .accent-warning { background: linear-gradient(90deg, #F59E0B, #B45309); }
+        .accent-danger { background: linear-gradient(90deg, #EF4444, #991B1B); }
         
         .content {
-            padding: 50px 40px;
+            padding: 60px 40px;
             text-align: center;
         }
         
         .title {
-            font-family: 'Bebas Neue', 'Impact', sans-serif;
-            font-size: 52px;
-            line-height: 0.95;
-            margin-bottom: 25px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 56px;
+            line-height: 0.9;
+            margin-bottom: 24px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             font-style: italic;
         }
         
-        .title-success { color: #CEDE0B; }
+        .title-primary { color: #CEDE0B; }
         .title-warning { color: #F59E0B; }
-        .title-error { color: #EF4444; }
+        .title-danger { color: #EF4444; }
         
         .divider {
-            width: 80px;
-            height: 2px;
-            margin: 0 auto 30px;
+            width: 60px;
+            height: 3px;
+            margin: 0 auto 32px;
+            border-radius: 2px;
         }
         
-        .divider-success { background: linear-gradient(90deg, transparent, #CEDE0B, transparent); }
-        .divider-warning { background: linear-gradient(90deg, transparent, #F59E0B, transparent); }
-        .divider-error { background: linear-gradient(90deg, transparent, #EF4444, transparent); }
+        .divider-primary { background-color: #CEDE0B; }
+        .divider-warning { background-color: #F59E0B; }
+        .divider-danger { background-color: #EF4444; }
         
         .message {
-            font-size: 16px;
-            line-height: 1.7;
-            margin-bottom: 40px;
-            color: #B0B0B0;
+            font-size: 17px;
+            line-height: 1.6;
+            margin-bottom: 45px;
+            color: #A0A0A0;
             font-weight: 400;
         }
         
         .message strong {
             color: #FFFFFF;
+            font-weight: 600;
         }
         
         .cta-container {
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
         
         .cta-button {
             display: inline-block;
-            padding: 20px 45px;
-            font-family: 'Bebas Neue', 'Impact', sans-serif;
-            font-size: 22px;
+            padding: 22px 50px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
             text-decoration: none;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             font-weight: bold;
-            border-radius: 2px;
-            transition: all 0.3s ease;
+            border-radius: 4px;
+            transition: transform 0.2s ease;
         }
         
-        .cta-success { background-color: #CEDE0B; color: #0D0D0D !important; }
-        .cta-warning { background-color: #F59E0B; color: #0D0D0D !important; }
-        .cta-error { background-color: #EF4444; color: #FFFFFF !important; }
+        .cta-primary { background-color: #CEDE0B; color: #000000 !important; }
+        .cta-warning { background-color: #F59E0B; color: #000000 !important; }
+        .cta-danger { background-color: #EF4444; color: #FFFFFF !important; }
         
         .footer-note {
-            font-size: 11px;
+            font-size: 12px;
             color: #555555;
-            max-width: 400px;
-            margin: 30px auto 0;
-            line-height: 1.5;
+            max-width: 420px;
+            margin: 40px auto 0;
+            line-height: 1.6;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .footer {
-            margin-top: 40px;
+            margin-top: 50px;
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
             color: #444444;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
+            font-weight: 600;
         }
         
+        .legal {
+            margin-top: 15px;
+            color: #333333;
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+
         @media only screen and (max-width: 600px) {
-            .content { padding: 40px 25px; }
-            .title { font-size: 42px; }
+            .content { padding: 45px 25px; }
+            .title { font-size: 44px; }
+            .cta-button { width: 100%; box-sizing: border-box; padding: 20px 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <img src="https://app.canchalibre.pro/images/logotipo.webp" alt="CANCHA LIBRE" class="logo">
-        </div>
-        
-        <div class="card">
-            <div class="status-bar status-{{status}}"></div>
-            <div class="content">
-                <div class="title title-{{status}}">{{title}}</div>
-                <div class="divider divider-{{status}}"></div>
-                <div class="message">
-                    {{body}}
-                </div>
-                
-                {{#if ctaLink}}
-                <div class="cta-container">
-                    <a href="{{ctaLink}}" class="cta-button cta-{{status}}">{{ctaText}}</a>
-                </div>
-                {{/if}}
-                
-                {{#if footerNote}}
-                <div class="footer-note">
-                    {{footerNote}}
-                </div>
-                {{/if}}
-            </div>
-        </div>
-        
-        <div class="footer">
-            © {{year}} CANCHA LIBRE. RENDIMIENTO SIN COMPROMISO.
-        </div>
+    <div class="wrapper">
+        <table class="main" role="presentation">
+            <tr>
+                <td class="header">
+                    <img src="{{logoUrl}}" alt="CANCHA LIBRE" class="logo">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="card">
+                        <div class="accent-bar accent-{{variant}}"></div>
+                        <div class="content">
+                            <div class="title title-{{variant}}">{{title}}</div>
+                            <div class="divider divider-{{variant}}"></div>
+                            
+                            <div class="message">
+                                {{body}}
+                            </div>
+                            
+                            {{#if ctaLink}}
+                            <div class="cta-container">
+                                <a href="{{ctaLink}}" class="cta-button cta-{{variant}}">{{ctaText}}</a>
+                            </div>
+                            {{/if}}
+                            
+                            {{#if footerNote}}
+                            <div class="footer-note">
+                                {{footerNote}}
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="footer">
+                    © {{year}} CANCHA LIBRE
+                    <div class="legal">ELITE TOURNAMENT MANAGEMENT SYSTEM</div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>
