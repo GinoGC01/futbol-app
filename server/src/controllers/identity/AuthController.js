@@ -262,7 +262,15 @@ class AuthController {
         })
         .eq("id", pr.id);
 
-      await sendVerificationEmail(email, newToken);
+      // Email de verificación aislado
+      try {
+        await sendVerificationEmail(email, newToken);
+      } catch (emailError) {
+        console.error(
+          "[Email Warning] sendVerificationEmail failed, process continues:",
+          emailError.message,
+        );
+      }
 
       res
         .status(200)
@@ -319,7 +327,15 @@ class AuthController {
       await supabaseAdmin
         .from("password_reset_tokens")
         .insert([{ user_id: user.id, token, expires_at: expiresAt }]);
-      await sendPasswordResetEmail(user.email, token);
+      // Email de recuperación aislado
+      try {
+        await sendPasswordResetEmail(user.email, token);
+      } catch (emailError) {
+        console.error(
+          "[Email Warning] sendPasswordResetEmail failed, process continues:",
+          emailError.message,
+        );
+      }
 
       res
         .status(200)
@@ -466,7 +482,15 @@ class AuthController {
         organizador = newOrg;
 
         // Enviar email de lista de espera para nuevos usuarios de Google
-        await sendWaitlistEmail(email, name);
+        // Enviar email de lista de espera para nuevos usuarios de Google (aislado)
+        try {
+          await sendWaitlistEmail(email, name);
+        } catch (emailError) {
+          console.error(
+            "[Email Warning] sendWaitlistEmail failed, login continues:",
+            emailError.message,
+          );
+        }
       } else if (!organizador.email_verified) {
         // Si ya existe pero no estaba verificado, lo verificamos ahora que entró por Google
         await supabaseAdmin
