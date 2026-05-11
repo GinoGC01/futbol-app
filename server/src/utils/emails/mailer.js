@@ -278,3 +278,43 @@ export const sendSubscriberEmail = async (toEmail, nombre) => {
     html,
   });
 };
+
+export const sendAdminNotificationEmail = async (newUserEmail, newUserName) => {
+  const adminEmail = process.env.GMAIL_SUPERADMIN;
+  if (!adminEmail) return;
+
+  if (isMockMode()) {
+    console.log("\n--- 📧 EMAIL A SUPERADMIN (MOCK) ---");
+    console.log(`Para: ${adminEmail}`);
+    console.log(`Nuevo Registro: ${newUserName} (${newUserEmail})`);
+    console.log("------------------------------------\n");
+    return;
+  }
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #facc15; padding: 20px; text-align: center;">
+        <h2 style="margin: 0; color: #111;">🚨 NUEVO REGISTRO EN CANCHA LIBRE</h2>
+      </div>
+      <div style="padding: 20px;">
+        <p>¡Hola! Tienes un nuevo usuario registrado en la plataforma:</p>
+        <ul style="background: #f9f9f9; padding: 15px 30px; border-radius: 5px;">
+          <li><strong>Nombre:</strong> ${newUserName}</li>
+          <li><strong>Email:</strong> ${newUserEmail}</li>
+          <li><strong>Fecha:</strong> ${new Date().toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })}</li>
+        </ul>
+        <p>Revisá el panel de Supabase para más detalles.</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    await sendEmail({
+      to: adminEmail,
+      subject: `🚨 NUEVO REGISTRO: ${newUserName} - Cancha Libre`,
+      html,
+    });
+  } catch (error) {
+    console.error("[Email Warning] Error al enviar email al Superadmin:", error);
+  }
+};

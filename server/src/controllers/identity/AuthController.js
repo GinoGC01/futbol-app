@@ -10,6 +10,7 @@ import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendWaitlistEmail,
+  sendAdminNotificationEmail,
 } from "../../utils/emails/mailer.js";
 
 class AuthController {
@@ -485,6 +486,7 @@ class AuthController {
         // Enviar email de lista de espera para nuevos usuarios de Google (aislado)
         try {
           await sendWaitlistEmail(email, name);
+          await sendAdminNotificationEmail(email, name);
         } catch (emailError) {
           console.error(
             "[Email Warning] sendWaitlistEmail failed, login continues:",
