@@ -29,7 +29,7 @@ export default function PublicNavbar() {
           {/* DESKTOP NAV */}
           <div className="hidden md:flex items-center gap-10">
             <NavLink to="/ligas" icon={<LayoutGrid className="w-3 h-3" />}>EXPLORAR</NavLink>
-            <NavLink to="/nosotros" icon={<Info className="w-3 h-3" />}>NOSOTROS</NavLink>
+            <NavLink to="https://www.canchalibre.pro/" icon={<Info className="w-3 h-3" />}>NOSOTROS</NavLink>
           </div>
         </div>
 
