@@ -89,6 +89,20 @@ export default function Login() {
             <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary/40" />
             <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary/40" />
 
+            <div className="mb-6 mt-2">
+              <GoogleAuthButton 
+                onError={setError} 
+                onLoadingChange={setLoading} 
+                text="continue_with" 
+              />
+            </div>
+
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1 h-px bg-white/5" />
+              <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em]">O ACCESO CON EMAIL</span>
+              <div className="flex-1 h-px bg-white/5" />
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary flex items-center gap-2 px-1">
@@ -160,18 +174,6 @@ export default function Login() {
                 </span>
               </button>
             </form>
-
-            <div className="flex items-center gap-4 my-8">
-              <div className="flex-1 h-px bg-white/5" />
-              <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em]">O ACCESO RÁPIDO</span>
-              <div className="flex-1 h-px bg-white/5" />
-            </div>
-
-            <GoogleAuthButton 
-              onError={setError} 
-              onLoadingChange={setLoading} 
-              text="continue_with" 
-            />
 
             <div className="mt-10 text-center space-y-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">

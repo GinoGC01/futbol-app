@@ -127,6 +127,20 @@ export default function Register() {
               <form onSubmit={handleStep1} className="flex flex-col gap-6">
                 <h3 className="text-sm font-black italic uppercase tracking-[0.3em] mb-2">UNIRSE A LA ÉLITE</h3>
                 
+                <div>
+                  <GoogleAuthButton 
+                    onError={setError} 
+                    onLoadingChange={setLoading} 
+                    text="signup_with" 
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex-1 h-px bg-white/5" />
+                  <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em]">O REGISTRO CON EMAIL</span>
+                  <div className="flex-1 h-px bg-white/5" />
+                </div>
+
                 <div className="grid gap-6">
                   <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                     NOMBRE COMPLETO
@@ -167,18 +181,6 @@ export default function Register() {
                 <p className="text-[9px] font-bold text-center text-white/30 uppercase tracking-widest mt-4">
                   AL CONTINUAR ACEPTAS NUESTROS <Link to="/" className="text-white hover:text-primary underline">TÉRMINOS DE SERVICIO</Link>
                 </p>
-
-                <div className="flex items-center gap-4 my-6">
-                  <div className="flex-1 h-px bg-white/5" />
-                  <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em]">O ACCESO RÁPIDO</span>
-                  <div className="flex-1 h-px bg-white/5" />
-                </div>
-
-                <GoogleAuthButton 
-                  onError={setError} 
-                  onLoadingChange={setLoading} 
-                  text="signup_with" 
-                />
               </form>
             )}
 
