@@ -43,17 +43,21 @@ export default function Login() {
       </div>
 
       {/* MOBILE HEADER */}
-      <header className="relative z-20 flex items-center justify-between p-6 md:px-12 md:py-8 w-full max-w-7xl mx-auto">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-primary/50 transition-all">
-            <ChevronLeft className="w-5 h-5 text-text-secondary group-hover:text-primary" />
-          </div>
-          <span className="hidden sm:block text-[10px] font-black tracking-[0.2em] uppercase text-text-secondary group-hover:text-primary transition-colors">
-            VOLVER AL INICIO
-          </span>
-        </Link>
-        <img src="/images/isotipo.webp" alt="Cancha Libre" className="h-10 md:h-12" />
-        <div className="w-10 sm:w-24" /> {/* Spacer */}
+      <header className="relative z-20 flex items-center p-6 md:px-12 md:py-8 w-full max-w-7xl mx-auto">
+        <div className="flex-1 flex justify-start">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-primary/50 transition-all">
+              <ChevronLeft className="w-5 h-5 text-text-secondary group-hover:text-primary" />
+            </div>
+            <span className="hidden sm:block text-[10px] font-black tracking-[0.2em] uppercase text-text-secondary group-hover:text-primary transition-colors">
+              VOLVER AL INICIO
+            </span>
+          </Link>
+        </div>
+        <div className="flex-shrink-0 flex justify-center">
+          <img src="/images/isotipo.webp" alt="Cancha Libre" className="h-10 md:h-12" />
+        </div>
+        <div className="flex-1" />
       </header>
 
       {/* MAIN CONTENT */}
