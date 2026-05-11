@@ -66,28 +66,19 @@ const faqItems = [
 		<!-- 2. MARQUEE DE CONVERSIÓN (Provincias) -->
 		<section class="bg-primary py-8 md:py-12 overflow-hidden border-y-8 border-dark/30 relative">
             <div class="absolute inset-0 bg-[linear-gradient(90deg,var(--color-dark)_0%,transparent_10%,transparent_90%,var(--color-dark)_100%)] z-10 pointer-events-none"></div>
-			<div class="marquee-content flex gap-20 text-dark font-display text-4xl md:text-8xl tracking-tighter uppercase italic items-center whitespace-nowrap font-black">
-				{Array(4).fill(0).map(() => (
-					<>
+			<div class="marquee-content flex text-dark font-display text-4xl md:text-8xl tracking-tighter uppercase italic items-center whitespace-nowrap font-black w-max">
+				{Array(2).fill(0).map(() => (
+					<div class="flex items-center gap-20 pr-20">
 						<span>BUENOS AIRES</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>CÓRDOBA</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>ROSARIO</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>SANTA FE</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>MENDOZA</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>LA PLATA</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>TUCUMÁN</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>MAR DEL PLATA</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
 						<span>SALTA</span>
-						<div class="w-6 h-6 bg-dark rotate-45 shadow-lg"></div>
-					</>
+					</div>
 				))}
 			</div>
 		</section>
@@ -246,20 +237,180 @@ const faqItems = [
 						    <li class="flex items-center gap-4 md:gap-6"><div class="w-4 h-4 md:w-6 md:h-6 bg-primary/30 skew-x-[-12deg]"></div> Sin registrarse</li>
 					    </ul>
                     </div>
-                    <div class="mt-12 md:mt-16 text-center">
-                        <p class="font-space text-xs md:text-sm tracking-[0.4em] text-muted uppercase font-black mb-6 md:mb-8">LA ELITE DEL FÚTBOL AMATEUR</p>
-                        <div class="flex justify-center -space-x-6">
-                            {[1,2,3,4,5].map(i => (
-                                <img src={`https://i.pravatar.cc/100?u=${i+10}`} alt="" class="w-20 h-20 rounded-full border-4 border-dark shadow-3xl hover:-translate-y-2 transition-transform cursor-pointer" />
-                            ))}
+                    
+				</div>
+			</div>
+		</section>
+
+
+		<!-- 6. PRECIOS -->
+		<section class="bg-dark py-32 px-6 relative overflow-hidden" id="precios">
+            <div class="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,_rgba(206,222,11,0.03)_0%,_transparent_50%)]"></div>
+            
+			<div class="container mx-auto max-w-7xl relative z-10">
+				<div class="text-center mb-24">
+					<h2 class="text-white text-6xl md:text-9xl font-display leading-none mb-6 uppercase italic reveal tracking-tighter">PLAN DE <span class="text-primary underline decoration-primary/20">ATAQUE.</span></h2>
+					<p class="text-primary text-lg md:text-2xl font-space font-black reveal reveal-delay-1 uppercase tracking-[0.2em] md:tracking-[0.3em] italic">TRANSPARENCIA TOTAL PARA TU LIGA</p>
+				</div>
+
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+					<!-- 1. FUNDADOR -->
+					<div class="reveal reveal-delay-1 group relative flex flex-col">
+                        <!-- Neon Glow Background -->
+                        <div class="absolute -inset-1 bg-primary rounded-[40px] blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                        
+                        <div class="relative flex-1 glass border-primary/30 rounded-[40px] p-8 md:p-10 flex flex-col overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-primary text-dark px-6 py-1.5 md:px-8 md:py-2 font-display text-lg md:text-xl italic font-black uppercase skew-x-[-12deg] -mr-2 mt-4 md:mt-6 z-10">
+                                SOLO 3 LUGARES
+                            </div>
+                            
+                            <div class="mb-8 md:mb-10 pt-4 md:pt-0">
+                                <h3 class="text-white text-4xl md:text-5xl font-display uppercase italic leading-none mb-4">FUNDADOR</h3>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-primary text-5xl md:text-6xl font-display italic leading-none">$25.000</span>
+                                    <span class="text-muted text-lg md:text-xl font-space font-bold uppercase">/MES</span>
+                                </div>
+                            </div>
+
+                            <ul class="flex-1 space-y-5 md:space-y-6 mb-10 md:mb-12">
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-primary rounded-sm flex-shrink-0 flex items-center justify-center text-dark font-black rotate-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-white text-lg md:text-xl font-space font-bold uppercase italic tracking-tight leading-tight">PRECIO BLOQUEADO <span class="text-primary">PARA SIEMPRE</span></span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/10 rounded-sm flex-shrink-0 flex items-center justify-center text-white/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-muted text-base md:text-lg font-space font-medium uppercase italic leading-tight">Acceso prioritario a nuevas funciones</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/10 rounded-sm flex-shrink-0 flex items-center justify-center text-white/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-muted text-base md:text-lg font-space font-medium uppercase italic leading-tight">Línea directa con el equipo</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/10 rounded-sm flex-shrink-0 flex items-center justify-center text-white/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-muted text-base md:text-lg font-space font-medium uppercase italic leading-tight">1 Liga activa</span>
+                                </li>
+                            </ul>
+
+                            <a href="https://app.canchalibre.pro" class="aggressive-btn !py-5 md:!py-6 !text-xl md:!text-2xl w-full text-center group">
+                                ASEGURAR MI LUGAR
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 2. BETA -->
+					<div class="reveal reveal-delay-2 flex flex-col">
+                        <div class="relative flex-1 glass border-white/10 rounded-[40px] p-8 md:p-10 flex flex-col">
+                            <div class="mb-8 md:mb-10">
+                                <h3 class="text-white text-4xl md:text-5xl font-display uppercase italic leading-none mb-4">BETA</h3>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-white text-5xl md:text-6xl font-display italic leading-none">$50.000</span>
+                                    <span class="text-muted text-lg md:text-xl font-space font-bold uppercase">/MES</span>
+                                </div>
+                                <p class="text-primary/60 font-space font-black text-sm tracking-widest uppercase italic mt-2">HASTA 15 ORGANIZADORES</p>
+                            </div>
+
+                            <ul class="flex-1 space-y-5 md:space-y-6 mb-10 md:mb-12">
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/10 rounded-sm flex-shrink-0 flex items-center justify-center text-white/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-muted text-base md:text-lg font-space font-medium uppercase italic leading-tight">Soporte directo</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/10 rounded-sm flex-shrink-0 flex items-center justify-center text-white/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-muted text-base md:text-lg font-space font-medium uppercase italic leading-tight">1 Liga activa</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/10 rounded-sm flex-shrink-0 flex items-center justify-center text-white/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-muted text-base md:text-lg font-space font-medium uppercase italic leading-tight">Precio de lanzamiento anticipado</span>
+                                </li>
+                            </ul>
+
+                            <a href="https://app.canchalibre.pro" class="bg-white/5 hover:bg-white/10 text-white border border-white/20 py-5 md:py-6 rounded-2xl font-display text-xl md:text-2xl font-black text-center transition-all uppercase tracking-widest">
+                                SOLICITAR ACCESO
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 3. LANZAMIENTO -->
+					<div class="reveal reveal-delay-3 flex flex-col">
+                        <div class="relative flex-1 glass border-white/5 rounded-[40px] p-8 md:p-10 flex flex-col opacity-60 grayscale-[0.5]">
+                            <div class="mb-8 md:mb-10">
+                                <h3 class="text-white/40 text-4xl md:text-5xl font-display uppercase italic leading-none mb-4">LANZAMIENTO</h3>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-white/40 text-5xl md:text-6xl font-display italic leading-none">$70.000</span>
+                                    <span class="text-white/20 text-lg md:text-xl font-space font-bold uppercase">/MES</span>
+                                </div>
+                                <p class="text-white/20 font-space font-black text-sm tracking-widest uppercase italic mt-2">PRECIO PÚBLICO FINAL</p>
+                            </div>
+
+                            <ul class="flex-1 space-y-5 md:space-y-6 mb-10 md:mb-12">
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/5 rounded-sm flex-shrink-0 flex items-center justify-center text-white/20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-white/30 text-base md:text-lg font-space font-medium uppercase italic leading-tight">3 Ligas activas</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/5 rounded-sm flex-shrink-0 flex items-center justify-center text-white/20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-white/30 text-base md:text-lg font-space font-medium uppercase italic leading-tight">Soporte Premium</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <div class="mt-1 w-5 h-5 bg-white/5 rounded-sm flex-shrink-0 flex items-center justify-center text-white/20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <span class="text-white/30 text-base md:text-lg font-space font-medium uppercase italic leading-tight">+$15.000 por liga extra</span>
+                                </li>
+                            </ul>
+
+                            <div class="py-5 md:py-6 text-white/20 font-display text-xl md:text-2xl font-black text-center uppercase tracking-widest border border-white/5 rounded-2xl">
+                                PRÓXIMAMENTE
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="mt-16 text-center">
+                        <div class="inline-flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                                </div>
+                                <span class="text-white/60 font-space font-bold uppercase italic tracking-widest text-sm">PAGOS SEGUROS</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+                                </div>
+                                <span class="text-white/60 font-space font-bold uppercase italic tracking-widest text-sm">SIN CONTRATOS</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11"/></svg>
+                                </div>
+                                <span class="text-white/60 font-space font-bold uppercase italic tracking-widest text-sm">ACTUALIZACIONES DE POR VIDA</span>
+                            </div>
                         </div>
                     </div>
 				</div>
 			</div>
 		</section>
 
-
-		<!-- 6. FAQ -->
+		<!-- 7. FAQ -->
 		<section class="bg-dark py-32 px-6" id="faq">
 			<div class="container mx-auto max-w-4xl">
 				<h2 class="text-7xl md:text-9xl font-display text-center mb-24 uppercase italic reveal">DESPEJÁ LAS <span class="text-primary">DUDAS.</span></h2>
@@ -355,7 +506,7 @@ const faqItems = [
 		100% { transform: translateX(-50%); }
 	}
 	.marquee-content {
-		animation: marquee 40s linear infinite;
+		animation: marquee 15s linear infinite;
 	}
 
 	/* FAQ */
