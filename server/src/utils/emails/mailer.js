@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 // --- RESEND CLIENT ---
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const EMAIL_FROM = process.env.EMAIL_FROM || "ginociancia10@gmail.com";
+const EMAIL_FROM = process.env.EMAIL_FROM || "soporte@canchalibre.pro";
 
 const isMockMode = () => {
   return process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY;
@@ -203,7 +203,7 @@ export const sendSuspendedEmail = async (
   nombre,
   motivo = "INCUMPLIMIENTO DE TÉRMINOS",
 ) => {
-  const link = `mailto:ginociancia10@gmail.com?subject=Suspension de cuenta: ${toEmail}`;
+  const link = `mailto:soporte@canchalibre.pro?subject=Suspension de cuenta: ${toEmail}`;
 
   if (isMockMode()) {
     console.log("\n--- 📧 EMAIL DE SUSPENSIÓN (MOCK) ---");

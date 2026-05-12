@@ -172,11 +172,11 @@ export default function Terms() {
                 ¿Tenés alguna consulta legal?
               </p>
               <a 
-                href="mailto:info@canchalibre.pro" 
+                href="mailto:soporte@canchalibre.pro" 
                 className="inline-flex items-center gap-3 text-2xl font-black italic hover:text-primary transition-colors group"
               >
                 <Mail className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
-                INFO@CANCHALIBRE.PRO
+                SOPORTE@CANCHALIBRE.PRO
               </a>
             </div>
           </div>

@@ -57,11 +57,11 @@ export default function Support() {
                 CORREO ELECTRÓNICO DIRECTO
               </p>
               <a 
-                href="mailto:ginociancia10@gmail.com" 
+                href="mailto:soporte@canchalibre.pro" 
                 className="inline-flex items-center justify-center gap-3 text-2xl md:text-3xl font-black italic hover:text-primary transition-colors group break-all"
               >
                 <Mail className="w-8 h-8 text-primary group-hover:scale-110 transition-transform hidden sm:block" />
-                GINOCIANCIA10@GMAIL.COM
+                SOPORTE@CANCHALIBRE.PRO
               </a>
             </div>
 

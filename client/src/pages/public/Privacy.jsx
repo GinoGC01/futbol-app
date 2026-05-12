@@ -141,11 +141,11 @@ export default function Privacy() {
                 ¿Tenés alguna consulta sobre tus datos?
               </p>
               <a 
-                href="mailto:ginociancia10@gmail.com" 
+                href="mailto:soporte@canchalibre.pro" 
                 className="inline-flex items-center gap-3 text-2xl font-black italic hover:text-primary transition-colors group"
               >
                 <Mail className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
-                GINOCIANCIA10@GMAIL.PRO
+                SOPORTE@CANCHALIBRE.PRO
               </a>
             </div>
           </div>
