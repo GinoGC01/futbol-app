@@ -6,6 +6,7 @@ import { supabaseAdmin } from "../../lib/supabase.js";
 import OrganizadorService from "../../services/identity/OrganizadorService.js";
 import LigaService from "../../services/identity/LigaService.js";
 import AppError from "../../utils/AppError.js";
+import { isDeployed } from "../../utils/envHelpers.js";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -23,8 +24,8 @@ class AuthController {
   setTokenCookie(res, token) {
     const cookieOptions = {
       httpOnly: true, // Habilitado para mayor seguridad
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: isDeployed(),
+      sameSite: isDeployed() ? "none" : "lax",
       maxAge: 2 * 60 * 60 * 1000, // 2 horas
     };
     res.cookie("token", token, cookieOptions);
@@ -105,8 +106,8 @@ class AuthController {
   async logout(req, res) {
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: isDeployed(),
+      sameSite: isDeployed() ? "none" : "lax",
     });
     res.status(200).json({ status: "success" });
   }
@@ -450,11 +451,11 @@ class AuthController {
       const { credential } = req.body;
       if (!credential) throw new AppError("Token de Google requerido", 400);
 
-      const client = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
       const ticket = await client.verifyIdToken({
         idToken: credential,
-        audience: process.env.VITE_GOOGLE_CLIENT_ID,
+        audience: process.env.GOOGLE_CLIENT_ID,
       });
 
       const payload = ticket.getPayload();

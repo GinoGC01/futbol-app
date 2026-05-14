@@ -1,10 +1,16 @@
 import cors from 'cors'
 
+// --- Orígenes estáticos permitidos ---
 const allowedOrigins = [
   'https://app.canchalibre.pro',
   'http://localhost:5173',
   'http://localhost:3000'
 ]
+
+// Agregar FRONTEND_URL de las env vars (staging / preview deploys)
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL)
+}
 
 export const corsMiddleware = cors({
   origin: (origin, callback) => {
@@ -13,8 +19,10 @@ export const corsMiddleware = cors({
 
     const isLocalhost = origin.startsWith('http://localhost:') || origin === 'http://localhost'
     const isAllowed = allowedOrigins.includes(origin)
+    // Permitir deploys de preview en Vercel (*.vercel.app)
+    const isVercelPreview = origin.endsWith('.vercel.app')
 
-    if (isAllowed || isLocalhost) {
+    if (isAllowed || isLocalhost || isVercelPreview) {
       callback(null, true)
     } else {
       console.warn(`CORS Bloqueado para el origen: ${origin}`)
