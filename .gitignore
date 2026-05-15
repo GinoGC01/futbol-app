@@ -40,3 +40,5 @@ ngrok.exe
 backups/
 .vercel
 .render
+.vercel
+.env*.local
