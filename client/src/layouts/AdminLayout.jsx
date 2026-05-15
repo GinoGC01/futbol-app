@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import BottomNav from '../components/layout/BottomNav'
 import { useAuth } from '../hooks/useAuth'
@@ -12,10 +12,12 @@ import { supabase } from '../lib/supabase'
 import { useToast } from '../components/ui/Toast'
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import NoLeagueScreen from '../pages/admin/NoLeagueScreen'
 
 function AdminLayoutContent() {
   const { user, signOut } = useAuth()
-  const { liga, setLiga, ligas } = useLigaActiva()
+  const { liga, setLiga, ligas, isLoading } = useLigaActiva()
+  const location = useLocation()
   const { data: alerts } = useAlertas(liga?.id)
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -44,6 +46,10 @@ function AdminLayoutContent() {
   }, [liga?.id])
 
   const unreadCount = alerts?.length || 0
+
+  // Si no hay ligas y no estamos en el dashboard, mostrar pantalla de bloqueo
+  const isDashboard = location.pathname === '/admin' || location.pathname === '/admin/'
+  const noLigas = !isLoading && ligas.length === 0
 
   return (
     <div className="flex min-h-screen bg-bg-deep">
@@ -139,7 +145,11 @@ function AdminLayoutContent() {
 
         {/* Page Content */}
         <main className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 overflow-y-auto">
-          <Outlet />
+          {noLigas && !isDashboard ? (
+            <NoLeagueScreen />
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
 
