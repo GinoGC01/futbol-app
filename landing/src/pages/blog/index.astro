@@ -1,0 +1,135 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { type CollectionEntry, getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort(
+  (a: CollectionEntry<"blog">, b: CollectionEntry<"blog">) =>
+    b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const title = "Blog | Noticias y Consejos de Fútbol Amateur";
+const description =
+  "Mantenete al tanto de las últimas novedades, consejos para organizar torneos y noticias del mundo del fútbol amateur.";
+---
+
+<Layout title={title} description={description}>
+  <main class="pt-32 pb-20 px-4 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+      <!-- Header Section -->
+      <div class="text-center mb-16 space-y-4">
+        <h1
+          class="text-6xl md:text-8xl font-heading italic text-primary tracking-tighter"
+        >
+          NUESTRO <span class="text-white">BLOG</span>
+        </h1>
+        <p class="text-text-muted text-lg max-w-2xl mx-auto font-subheading">
+          Estrategias, tecnología y pasión por el fútbol amateur. Todo lo que
+          necesitás para llevar tu liga al siguiente nivel.
+        </p>
+      </div>
+
+      <!-- Featured Post (if any) -->
+      {
+        posts.length > 0 && (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {posts.map((post: CollectionEntry<"blog">) => (
+              <article class="group relative bg-surface border border-white/5 rounded-2xl overflow-hidden hover:border-primary/30 transition-all duration-500 flex flex-col h-full">
+                <a
+                  href={`/blog/${post.id}`}
+                  class="block aspect-video overflow-hidden"
+                >
+                  {post.data.image ? (
+                    <img
+                      src={post.data.image}
+                      alt={post.data.title}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      style={`view-transition-name: blog-image-${post.id}`}
+                    />
+                  ) : (
+                    <div class="w-full h-full bg-dark/50 flex items-center justify-center">
+                      <span class="text-primary/20 text-4xl font-heading italic">
+                        CANCHA LIBRE
+                      </span>
+                    </div>
+                  )}
+                </a>
+
+                <div class="p-8 flex flex-col flex-grow space-y-4">
+                  <div class="flex flex-col  justify-between gap-4">
+                    <div class="flex items-center flex-wrap gap-2">
+                      {post.data.tags.map((tag: string) => (
+                        <span class="text-[7px] tracking-[0.2em] font-bold text-primary uppercase bg-primary/10 px-2 py-1 rounded">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <time class="text-text-muted text-xs font-medium shrink-0 opacity-60">
+                      {post.data.pubDate.toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </time>
+                  </div>
+
+                  <h2 class="text-2xl font-subheading font-bold text-white group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                    <a href={`/blog/${post.id}`}>{post.data.title}</a>
+                  </h2>
+
+                  <p class="text-text-muted line-clamp-3 text-sm leading-relaxed">
+                    {post.data.description}
+                  </p>
+
+                  <div class="pt-4 mt-auto border-t border-white/5 flex items-center justify-between">
+                    <span class="text-xs text-text-muted">
+                      Por {post.data.author}
+                    </span>
+                    <a
+                      href={`/blog/${post.id}`}
+                      class="text-primary text-xs font-bold tracking-widest flex items-center gap-2 group/btn"
+                    >
+                      LEER MÁS
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 transform group-hover/btn:translate-x-1 transition-transform"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )
+      }
+
+      {
+        posts.length === 0 && (
+          <div class="text-center py-20 bg-surface rounded-3xl border border-dashed border-white/10">
+            <p class="text-text-muted font-subheading">
+              Aún no hay publicaciones. ¡Volvé pronto!
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .font-heading {
+    font-family: "Bebas Neue", sans-serif;
+  }
+  .font-subheading {
+    font-family: "Space Grotesk", sans-serif;
+  }
+</style>

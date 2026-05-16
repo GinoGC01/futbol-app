@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@view-transition {
+  navigation: auto;
+}
+
 
 @theme {
   /* Background Layers */
