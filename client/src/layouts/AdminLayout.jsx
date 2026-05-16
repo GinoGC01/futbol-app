@@ -1,3 +1,4 @@
+import { memo, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import BottomNav from '../components/layout/BottomNav'
@@ -10,11 +11,10 @@ import { LiveMatchHeaderWidget, LiveMatchBubble } from '../components/layout/Liv
 import { useAlertas } from '../hooks/useAdmin'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../components/ui/Toast'
-import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import NoLeagueScreen from '../pages/admin/NoLeagueScreen'
 
-function AdminLayoutContent() {
+const AdminLayoutContent = memo(function AdminLayoutContent() {
   const { user, signOut } = useAuth()
   const { liga, setLiga, ligas, isLoading } = useLigaActiva()
   const location = useLocation()
@@ -159,7 +159,7 @@ function AdminLayoutContent() {
       <LiveMatchBubble />
     </div>
   )
-}
+})
 
 export default function AdminLayout() {
   return (

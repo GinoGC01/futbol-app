@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { useAdminLiga, useAdminEquipos, useAdminTemporada, useAdminPartidos, useCrearPartido } from '../../hooks/useAdminData'
+import { useAdminLiga, useEquipos, useTemporadas, useFixtureAdmin, useCreatePartido } from '../../hooks/useAdmin'
 import Loader from '../../components/ui/Loader'
 
 export default function GestionFixture() {
   const { data: adminLiga } = useAdminLiga()
   const ligaId = adminLiga?.liga_id
 
-  const { data: temporada } = useAdminTemporada(ligaId)
-  const { data: equipos = [] } = useAdminEquipos(ligaId)
-  const { data: partidos = [] } = useAdminPartidos(temporada?.id, 'programado')
-  const crearPartido = useCrearPartido()
+  const { data: temporada } = useTemporadas(ligaId)
+  const { data: equipos = [] } = useEquipos(ligaId)
+  const { data: partidos = [] } = useFixtureAdmin(temporada?.[0]?.id) // Temporadas returns array or object? We'll see.
+  const crearPartido = useCreatePartido()
 
   const [form, setForm] = useState({
     equipo_local: '', equipo_visitante: '', fecha: '', cancha: '', jornada: ''

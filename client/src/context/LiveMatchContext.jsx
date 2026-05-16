@@ -91,65 +91,55 @@ export function LiveMatchProvider({ children }) {
     return `${m}:${s}`
   }
 
-  // TICKER (1s) & Live Title
+  // TICKER (1s) & Live Title — Optimization: Update document.title WITHOUT state update to avoid global re-render
   useEffect(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current)
-
     if (!user || liveMatches.length === 0) {
-      setTimers({})
-      document.title = "Cancha Libre | Torneos de Fútbol" // Restore original title
+      document.title = "Cancha Libre | Torneos de Fútbol"
       return
     }
 
     let titleIndex = 0
 
-    const tick = () => {
+    const updateTitle = () => {
       const now = Date.now()
-      const next = {}
-
-      liveMatches.forEach(p => {
-        const saved = localStorage.getItem(`match_timer_${p.id}`)
-        if (!saved) { next[p.id] = 0; return }
-
-        const data = JSON.parse(saved)
-
-        if (p.estado === 'en_juego' && data.startTime) {
-          next[p.id] = Math.floor((now - data.startTime) / 1000)
-        } else if (p.estado === 'entre_tiempo' && data.pausedAt !== undefined) {
-          next[p.id] = data.pausedAt
-        } else {
-          next[p.id] = 0
-        }
-      })
-
-      setTimers(next)
-
-      // Live Title logic
-      // Every 5 seconds (ticks), rotate the displayed match if there are multiple
-      if (now % 5000 < 1000) {
-        titleIndex = (titleIndex + 1) % liveMatches.length
-      }
-      
       const p = liveMatches[titleIndex] || liveMatches[0]
-      const time = formatTime(next[p.id])
+      if (!p) return
+
+      const saved = localStorage.getItem(`match_timer_${p.id}`)
+      let elapsed = 0
+      if (saved) {
+        const data = JSON.parse(saved)
+        if (p.estado === 'en_juego' && data.startTime) {
+          elapsed = Math.floor((now - data.startTime) / 1000)
+        } else if (p.estado === 'entre_tiempo' && data.pausedAt !== undefined) {
+          elapsed = data.pausedAt
+        }
+      }
+
+      const time = formatTime(elapsed)
       const local = p.equipo_local?.nombre?.substring(0, 3).toUpperCase() || 'LOC'
       const vis = p.equipo_visitante?.nombre?.substring(0, 3).toUpperCase() || 'VIS'
       const statusIcon = p.estado === 'entre_tiempo' ? '⏸' : '🔴'
       
       document.title = `${statusIcon} ${p.goles_local ?? 0}-${p.goles_visitante ?? 0} [${time}'] ${local}v${vis}`
+
+      // Rotate match in title every 5 seconds
+      if (now % 5000 < 1000) {
+        titleIndex = (titleIndex + 1) % liveMatches.length
+      }
     }
 
-    tick() // Initial tick
-    intervalRef.current = setInterval(tick, 1000)
+    updateTitle()
+    const titleInterval = setInterval(updateTitle, 1000)
     
     return () => {
-      clearInterval(intervalRef.current)
+      clearInterval(titleInterval)
       document.title = "Cancha Libre | Torneos de Fútbol"
     }
   }, [liveMatches, user])
 
   return (
-    <LiveMatchContext.Provider value={{ liveMatches, timers, formatTime, refreshLive: scanForLive }}>
+    <LiveMatchContext.Provider value={{ liveMatches, formatTime, refreshLive: scanForLive }}>
       {children}
     </LiveMatchContext.Provider>
   )

@@ -42,7 +42,7 @@ export default function DashboardHome() {
             </span>
           </div>
           <div className="relative">
-            <h1 className="text-4xl sm:text-7xl lg:text-8xl font-heading font-black tracking-normal leading-[0.9] uppercase italic text-white mix-blend-difference break-words">
+            <h1 className="text-4xl sm:text-7xl lg:text-8xl font-heading font-black tracking-normal leading-[0.9] uppercase italic text-white break-words">
               HOLA, <span className="text-primary">{user?.nombre}</span>
             </h1>
             <p className="text-base sm:text-xl text-text-dim max-w-xl font-bold uppercase tracking-normal mt-4 border-l-4 border-primary pl-4 sm:pl-6 py-2">

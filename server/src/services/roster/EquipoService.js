@@ -86,13 +86,13 @@ class EquipoService {
   }
 
   /**
-   * Borrado lógico de un equipo.
+   * Borrado lógico de un equipo y eliminación de su escudo en Storage.
    */
   async deleteEquipo(equipoId, organizadorId) {
     // 1. Verificar existencia y propiedad
     const { data: equipo, error: eqError } = await supabaseAdmin
       .from('equipo')
-      .select('id, liga_id, nombre')
+      .select('id, liga_id, nombre, escudo_url')
       .eq('id', equipoId)
       .maybeSingle()
 
@@ -112,13 +112,25 @@ class EquipoService {
       throw new AppError('No se puede eliminar un equipo que participa en una temporada activa', 400)
     }
 
-    // 3. Soft Delete
+    // 3. Soft Delete del equipo en DB
     const { error: delError } = await supabaseAdmin
       .from('equipo')
       .update({ activo: false })
       .eq('id', equipoId)
 
     if (delError) throw new AppError(`Error al eliminar equipo: ${delError.message}`, 500)
+
+    // 4. Eliminar el escudo del Storage (si existe)
+    if (equipo.escudo_url) {
+      try {
+        const pathMatch = equipo.escudo_url.split('/public/assets/')[1]
+        if (pathMatch) {
+          await supabaseAdmin.storage.from('assets').remove([pathMatch])
+        }
+      } catch (err) {
+        console.warn(`No se pudo eliminar el escudo del storage para el equipo ${equipoId}:`, err)
+      }
+    }
 
     return { message: `Equipo "${equipo.nombre}" eliminado correctamente` }
   }
@@ -130,7 +142,7 @@ class EquipoService {
     // Primero verificar que el equipo existe y pertenece a una liga del organizador
     const { data: equipo, error: eqError } = await supabaseAdmin
       .from('equipo')
-      .select('liga_id')
+      .select('liga_id, escudo_url')
       .eq('id', equipoId)
       .maybeSingle()
 
@@ -163,6 +175,22 @@ class EquipoService {
       .single()
 
     if (error) throw new AppError(`Error actualizando equipo: ${error.message}`, 500)
+
+    // Si se actualizó el escudo, borrar el viejo para no ocupar espacio
+    if (equipo.escudo_url && payload.escudo_url !== equipo.escudo_url) {
+      try {
+        // Soportar tanto /public/STAGING_ASSETS/ como /public/assets/
+        let pathMatch = equipo.escudo_url.split('/public/STAGING_ASSETS/')[1]
+        if (!pathMatch) pathMatch = equipo.escudo_url.split('/public/assets/')[1]
+        
+        if (pathMatch) {
+          const bucketName = equipo.escudo_url.includes('/STAGING_ASSETS/') ? 'STAGING_ASSETS' : 'assets'
+          await supabaseAdmin.storage.from(bucketName).remove([pathMatch])
+        }
+      } catch (err) {
+        console.warn(`No se pudo eliminar el escudo viejo del storage para el equipo ${equipoId}:`, err)
+      }
+    }
 
     return updated
   }

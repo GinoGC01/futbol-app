@@ -277,25 +277,53 @@ export default function TournamentArchitect() {
       )}
 
       {/* Modals */}
-      <FixtureAutoSelector 
-        open={!!showGenerateFixture} 
-        onClose={() => setShowGenerateFixture(null)} 
-        fase={showGenerateFixture}
-        equipos={equipos}
-        ligaId={liga?.id}
-        currentTemporada={tree}
-      />
-      <NewTemporadaModal 
-        open={showNewTemp} 
-        onClose={() => setShowNewTemp(false)} 
-        ligaId={liga?.id} 
-        formatos={formatos} 
-        defaultTipoFutbol={liga?.tipo_futbol}
-      />
-      {tree && <EditTemporadaModal open={showEditTemp} onClose={() => setShowEditTemp(false)} temporada={tree} />}
-      <NewFaseModal open={showNewFase} onClose={() => setShowNewFase(false)} temporadaId={selectedTemp} />
-      {editingFase && <EditFaseModal open={!!editingFase} onClose={() => setEditingFase(null)} fase={editingFase} />}
-      <NewJornadasModal open={showNewJornadas} onClose={() => setShowNewJornadas(false)} faseId={selectedFase} />
+      {showGenerateFixture && (
+        <FixtureAutoSelector 
+          open={!!showGenerateFixture} 
+          onClose={() => setShowGenerateFixture(null)} 
+          fase={showGenerateFixture}
+          equipos={equipos}
+          ligaId={liga?.id}
+          currentTemporada={tree}
+        />
+      )}
+      {showNewTemp && (
+        <NewTemporadaModal 
+          open={showNewTemp} 
+          onClose={() => setShowNewTemp(false)} 
+          ligaId={liga?.id} 
+          formatos={formatos} 
+          defaultTipoFutbol={liga?.tipo_futbol}
+        />
+      )}
+      {showEditTemp && tree && (
+        <EditTemporadaModal 
+          open={showEditTemp} 
+          onClose={() => setShowEditTemp(false)} 
+          temporada={tree} 
+        />
+      )}
+      {showNewFase && (
+        <NewFaseModal 
+          open={showNewFase} 
+          onClose={() => setShowNewFase(false)} 
+          temporadaId={selectedTemp} 
+        />
+      )}
+      {editingFase && (
+        <EditFaseModal 
+          open={!!editingFase} 
+          onClose={() => setEditingFase(null)} 
+          fase={editingFase} 
+        />
+      )}
+      {showNewJornadas && (
+        <NewJornadasModal 
+          open={showNewJornadas} 
+          onClose={() => setShowNewJornadas(false)} 
+          faseId={selectedFase} 
+        />
+      )}
     </div>
   )
 }
@@ -515,11 +543,7 @@ function MatchCreator({ jornadaId, equipos }) {
 // ====================================================
 // GENERATE FIXTURE MODAL — Team checklist + confirmation
 // ====================================================
-function TeamInscriptionsBadge({ teamId, temporadaId, required, ligaId }) {
-  const { data: seasons } = useInscripcionesEquipo(ligaId, teamId)
-  const plantel = seasons?.find(s => s.temporada_id === temporadaId)
-  const activos = plantel?.plantel?.inscripciones?.filter(i => i.estado === 'activo')?.length || 0
-
+function TeamInscriptionsBadge({ activos, required }) {
   return (
     <div className={`ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-normal uppercase ${
       activos >= required ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning animate-pulse'
@@ -722,7 +746,10 @@ function FixtureAutoSelector({ open, onClose, fase, equipos, ligaId, currentTemp
                       </div>
                       <Shield className="w-4 h-4 shrink-0" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
                       <span className="text-sm font-medium">{eq.nombre}</span>
-                      <TeamInscriptionsBadge teamId={eq.id} temporadaId={currentTemporada?.id} required={modalidadReq} ligaId={ligaId} />
+                      <TeamInscriptionsBadge 
+                        activos={eq.jugadores_activos || 0} 
+                        required={modalidadReq} 
+                      />
                     </button>
                   )
                 })

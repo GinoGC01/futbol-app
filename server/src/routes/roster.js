@@ -21,7 +21,7 @@ router.post(
       .isString()
       .isLength({ min: 2, max: 100 })
       .withMessage("Nombre de equipo inválido"),
-    body("escudo_url").optional().isURL().withMessage("URL de escudo inválida"),
+    body("escudo_url").optional({ values: 'null' }).isURL().withMessage("URL de escudo inválida"),
     body("color_principal")
       .optional()
       .matches(/^#[0-9A-Fa-f]{6}$/)
@@ -45,7 +45,7 @@ router.put(
   [
     param("id").isUUID().withMessage("ID de equipo inválido"),
     body("nombre").optional().isString().isLength({ min: 2, max: 100 }),
-    body("escudo_url").optional().isURL(),
+    body("escudo_url").optional({ values: 'null' }).isURL(),
     body("color_principal")
       .optional()
       .matches(/^#[0-9A-Fa-f]{6}$/),

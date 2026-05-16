@@ -20,6 +20,18 @@ export function useDashboardStats(ligaId) {
   });
 }
 
+/**
+ * Compatibility hook for legacy components.
+ * Returns the active league ID from context in a useQuery-like structure.
+ */
+export function useAdminLiga() {
+  const { liga, isLoading } = useLigaActiva();
+  return { 
+    data: liga ? { liga_id: liga.id, ...liga } : null, 
+    isLoading 
+  };
+}
+
 // Competition
 export function useTemporadas(ligaId) {
   return useQuery({
