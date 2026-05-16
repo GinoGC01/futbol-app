@@ -4,11 +4,40 @@ import { useLiveMatches } from '../../context/LiveMatchContext'
 import { Swords, Clock, Pause, ChevronRight, X, Target, AlertTriangle } from 'lucide-react'
 
 /**
+ * Helper component to handle local ticking for a specific match
+ */
+function MatchTimer({ partido, formatTime }) {
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    const update = () => {
+      const saved = localStorage.getItem(`match_timer_${partido.id}`)
+      if (!saved) { setElapsed(0); return }
+      const data = JSON.parse(saved)
+      const now = Date.now()
+      
+      if (partido.estado === 'en_juego' && data.startTime) {
+        setElapsed(Math.floor((now - data.startTime) / 1000))
+      } else if (partido.estado === 'entre_tiempo' && data.pausedAt !== undefined) {
+        setElapsed(data.pausedAt)
+      } else {
+        setElapsed(0)
+      }
+    }
+
+    update()
+    const interval = setInterval(update, 1000)
+    return () => clearInterval(interval)
+  }, [partido.id, partido.estado])
+
+  return <span>{formatTime(elapsed)}</span>
+}
+
+/**
  * E-01 — Header strip widget showing all live matches.
- * Renders inside the admin header when matches are in progress.
  */
 export function LiveMatchHeaderWidget() {
-  const { liveMatches, timers, formatTime } = useLiveMatches()
+  const { liveMatches, formatTime } = useLiveMatches()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -36,7 +65,9 @@ export function LiveMatchHeaderWidget() {
             {p.goles_local ?? 0}-{p.goles_visitante ?? 0}
           </span>
           <span className="truncate max-w-[25px] lg:max-w-[40px]">{p.equipo_visitante?.nombre?.slice(0, 3)}</span>
-          <span className="font-mono text-[9px] lg:text-[10px] opacity-70">{formatTime(timers[p.id])}'</span>
+          <span className="font-mono text-[9px] lg:text-[10px] opacity-70">
+            <MatchTimer partido={p} formatTime={formatTime} />'
+          </span>
         </button>
       ))}
     </div>
@@ -50,7 +81,7 @@ export function LiveMatchHeaderWidget() {
  * Shows a compact scoreboard + timer with one-tap navigation back to Match Edge.
  */
 export function LiveMatchBubble() {
-  const { liveMatches, timers, formatTime } = useLiveMatches()
+  const { liveMatches, formatTime } = useLiveMatches()
   const navigate = useNavigate()
   const location = useLocation()
   const [expanded, setExpanded] = useState(false)
@@ -135,7 +166,7 @@ export function LiveMatchBubble() {
                     {isHalftime ? <><Pause className="w-2.5 h-2.5" /> ET</> : <><Clock className="w-2.5 h-2.5" /> Live</>}
                   </div>
                   <span className={`stopwatch-display text-lg font-black ${isHalftime ? 'text-warning' : 'text-primary'}`}>
-                    {formatTime(timers[p.id])}<span className="text-xs opacity-50">'</span>
+                    <MatchTimer partido={p} formatTime={formatTime} /><span className="text-xs opacity-50">'</span>
                   </span>
                 </div>
 

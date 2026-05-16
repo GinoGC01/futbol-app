@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   useTemporadas, useLigas, useTemporadaTree, useFixtureAdmin, 
   useEventos, useCambiarEstadoPartido, useRegistrarGol, 
@@ -24,24 +24,22 @@ export default function MatchEdgeBox() {
   const allJornadas = tree?.fases?.flatMap(f => f.jornadas?.map(j => ({ ...j, faseName: f.nombre })) || []) || []
   const [selectedJornada, setSelectedJornada] = useState(null)
   const [selectedPartido, setSelectedPartido] = useState(null)
-  const [entryMode, setEntryMode] = useState(null) // { type: 'GOL' | 'AMARILLA' | 'ROJA' }
-
-  const jornadaActual = allJornadas.find(j => j.id === (selectedJornada || allJornadas[0]?.id))
-
-  // Stopwatch State
-  const [timer, setTimer] = useState(0)
+  const [entryMode, setEntryMode] = useState(null)
   const [isRunning, setIsRunning] = useState(false)
+  const timerRef = useRef(0)
+  const [initialTimer, setInitialTimer] = useState(0)
 
   const jornadaId = selectedJornada || allJornadas[0]?.id
   const { data: fixtureData, isLoading: loadingFixture } = useFixtureAdmin(jornadaId)
   const partidos = fixtureData?.partidos || []
-  const { data: eventos, isLoading: loadingEventos } = useEventos(selectedPartido)
+  const jornadaActual = allJornadas.find(j => j.id === jornadaId)
 
+  const { data: eventos, isLoading: loadingEventos } = useEventos(selectedPartido)
   const cambiarEstado = useCambiarEstadoPartido()
   const registrarGol = useRegistrarGol()
   const registrarTarjeta = useRegistrarTarjeta()
-
   const partido = partidos.find(p => p.id === selectedPartido)
+
   
   // Players for both teams
   const { data: playersLocal, isLoading: loadingLocal } = useInscripcionesEquipo(liga?.id, partido?.equipo_local?.id)
@@ -50,10 +48,10 @@ export default function MatchEdgeBox() {
   // D-03: Live matches tracking
   const liveMatches = partidos.filter(p => p.estado === 'en_juego' || p.estado === 'entre_tiempo')
 
-  // Timer Logic
   useEffect(() => {
     if (!selectedPartido) {
-      setTimer(0)
+      setInitialTimer(0)
+      timerRef.current = 0
       setIsRunning(false)
       return
     }
@@ -65,39 +63,35 @@ export default function MatchEdgeBox() {
       if (saved) {
         const { startTime } = JSON.parse(saved)
         const elapsed = Math.floor((Date.now() - startTime) / 1000)
-        setTimer(elapsed > 0 ? elapsed : 0)
+        const val = elapsed > 0 ? elapsed : 0
+        timerRef.current = val
+        setInitialTimer(val)
         setIsRunning(true)
       } else {
-        setTimer(0)
+        timerRef.current = 0
+        setInitialTimer(0)
         setIsRunning(true)
       }
     } else if (p?.estado === 'entre_tiempo') {
       setIsRunning(false)
       if (saved) {
         const { pausedAt } = JSON.parse(saved)
-        setTimer(pausedAt || 0)
+        timerRef.current = pausedAt || 0
+        setInitialTimer(pausedAt || 0)
       }
     } else if (p?.estado === 'finalizado') {
       setIsRunning(false)
       if (saved) {
         const { duration } = JSON.parse(saved)
-        setTimer(duration || 0)
+        timerRef.current = duration || 0
+        setInitialTimer(duration || 0)
       }
     } else {
-      setTimer(0)
+      timerRef.current = 0
+      setInitialTimer(0)
       setIsRunning(false)
     }
   }, [selectedPartido, partidos])
-
-  useEffect(() => {
-    let interval
-    if (isRunning) {
-      interval = setInterval(() => {
-        setTimer(prev => prev + 1)
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [isRunning])
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -126,7 +120,7 @@ export default function MatchEdgeBox() {
     cambiarEstado.mutate({ id: partido.id, estado: 'entre_tiempo' }, {
       onSuccess: () => {
         setIsRunning(false)
-        localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ pausedAt: timer }))
+        localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ pausedAt: timerRef.current }))
         toast.info('⏸ Entre Tiempo — Cronómetro pausado.')
       }
     })
@@ -134,7 +128,7 @@ export default function MatchEdgeBox() {
 
   // D-02: Resume from entre_tiempo
   const handleResumeMatch = () => {
-    const startTime = Date.now() - (timer * 1000)
+    const startTime = Date.now() - (timerRef.current * 1000)
     localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ startTime }))
     cambiarEstado.mutate({ id: partido.id, estado: 'en_juego' }, {
       onSuccess: () => {
@@ -149,7 +143,7 @@ export default function MatchEdgeBox() {
       onSuccess: () => {
         setIsRunning(false)
         const saved = JSON.parse(localStorage.getItem(`match_timer_${partido.id}`) || '{}')
-        localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ ...saved, duration: timer }))
+        localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ ...saved, duration: timerRef.current }))
         toast.success('Partido Finalizado.')
       }
     })
@@ -172,7 +166,7 @@ export default function MatchEdgeBox() {
   }
 
   const submitEvent = (player) => {
-    const currentMinute = Math.floor(timer / 60) + 1 // El minuto actual (ej: 0:45 -> min 1)
+    const currentMinute = Math.floor(timerRef.current / 60) + 1 // El minuto actual (ej: 0:45 -> min 1)
     
     const common = { 
       partidoId: partido.id, 
@@ -318,7 +312,13 @@ export default function MatchEdgeBox() {
             ))}
           </div>
         ) : (
-          <EmptyState icon={Swords} title="Sin Partidos" description="Seleccioná una jornada con partidos programados." />
+          <EmptyState 
+            icon={Swords} 
+            title={!temporadaActiva ? "Sin Temporada Activa" : "Sin Partidos"} 
+            description={!temporadaActiva 
+              ? "Para gestionar partidos, primero debés tener una temporada en estado 'activa'." 
+              : "Seleccioná una jornada con partidos programados."} 
+          />
         )
       ) : (
         /* Match detail + incident feed */
@@ -332,7 +332,7 @@ export default function MatchEdgeBox() {
             </button>
             
             <div className="flex items-center gap-2">
-            {partido.estado === 'programado' ? (
+            {partido?.estado === 'programado' ? (
               <button 
                 onClick={handleStartMatch}
                 disabled={cambiarEstado.isPending}
@@ -340,7 +340,7 @@ export default function MatchEdgeBox() {
               >
                 <Play className="w-3.5 h-3.5 inline mr-1" /> Iniciar
               </button>
-            ) : partido.estado === 'en_juego' ? (
+            ) : partido?.estado === 'en_juego' ? (
               <>
                 <button 
                   onClick={handlePauseMatch}
@@ -357,7 +357,7 @@ export default function MatchEdgeBox() {
                   <Square className="w-3 h-3 inline mr-1" /> Fin
                 </button>
               </>
-            ) : partido.estado === 'entre_tiempo' ? (
+            ) : partido?.estado === 'entre_tiempo' ? (
               <>
                 <button 
                   onClick={handleResumeMatch}
@@ -409,25 +409,12 @@ export default function MatchEdgeBox() {
 
                     {/* D-01: GIANT Stopwatch */}
                     {(partido.estado === 'en_juego' || partido.estado === 'entre_tiempo') && (
-                      <div className={`mb-4 px-6 py-3 rounded-2xl border ${
-                        partido.estado === 'entre_tiempo' 
-                          ? 'bg-warning/5 border-warning/20' 
-                          : 'bg-primary/5 border-primary/20 live-ring'
-                      }`}>
-                        <div className="flex items-center gap-2">
-                          <Timer className={`w-5 h-5 md:w-6 md:h-6 ${
-                            partido.estado === 'entre_tiempo' ? 'text-warning' : 'text-primary'
-                          }`} />
-                          <span className={`stopwatch-display text-4xl md:text-6xl font-black ${
-                            partido.estado === 'entre_tiempo' ? 'text-warning' : 'text-primary'
-                          }`}>
-                            {formatTimeParts(timer).mins}<span className="stopwatch-colon">:</span>{formatTimeParts(timer).secs}
-                          </span>
-                          <span className={`text-lg md:text-2xl font-heading italic ${
-                            partido.estado === 'entre_tiempo' ? 'text-warning/60' : 'text-primary/60'
-                          }`}>'</span>
-                        </div>
-                      </div>
+                      <MatchTimer 
+                        initialSeconds={initialTimer} 
+                        isRunning={isRunning} 
+                        estado={partido.estado} 
+                        onTick={(val) => { timerRef.current = val }}
+                      />
                     )}
 
                     <div className="w-full flex items-center justify-between gap-4">
@@ -628,6 +615,53 @@ export default function MatchEdgeBox() {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+function MatchTimer({ initialSeconds, isRunning, estado, onTick }) {
+  const [seconds, setSeconds] = useState(initialSeconds)
+
+  useEffect(() => {
+    setSeconds(initialSeconds)
+  }, [initialSeconds])
+
+  useEffect(() => {
+    let interval
+    if (isRunning) {
+      interval = setInterval(() => {
+        setSeconds(prev => {
+          const next = prev + 1
+          onTick(next)
+          return next
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isRunning, onTick])
+
+  const mins = String(Math.floor(seconds / 60)).padStart(2, '0')
+  const secs = String(seconds % 60).padStart(2, '0')
+
+  return (
+    <div className={`mb-4 px-6 py-3 rounded-2xl border ${
+      estado === 'entre_tiempo' 
+        ? 'bg-warning/5 border-warning/20' 
+        : 'bg-primary/5 border-primary/20 live-ring'
+    }`}>
+      <div className="flex items-center gap-2">
+        <Timer className={`w-5 h-5 md:w-6 md:h-6 ${
+          estado === 'entre_tiempo' ? 'text-warning' : 'text-primary'
+        }`} />
+        <span className={`stopwatch-display text-4xl md:text-6xl font-black ${
+          estado === 'entre_tiempo' ? 'text-warning' : 'text-primary'
+        }`}>
+          {mins}<span className="stopwatch-colon">:</span>{secs}
+        </span>
+        <span className={`text-lg md:text-2xl font-heading italic ${
+          estado === 'entre_tiempo' ? 'text-warning/60' : 'text-primary/60'
+        }`}>'</span>
+      </div>
     </div>
   )
 }

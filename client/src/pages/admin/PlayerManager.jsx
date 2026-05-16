@@ -86,7 +86,7 @@ export default function PlayerManager() {
             <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-full bg-primary/30 skew-x-[-15deg] hidden lg:block" />
           </div>
           <p className="text-xs sm:text-base text-text-dim max-w-md font-medium leading-tight italic uppercase tracking-normal">
-            Descubre, ficha y asigna talento a los clubes de {liga?.nombre}.
+             {liga?.nombre ? "Descubre, ficha y asigna talento a los clubes de ".concat(liga.nombre, ".") : "Crea una liga para comenzar"}.
           </p>
         </div>
         

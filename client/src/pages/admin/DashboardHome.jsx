@@ -1,16 +1,16 @@
 import { useState } from 'react'
-import { useLigas, useTemporadas, useCreateLiga, useDashboardStats, useAlertas, useResolverAlerta, useEvaluarAlertas } from '../../hooks/useAdmin'
+import { useTemporadas, useDashboardStats, useAlertas, useResolverAlerta, useEvaluarAlertas } from '../../hooks/useAdmin'
 import { useAuth } from '../../hooks/useAuth'
 import StatCard from '../../components/ui/StatCard'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
-import Modal from '../../components/ui/Modal'
 import { Shield, Users, Swords, DollarSign, Plus, Trophy, Bell, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useToast } from '../../components/ui/Toast'
 import { useLigaActiva } from '../../context/LigaContext'
 import Loader from '../../components/ui/Loader'
-import LeagueLimitScreen from './LeagueLimitScreen'
+import NoLeagueScreen from './NoLeagueScreen'
+import NewLigaModal from '../../components/admin/NewLigaModal'
 
 export default function DashboardHome() {
   const { user } = useAuth()
@@ -42,7 +42,7 @@ export default function DashboardHome() {
             </span>
           </div>
           <div className="relative">
-            <h1 className="text-4xl sm:text-7xl lg:text-8xl font-heading font-black tracking-normal leading-[0.9] uppercase italic text-white mix-blend-difference break-words">
+            <h1 className="text-4xl sm:text-7xl lg:text-8xl font-heading font-black tracking-normal leading-[0.9] uppercase italic text-white break-words">
               HOLA, <span className="text-primary">{user?.nombre}</span>
             </h1>
             <p className="text-base sm:text-xl text-text-dim max-w-xl font-bold uppercase tracking-normal mt-4 border-l-4 border-primary pl-4 sm:pl-6 py-2">
@@ -68,21 +68,7 @@ export default function DashboardHome() {
       </div>
 
       {!liga ? (
-        <div className="py-24 text-center bg-bg-surface rounded-[3rem] border border-white/5 space-y-8 relative overflow-hidden group shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
-          <div className="relative z-10">
-            <div className="w-28 h-28 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 rotate-3 group-hover:rotate-6 transition-transform duration-500 border-2 border-primary/20 shadow-glow-primary">
-              <Trophy className="w-14 h-14 text-primary" />
-            </div>
-            <div className="max-w-md mx-auto px-6">
-              <h2 className="text-3xl font-heading font-black mb-4 tracking-wide uppercase italic leading-[1.1] pt-1">Comienza tu Legado</h2>
-              <p className="text-base text-text-dim mb-10 leading-relaxed font-medium">No hemos encontrado ninguna liga asociada a tu cuenta. Crea tu primera liga para empezar a gestionar torneos, equipos y jugadores con estilo profesional.</p>
-              <Button onClick={() => setShowNewLiga(true)} size="lg" className="w-full shadow-2xl shadow-primary/30 h-16 text-lg font-black italic uppercase italic tracking-wide">
-                Crear mi primera Liga
-              </Button>
-            </div>
-          </div>
-        </div>
+        <NoLeagueScreen />
       ) : (
         <>
           {/* Stats Grid */}
@@ -225,87 +211,5 @@ export default function DashboardHome() {
         setLimitReached={setLimitReached}
       />
     </div>
-  )
-}
-
-function NewLigaModal({ open, onClose, limitReached, setLimitReached }) {
-  const [form, setForm] = useState({ nombre: '', slug: '', tipo_futbol: 'f7', zona: '', monto_inscripcion: 0 })
-  const mutation = useCreateLiga()
-  const toast = useToast()
-  
-  const generateSlug = (val) => val.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
-
-  async function submit(e) {
-    e.preventDefault()
-    try {
-      await mutation.mutateAsync(form)
-      onClose()
-      setForm({ nombre: '', slug: '', tipo_futbol: 'f7', zona: '', monto_inscripcion: 0 })
-    } catch (err) {
-      if (err.code === 'LEAGUE_LIMIT_REACHED') {
-        setLimitReached(true)
-      } else {
-        toast.error(err.message || 'Error al crear liga')
-      }
-    }
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title={limitReached ? "" : "Crear Nueva Liga"} size={limitReached ? "md" : "sm"}>
-      {limitReached ? (
-        <LeagueLimitScreen onBack={() => setLimitReached(false)} />
-      ) : (
-        <form onSubmit={submit} className="space-y-4">
-          <label className="block text-xs font-medium text-text-dim">
-            Nombre de la Liga
-            <input type="text" required value={form.nombre} 
-              onChange={e => setForm({ ...form, nombre: e.target.value, slug: generateSlug(e.target.value) })}
-              placeholder="Ej: Cancha Libre Palermo"
-              className="w-full mt-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all" />
-          </label>
-
-          <label className="block text-xs font-medium text-text-dim">
-            URL (Slug)
-            <div className="flex items-center gap-1 mt-1 group">
-              <span className="text-xs text-text-dim group-focus-within:text-primary transition-colors">
-                {(import.meta.env.VITE_API_DOM || 'canchalibre.app/').replace(/^https?:\/\//, '').replace(/\/$/, '')}/liga/
-              </span>
-              <input type="text" required value={form.slug} onChange={e => setForm({ ...form, slug: generateSlug(e.target.value) })}
-                className="flex-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all font-mono" />
-            </div>
-          </label>
-
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block text-xs font-medium text-text-dim">
-              Tipo de Fútbol
-              <select value={form.tipo_futbol} onChange={e => setForm({ ...form, tipo_futbol: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all appearance-none">
-                <option value="f5">Fútbol 5</option>
-                <option value="f6">Fútbol 6</option>
-                <option value="f7">Fútbol 7</option>
-                <option value="f9">Fútbol 9</option>
-                <option value="f11">Fútbol 11</option>
-              </select>
-            </label>
-            <label className="block text-xs font-medium text-text-dim">
-              Zona / Ubicación
-              <input type="text" value={form.zona} onChange={e => setForm({ ...form, zona: e.target.value })}
-                placeholder="Ej: Buenos Aires"
-                className="w-full mt-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all" />
-            </label>
-            <label className="block text-xs font-medium text-text-dim">
-              Valor Inscripción ($)
-              <input type="number" value={form.monto_inscripcion} onChange={e => setForm({ ...form, monto_inscripcion: e.target.value })}
-                placeholder="Ej: 5000"
-                className="w-full mt-1 px-3 py-2 bg-bg-input border border-border-default rounded-xl text-sm outline-none focus:border-primary transition-all font-mono" />
-            </label>
-          </div>
-
-          <Button type="submit" loading={mutation.isPending} className="w-full mt-4">
-            Crear mi Liga
-          </Button>
-        </form>
-      )}
-    </Modal>
   )
 }

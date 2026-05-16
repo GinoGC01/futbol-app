@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useLigas, useEquipos, useCreateEquipo, useDeleteEquipo, useTemporadas, useInscribirEquiposBatch } from '../../hooks/useAdmin'
 import { adminService } from '../../services/adminService'
+import ImageUploader from '../../components/ui/ImageUploader'
 import GlassCard from '../../components/ui/GlassCard'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
@@ -109,21 +110,21 @@ export default function RosterManager() {
       )}
 
 
-      {selectedEquipo ? (
-        <TeamDetailView 
-          equipo={selectedEquipo} 
-          onBack={() => setSelectedEquipo(null)} 
-          ligaId={liga?.id} 
-        />
-      ) : equipos?.length > 0 ? (
+      {selectedEquipo ? (() => {
+        const liveEquipo = equipos?.find(e => e.id === selectedEquipo.id) || selectedEquipo;
+        return (
+          <TeamDetailView 
+            equipo={liveEquipo} 
+            onBack={() => setSelectedEquipo(null)} 
+            ligaId={liga?.id} 
+          />
+        );
+      })() : equipos?.length > 0 ? (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {equipos.map(eq => {
             const isSelected = selectedIds.includes(eq.id);
-            const allInscripciones = eq.inscripciones || [];
-            const activeInscripciones = allInscripciones.filter(i => i.temporada && i.temporada.estado !== 'finalizada' && !i.temporada.deleted_at);
-            const archivedInscripciones = allInscripciones.filter(i => i.temporada && i.temporada.deleted_at);
-            
-            // Get player count from the most recent active inscription
+            const activeInscripciones = eq.inscripciones?.filter(i => i.temporada && i.temporada.estado !== 'finalizada' && !i.temporada.deleted_at) || [];
+            const archivedInscripciones = eq.inscripciones?.filter(i => i.temporada && i.temporada.deleted_at) || [];
             const playerCount = activeInscripciones[0]?.plantel?.inscripciones?.length || 0;
 
             return (
@@ -154,9 +155,13 @@ export default function RosterManager() {
                 
                 <div className="flex flex-col gap-6 relative z-10">
                   <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 border-2 border-white/5 shadow-2xl transition-all group-hover:scale-110 group-hover:rotate-3"
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 border-2 border-white/5 shadow-2xl transition-all group-hover:scale-110 group-hover:rotate-3 overflow-hidden"
                       style={{ backgroundColor: eq.color_principal ? `${eq.color_principal}20` : 'rgba(206, 222, 11, 0.1)' }}>
-                      <Shield className="w-8 h-8" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
+                      {eq.escudo_url ? (
+                        <img src={eq.escudo_url} alt="" className="w-full h-full object-contain" />
+                      ) : (
+                        <Shield className="w-8 h-8" style={{ color: eq.color_principal || 'var(--color-primary)' }} />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-2xl font-heading font-black uppercase italic tracking-wide leading-[1.1] truncate group-hover:text-primary transition-colors">
@@ -262,37 +267,64 @@ export default function RosterManager() {
       )}
 
 
-      <NewEquipoModal open={showNewEquipo} onClose={() => setShowNewEquipo(false)} ligaId={liga?.id} />
-      <SearchPlayerModal open={showSearchPlayer} onClose={() => setShowSearchPlayer(false)} />
-      <BatchEnrollModal 
-        open={showBatchEnroll} 
-        onClose={() => {
-          setShowBatchEnroll(false)
-          setSelectionMode(false)
-          setSelectedIds([])
-        }} 
-        equipoIds={selectedIds}
-        temporadas={temporadas}
-      />
+      {showNewEquipo && (
+        <NewEquipoModal 
+          open={showNewEquipo} 
+          onClose={() => setShowNewEquipo(false)} 
+          ligaId={liga?.id} 
+        />
+      )}
+      {showSearchPlayer && (
+        <SearchPlayerModal 
+          open={showSearchPlayer} 
+          onClose={() => setShowSearchPlayer(false)} 
+        />
+      )}
+      {showBatchEnroll && (
+        <BatchEnrollModal 
+          open={showBatchEnroll} 
+          onClose={() => {
+            setShowBatchEnroll(false)
+            setSelectionMode(false)
+            setSelectedIds([])
+          }} 
+          equipoIds={selectedIds}
+          temporadas={temporadas}
+        />
+      )}
     </div>
   )
 }
 
 function NewEquipoModal({ open, onClose, ligaId }) {
-  const [form, setForm] = useState({ nombre: '', color_principal: '#CEDE0B' })
+  const [form, setForm] = useState({ nombre: '', color_principal: '#CEDE0B', escudo_url: null })
   const mutation = useCreateEquipo()
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
   async function submit(e) {
     e.preventDefault()
-    await mutation.mutateAsync({ liga_id: ligaId, ...form })
+    await mutation.mutateAsync({ 
+      liga_id: ligaId, 
+      nombre: form.nombre,
+      color_principal: form.color_principal,
+      escudo_url: form.escudo_url || null
+    })
     onClose()
-    setForm({ nombre: '', color_principal: '#CEDE0B' })
+    setForm({ nombre: '', color_principal: '#CEDE0B', escudo_url: null })
   }
 
   return (
     <Modal open={open} onClose={onClose} title="Nuevo Equipo" size="sm">
       <form onSubmit={submit} className="flex flex-col gap-6">
+        <div className="flex justify-center">
+          <ImageUploader 
+            onUploadSuccess={(url) => setForm(f => ({ ...f, escudo_url: url }))}
+            bucket="STAGING_ASSETS"
+            path={`equipos/${ligaId}`}
+            variant="circular"
+          />
+        </div>
+
         <div className="space-y-2">
           <label className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] ml-1">Identidad Visual</label>
           <div className="relative group">

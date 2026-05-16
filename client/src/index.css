@@ -281,9 +281,8 @@
 /* =============================================
    VIEW TRANSITIONS API: "Premium Motion"
    ============================================= */
-@view-transition {
-  navigation: auto;
-}
+/* View Transitions — Disabled global auto navigation to improve performance on complex layouts */
+/* @view-transition { navigation: auto; } */
 
 ::view-transition-old(root) {
   animation: 400ms cubic-bezier(0.4, 0, 0.2, 1) both fade-out;

@@ -1,6 +1,6 @@
+import { memo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Trophy, Users, Swords, Award, ChevronLeft, ChevronRight, User, Settings } from 'lucide-react'
-import { useState } from 'react'
 
 const links = [
   { to: '/admin',         icon: LayoutDashboard, label: 'Dashboard' },
@@ -12,7 +12,7 @@ const links = [
   { to: '/admin/settings', icon: Settings,        label: 'Configuración' },
 ]
 
-export default function Sidebar() {
+const Sidebar = memo(function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
@@ -41,7 +41,6 @@ export default function Sidebar() {
           <NavLink
             key={to}
             to={to}
-            viewTransition
             end={to === '/admin'}
             className={({ isActive }) => `
               flex items-center gap-3 px-3 py-3 rounded-lg
@@ -71,4 +70,6 @@ export default function Sidebar() {
       </button>
     </aside>
   )
-}
+})
+
+export default Sidebar

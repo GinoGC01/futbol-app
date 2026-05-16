@@ -1,13 +1,46 @@
+# Dependencias
 node_modules/
+
+# Archivos de Entorno (¡CRÍTICO!)
+# Ignora absolutamente todos los archivos .env reales
 .env
 .env.local
+.env.staging
+.env.production
 .env.*.local
+.env.staging.local
+.env.production.local
+
+# Pero PERMITE los archivos de ejemplo/plantilla
+!.env.example
+!.env.staging.example
+!.env.production.example
+
+# Compilación y Salida
 dist/
 build/
+out/
+.next/
+bin/
+obj/
+
+# Logs y Debug
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 coverage/
 .DS_Store
+
+# Herramientas Específicas
 supabase/.temp/
 /scratch
 ngrok.exe
 backups/
+.vercel
+.render
+.vercel
+.env*.local
+
 .vercel/

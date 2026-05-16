@@ -59,5 +59,26 @@ export const api = {
   post:   (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
   patch:  (path, body) => request(path, { method: 'PATCH', body: JSON.stringify(body) }),
   put:    (path, body) => request(path, { method: 'PUT', body: JSON.stringify(body) }),
-  delete: (path) => request(path, { method: 'DELETE' })
+  delete: (path) => request(path, { method: 'DELETE' }),
+  // Para subir archivos (FormData) — NO usar Content-Type, el browser lo pone solo
+  upload: (path, formData) => {
+    const BASE = import.meta.env.VITE_API_URL
+    const token = localStorage.getItem('token')
+    return fetch(`${BASE}${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: formData
+    }).then(async (res) => {
+      const json = await res.json()
+      if (!res.ok) {
+        const err = new Error(json.message || json.error || `Error ${res.status}`)
+        err.status = res.status
+        throw err
+      }
+      return json.data !== undefined ? json.data : json
+    })
+  }
 }

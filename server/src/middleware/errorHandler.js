@@ -1,3 +1,5 @@
+import { isDev } from '../utils/envHelpers.js'
+
 export const errorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
@@ -28,7 +30,7 @@ export const errorHandler = (err, req, res, next) => {
     publicMessage = 'Hubo un problema interno en el servidor. Por favor, intente más tarde.';
   }
 
-  if (process.env.NODE_ENV === "development") {
+  if (isDev()) {
     // En desarrollo, enviamos un poco más de contexto pero filtrando tecnicismos del mensaje principal
     res.status(err.statusCode).json({
       status: err.status,
@@ -37,7 +39,7 @@ export const errorHandler = (err, req, res, next) => {
       stack: err.stack, // En dev el stack es útil, pero el mensaje debe ser limpio
     });
   } else {
-    // Production: Silencio total sobre detalles técnicos
+    // Production & Staging: Silencio total sobre detalles técnicos
     res.status(err.statusCode).json({
       status: err.status,
       message: publicMessage,

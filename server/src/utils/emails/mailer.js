@@ -12,7 +12,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = process.env.EMAIL_FROM || "soporte@canchalibre.pro";
 
 const isMockMode = () => {
-  return process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY;
+  // Solo mockear en desarrollo local SIN API key configurada.
+  // En staging y producción siempre se envían emails reales.
+  return process.env.NODE_ENV === "development" && !process.env.RESEND_API_KEY;
 };
 
 // --- EMAIL TEMPLATE LOADER ---

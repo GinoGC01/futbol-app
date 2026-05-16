@@ -1,0 +1,78 @@
+# ============================================================
+# Render Blueprint — Cancha Libre API (Staging)
+# Documentación: https://render.com/docs/blueprint-spec
+# ============================================================
+# Para desplegar: conectar el repo en Render y seleccionar
+# este archivo como Blueprint, o crear el servicio manualmente
+# siguiendo los valores de abajo.
+# ============================================================
+
+services:
+  - type: web
+    name: canchalibre-api-staging
+    runtime: node
+    region: oregon
+
+    # --- Build & Start ---
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+
+    # --- Plan ---
+    plan: free
+
+    # --- Branch ---
+    branch: staging
+
+    # --- Health Check ---
+    healthCheckPath: /health
+
+    # --- Environment Variables ---
+    # Estas variables DEBEN configurarse en el Dashboard de Render.
+    # Los valores de abajo son plantillas de referencia.
+    envVars:
+      # Core
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: 3000
+
+      # Supabase (STAGING instance)
+      - key: SUPABASE_URL
+        sync: false  # Configurar manualmente en Dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+
+      # JWT propio de la API
+      - key: JWT_SECRET
+        sync: false
+
+      # URLs del frontend (STAGING)
+      - key: APP_URL
+        sync: false  # Ej: https://canchalibre-staging.vercel.app
+      - key: FRONTEND_URL
+        sync: false  # Ej: https://canchalibre-staging.vercel.app (para CORS)
+      - key: LANDING_URL
+        value: https://canchalibre.pro
+
+      # Emails (Resend)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "Cancha Libre <onboarding@canchalibre.pro>"
+      - key: VERIFICATION_TOKEN_EXPIRES_HOURS
+        value: "24"
+
+      # Google OAuth
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+      # Webhooks
+      - key: SUPABASE_WEBHOOK_SECRET
+        sync: false
+
+      # Admin
+      - key: GMAIL_SUPERADMIN
+        sync: false

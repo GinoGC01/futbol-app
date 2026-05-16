@@ -28,6 +28,7 @@ import {
 } from '../../hooks/useAdmin'
 import { adminService } from '../../services/adminService'
 import { useToast } from '../../components/ui/Toast'
+import ImageUploader from '../../components/ui/ImageUploader'
 
 export default function TeamDetailView({ equipo, onBack, ligaId }) {
   const [activeTab, setActiveTab] = useState('plantel')
@@ -74,7 +75,11 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] flex items-center justify-center relative overflow-hidden group shadow-[0_0_50px_rgba(0,0,0,0.5)] border-4 border-white/5 transition-transform hover:rotate-3 duration-500"
                 style={{ backgroundColor: equipo.color_principal ? `${equipo.color_principal}20` : 'rgba(206, 222, 11, 0.1)' }}>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
-                <Shield className="w-12 h-12 md:w-16 md:h-16 relative z-10" style={{ color: equipo.color_principal || 'var(--color-primary)' }} />
+                {equipo.escudo_url ? (
+                  <img src={equipo.escudo_url} alt={equipo.nombre} className="w-full h-full object-contain relative z-10" />
+                ) : (
+                  <Shield className="w-12 h-12 md:w-16 md:h-16 relative z-10" style={{ color: equipo.color_principal || 'var(--color-primary)' }} />
+                )}
                 <div className="absolute -right-2 -bottom-2 w-16 h-16 bg-white/5 blur-2xl rounded-full" />
               </div>
               <button 
@@ -348,15 +353,30 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
         </div>
       </div>
 
-      <EditTeamModal open={showEditTeam} onClose={() => setShowEditTeam(false)} equipo={equipo} />
-      <AddPlayerModal 
-        open={showAddPlayer} 
-        onClose={() => setShowAddPlayer(false)} 
-        plantelId={viewedInscripcion?.plantel?.id} 
-        ligaId={ligaId}
-      />
-      <InscribeTeamModal open={showInscribeTeam} onClose={() => setShowInscribeTeam(false)} equipoId={equipo.id} ligaId={ligaId} />
-      {latestInscripcion && (
+      {showEditTeam && (
+        <EditTeamModal 
+          open={showEditTeam} 
+          onClose={() => setShowEditTeam(false)} 
+          equipo={equipo} 
+        />
+      )}
+      {showAddPlayer && (
+        <AddPlayerModal 
+          open={showAddPlayer} 
+          onClose={() => setShowAddPlayer(false)} 
+          plantelId={viewedInscripcion?.plantel?.id} 
+          ligaId={ligaId}
+        />
+      )}
+      {showInscribeTeam && (
+        <InscribeTeamModal 
+          open={showInscribeTeam} 
+          onClose={() => setShowInscribeTeam(false)} 
+          equipoId={equipo.id} 
+          ligaId={ligaId} 
+        />
+      )}
+      {showUpdatePayment && latestInscripcion && (
         <UpdatePaymentModal 
           open={showUpdatePayment} 
           onClose={() => setShowUpdatePayment(false)} 
@@ -426,13 +446,24 @@ function TabButton({ active, onClick, label }) {
 }
 
 function EditTeamModal({ open, onClose, equipo }) {
-  const [form, setForm] = useState({ nombre: equipo.nombre, color_principal: equipo.color_principal || '#CEDE0B' })
+  const [form, setForm] = useState({ 
+    nombre: equipo.nombre, 
+    color_principal: equipo.color_principal || '#CEDE0B',
+    escudo_url: equipo.escudo_url
+  })
   const updateMutation = useUpdateEquipo()
+  const toast = useToast()
 
   async function handleSubmit(e) {
     e.preventDefault()
     try {
-      await updateMutation.mutateAsync({ id: equipo.id, ...form })
+      const payload = {
+        id: equipo.id,
+        nombre: form.nombre,
+        color_principal: form.color_principal,
+        escudo_url: form.escudo_url || null
+      }
+      await updateMutation.mutateAsync(payload)
       toast.success('Equipo actualizado exitosamente')
       onClose()
     } catch (error) {
@@ -442,7 +473,17 @@ function EditTeamModal({ open, onClose, equipo }) {
 
   return (
     <Modal open={open} onClose={onClose} title="Editar Equipo">
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex justify-center pb-4">
+          <ImageUploader 
+            defaultImage={form.escudo_url}
+            onUploadSuccess={(url) => setForm(f => ({ ...f, escudo_url: url }))}
+            bucket="STAGING_ASSETS"
+            path={`equipos/${equipo.liga_id || 'general'}`}
+            variant="circular"
+          />
+        </div>
+
         <div className="space-y-1.5">
           <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Nombre</label>
           <input type="text" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="w-full px-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary transition-all text-sm font-medium" />
