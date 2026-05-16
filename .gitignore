@@ -10,3 +10,4 @@ supabase/.temp/
 /scratch
 ngrok.exe
 backups/
+.vercel/
