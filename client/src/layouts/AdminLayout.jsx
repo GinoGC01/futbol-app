@@ -1,4 +1,4 @@
-import { memo, useEffect } from 'react'
+import { memo, useEffect, Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import BottomNav from '../components/layout/BottomNav'
@@ -143,12 +143,13 @@ const AdminLayoutContent = memo(function AdminLayoutContent() {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 overflow-y-auto">
           {noLigas && !isDashboard ? (
             <NoLeagueScreen />
           ) : (
-            <Outlet />
+            <Suspense fallback={<div className="h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+              <Outlet />
+            </Suspense>
           )}
         </main>
       </div>

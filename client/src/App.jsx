@@ -3,36 +3,46 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from './hooks/useAuth'
 import { ToastProvider } from './components/ui/Toast'
 
-// Public Pages
-import Home from './pages/public/Home'
-import LeagueExplorer from './pages/public/LeagueExplorer'
-import LeagueArena from './pages/public/LeagueArena'
-import TeamProfile from './pages/public/TeamProfile'
-import PlayerProfile from './pages/public/PlayerProfile'
-import Omnisearch from './components/ui/Omnisearch'
-import NotFound from './pages/public/NotFound'
-import Terms from './pages/public/Terms'
-import Privacy from './pages/public/Privacy'
-import Support from './pages/public/Support'
+import { Suspense, lazy } from 'react'
 
-// Admin Pages
-import Login from './pages/admin/Login'
-import Register from './pages/admin/Register'
+// Layouts & Synchronous Components
+import Omnisearch from './components/ui/Omnisearch'
 import AdminLayout from './layouts/AdminLayout'
-import DashboardHome from './pages/admin/DashboardHome'
-import TournamentArchitect from './pages/admin/TournamentArchitect'
-import RosterManager from './pages/admin/RosterManager'
-import MatchEdgeBox from './pages/admin/MatchEdgeBox'
-import AwardScrutinyTool from './pages/admin/AwardScrutinyTool'
-import PlayerManager from './pages/admin/PlayerManager'
-import LeagueSettings from './pages/admin/LeagueSettings'
-import ForgotPassword from './pages/admin/ForgotPassword'
-import ResetPassword from './pages/admin/ResetPassword'
-import VerifyEmail from './pages/admin/VerifyEmail'
+import PublicLayout from './layouts/PublicLayout'
+import Loader from './components/ui/Loader'
 import WaitlistScreen from './pages/admin/WaitlistScreen'
 import SuspendedScreen from './pages/admin/SuspendedScreen'
-import Loader from './components/ui/Loader'
-import PublicLayout from './layouts/PublicLayout'
+
+// Lazy-loaded Public Pages
+const Home = lazy(() => import('./pages/public/Home'))
+const LeagueExplorer = lazy(() => import('./pages/public/LeagueExplorer'))
+const LeagueArena = lazy(() => import('./pages/public/LeagueArena'))
+const TeamProfile = lazy(() => import('./pages/public/TeamProfile'))
+const PlayerProfile = lazy(() => import('./pages/public/PlayerProfile'))
+const NotFound = lazy(() => import('./pages/public/NotFound'))
+const Terms = lazy(() => import('./pages/public/Terms'))
+const Privacy = lazy(() => import('./pages/public/Privacy'))
+const Support = lazy(() => import('./pages/public/Support'))
+
+// Lazy-loaded Admin Pages
+const Login = lazy(() => import('./pages/admin/Login'))
+const Register = lazy(() => import('./pages/admin/Register'))
+const DashboardHome = lazy(() => import('./pages/admin/DashboardHome'))
+const TournamentArchitect = lazy(() => import('./pages/admin/TournamentArchitect'))
+const RosterManager = lazy(() => import('./pages/admin/RosterManager'))
+const MatchEdgeBox = lazy(() => import('./pages/admin/MatchEdgeBox'))
+const AwardScrutinyTool = lazy(() => import('./pages/admin/AwardScrutinyTool'))
+const PlayerManager = lazy(() => import('./pages/admin/PlayerManager'))
+const LeagueSettings = lazy(() => import('./pages/admin/LeagueSettings'))
+const ForgotPassword = lazy(() => import('./pages/admin/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/admin/ResetPassword'))
+const VerifyEmail = lazy(() => import('./pages/admin/VerifyEmail'))
+
+const Loadable = (Component) => (props) => (
+  <Suspense fallback={<Loader fullScreen text="Cargando módulo..." />}>
+    <Component {...props} />
+  </Suspense>
+)
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +65,13 @@ function ProtectedRoute({ children }) {
 
   return children
 }
+
+const LoadableLogin = Loadable(Login)
+const LoadableRegister = Loadable(Register)
+const LoadableForgotPassword = Loadable(ForgotPassword)
+const LoadableResetPassword = Loadable(ResetPassword)
+const LoadableVerifyEmail = Loadable(VerifyEmail)
+const LoadableNotFound = Loadable(NotFound)
 
 // ============================================
 // ROUTER CONFIGURATION (v7 Data Router)
@@ -82,11 +99,11 @@ const router = createBrowserRouter([
           { path: "soporte", element: <Support /> },
         ]
       },
-      { path: "admin/login", element: <Login /> },
-      { path: "admin/register", element: <Register /> },
-      { path: "admin/forgot-password", element: <ForgotPassword /> },
-      { path: "admin/reset-password", element: <ResetPassword /> },
-      { path: "admin/verify", element: <VerifyEmail /> },
+      { path: "admin/login", element: <LoadableLogin /> },
+      { path: "admin/register", element: <LoadableRegister /> },
+      { path: "admin/forgot-password", element: <LoadableForgotPassword /> },
+      { path: "admin/reset-password", element: <LoadableResetPassword /> },
+      { path: "admin/verify", element: <LoadableVerifyEmail /> },
       {
         path: "admin",
         element: (
@@ -104,7 +121,7 @@ const router = createBrowserRouter([
           { path: "settings", element: <LeagueSettings /> },
         ]
       },
-      { path: "*", element: <NotFound /> }
+      { path: "*", element: <LoadableNotFound /> }
     ]
   }
 ], {

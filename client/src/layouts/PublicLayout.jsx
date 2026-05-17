@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { ChevronLeft } from 'lucide-react'
@@ -23,7 +24,9 @@ export default function PublicLayout() {
 
       {/* PAGE CONTENT */}
       <main className="flex-1 relative z-10 pt-20">
-        <Outlet />
+        <React.Suspense fallback={<div className="h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+          <Outlet />
+        </React.Suspense>
       </main>
 
       {/* SHARED PUBLIC FOOTER */}
