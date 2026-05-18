@@ -42,3 +42,5 @@ backups/
 .render
 .vercel
 .env*.local
+
+doc.md

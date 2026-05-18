@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom'
 import { useToast } from '../../components/ui/Toast'
 import { useLigaActiva } from '../../context/LigaContext'
 import Loader from '../../components/ui/Loader'
-import NoLeagueScreen from './NoLeagueScreen'
+import NoLeagueScreen from '../../features/alerts/components/NoLeagueScreen'
 import NewLigaModal from '../../components/admin/NewLigaModal'
 
 export default function DashboardHome() {

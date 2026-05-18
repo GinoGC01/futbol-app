@@ -47,9 +47,9 @@ describe('🟢 GET /health — Estado del servidor', () => {
     expect(res.body).toMatchObject({ status: 'ok' })
   })
 
-  it('incluye el campo "env" igual a "test"', async () => {
+  it('incluye el campo "environment" igual a "test"', async () => {
     const res = await request(app).get('/health')
-    expect(res.body.env).toBe('test')
+    expect(res.body.environment).toBe('test')
   })
 
   it('responde 404 para una ruta inexistente', async () => {

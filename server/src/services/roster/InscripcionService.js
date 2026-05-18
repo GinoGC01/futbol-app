@@ -1,9 +1,9 @@
-import { supabaseAdmin } from "../../lib/supabase.js";
+import { inscripcionRepository } from "../../repositories/inscripcionRepository.js";
 import LigaService from "../identity/LigaService.js";
 import TemporadaService from "../competition/TemporadaService.js";
 import AppError from "../../utils/AppError.js";
 
-class InscripcionService {
+const InscripcionService = {
   /**
    * Inscribe un equipo en una temporada.
    * 1. Verifica que la temporada no esté finalizada (Hard Lock).
@@ -26,11 +26,7 @@ class InscripcionService {
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId);
 
     // 3. Verificar que el equipo pertenece a la MISMA liga que la temporada
-    const { data: equipo, error: eqError } = await supabaseAdmin
-      .from("equipo")
-      .select("id, liga_id, nombre")
-      .eq("id", equipoId)
-      .maybeSingle();
+    const { data: equipo, error: eqError } = await inscripcionRepository.findEquipoById(equipoId);
 
     if (eqError || !equipo) throw new AppError("Equipo no encontrado", 404);
 
@@ -42,21 +38,13 @@ class InscripcionService {
     }
 
     // 4. Crear inscripcion_equipo
-    const { data: inscripcion, error: inscError } = await supabaseAdmin
-      .from("inscripcion_equipo")
-      .insert([
-        {
-          equipo_id: equipoId,
-          temporada_id: temporadaId,
-          monto_total: Number(temporada.liga?.monto_inscripcion || 0),
-          monto_abonado: 0,
-          estado_pago: "pendiente",
-        },
-      ])
-      .select(
-        "id, equipo_id, temporada_id, estado_pago, monto_total, monto_abonado, fecha_inscripcion",
-      )
-      .single();
+    const { data: inscripcion, error: inscError } = await inscripcionRepository.createInscripcionEquipo({
+      equipo_id: equipoId,
+      temporada_id: temporadaId,
+      monto_total: Number(temporada.liga?.monto_inscripcion || 0),
+      monto_abonado: 0,
+      estado_pago: "pendiente",
+    });
 
     if (inscError) {
       if (inscError.code === "23505") {
@@ -72,24 +60,15 @@ class InscripcionService {
     }
 
     // 5. Crear plantel automáticamente
-    const { data: plantel, error: plantelError } = await supabaseAdmin
-      .from("plantel")
-      .insert([
-        {
-          equipo_id: equipoId,
-          temporada_id: temporadaId,
-          limite_jugadores: Number(limite_jugadores),
-        },
-      ])
-      .select("id, equipo_id, temporada_id, limite_jugadores")
-      .single();
+    const { data: plantel, error: plantelError } = await inscripcionRepository.createPlantel({
+      equipo_id: equipoId,
+      temporada_id: temporadaId,
+      limite_jugadores: Number(limite_jugadores),
+    });
 
     if (plantelError) {
       // Rollback de la inscripcion si el plantel falla
-      await supabaseAdmin
-        .from("inscripcion_equipo")
-        .delete()
-        .eq("id", inscripcion.id);
+      await inscripcionRepository.deleteInscripcionEquipo(inscripcion.id);
 
       if (plantelError.code === "23505") {
         throw new AppError(
@@ -104,7 +83,7 @@ class InscripcionService {
     }
 
     return { inscripcion, plantel };
-  }
+  },
 
   /**
    * Agrega un jugador a un plantel.
@@ -115,16 +94,7 @@ class InscripcionService {
     const { dorsal, posicion } = data;
 
     // 1. Obtener plantel con su temporada y equipo para verificar ownership
-    const { data: plantel, error: plantelError } = await supabaseAdmin
-      .from("plantel")
-      .select(
-        `
-        id, equipo_id, temporada_id, limite_jugadores,
-        equipo:equipo(liga_id)
-      `,
-      )
-      .eq("id", plantelId)
-      .maybeSingle();
+    const { data: plantel, error: plantelError } = await inscripcionRepository.findPlantelById(plantelId);
 
     if (plantelError || !plantel)
       throw new AppError("Plantel no encontrado", 404);
@@ -136,10 +106,7 @@ class InscripcionService {
     await TemporadaService.validateNotFinalizada(plantel.temporada_id);
 
     // 4. Verificar cupo en el plantel
-    const { count: jugadoresActuales, error: countError } = await supabaseAdmin
-      .from("inscripcion_jugador")
-      .select("*", { count: "exact", head: true })
-      .eq("plantel_id", plantelId);
+    const { count: jugadoresActuales, error: countError } = await inscripcionRepository.countJugadoresInPlantel(plantelId);
 
     if (countError)
       throw new AppError(`Error verificando cupo: ${countError.message}`, 500);
@@ -152,17 +119,7 @@ class InscripcionService {
     }
 
     // 5. Verificar que el jugador NO esté inscrito en OTRO equipo de la MISMA temporada
-    const { data: inscripcionExistente, error: dupError } = await supabaseAdmin
-      .from("inscripcion_jugador")
-      .select(
-        `
-        id,
-        plantel:plantel!inner(equipo_id, temporada_id, equipo:equipo(nombre))
-      `,
-      )
-      .eq("jugador_id", jugadorId)
-      .eq("plantel.temporada_id", plantel.temporada_id)
-      .maybeSingle();
+    const { data: inscripcionExistente, error: dupError } = await inscripcionRepository.findJugadorInscripcionInTemporada(jugadorId, plantel.temporada_id);
 
     if (dupError && !dupError.message.includes("rows")) {
       throw new AppError(
@@ -204,11 +161,7 @@ class InscripcionService {
       payload.dorsal = Number(dorsal);
     if (posicion) payload.posicion = posicion;
 
-    const { data: inscripcion, error: insError } = await supabaseAdmin
-      .from("inscripcion_jugador")
-      .insert([payload])
-      .select("id, jugador_id, plantel_id, dorsal, posicion, estado")
-      .single();
+    const { data: inscripcion, error: insError } = await inscripcionRepository.createInscripcionJugador(payload);
 
     if (insError) {
       if (insError.code === "23505") {
@@ -221,23 +174,14 @@ class InscripcionService {
     }
 
     return inscripcion;
-  }
+  },
 
   /**
    * Actualiza el pago de una inscripción de equipo.
    */
   async actualizarPago(inscripcionId, organizadorId, montoAbonado) {
     // 1. Obtener inscripcion con datos del equipo para verificar ownership
-    const { data: inscripcion, error: insError } = await supabaseAdmin
-      .from("inscripcion_equipo")
-      .select(
-        `
-        id, monto_total, monto_abonado, 
-        equipo:equipo(liga_id)
-      `,
-      )
-      .eq("id", inscripcionId)
-      .maybeSingle();
+    const { data: inscripcion, error: insError } = await inscripcionRepository.findInscripcionEquipoById(inscripcionId);
 
     if (insError || !inscripcion)
       throw new AppError("Inscripción no encontrada", 404);
@@ -268,61 +212,31 @@ class InscripcionService {
       estadoPago = "parcial";
     }
 
-    const { data: updated, error: upError } = await supabaseAdmin
-      .from("inscripcion_equipo")
-      .update({ monto_abonado: nuevoAbonado, estado_pago: estadoPago })
-      .eq("id", inscripcionId)
-      .select(
-        "id, equipo_id, temporada_id, estado_pago, monto_total, monto_abonado",
-      )
-      .single();
+    const { data: updated, error: upError } = await inscripcionRepository.updateInscripcionEquipoPago(inscripcionId, {
+      monto_abonado: nuevoAbonado,
+      estado_pago: estadoPago,
+    });
 
     if (upError)
       throw new AppError(`Error actualizando pago: ${upError.message}`, 500);
 
     return updated;
-  }
+  },
 
   /**
    * Lista los equipos inscritos en una temporada con datos de pago y plantel.
    */
   async getInscripcionesByTemporada(temporadaId, organizadorId) {
     // Aislamiento indirecto
-    const { data: temporada, error: tErr } = await supabaseAdmin
-      .from("temporada")
-      .select("liga_id")
-      .eq("id", temporadaId)
-      .maybeSingle();
-
-    if (tErr || !temporada) throw new AppError("Temporada no encontrada", 404);
+    const temporada = await TemporadaService.validateNotFinalizada(temporadaId);
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId);
 
-    const { data: inscripciones, error: iErr } = await supabaseAdmin
-      .from("inscripcion_equipo")
-      .select(
-        `
-        id, estado_pago, monto_total, monto_abonado, fecha_inscripcion, equipo_id,
-        equipo:equipo(id, nombre, escudo_url, color_principal)
-      `,
-      )
-      .eq("temporada_id", temporadaId)
-      .order("fecha_inscripcion", { ascending: true });
+    const { data: inscripciones, error: iErr } = await inscripcionRepository.findInscripcionesByTemporada(temporadaId);
 
     if (iErr)
       throw new AppError(`Error listando inscripciones: ${iErr.message}`, 500);
 
-    const { data: planteles, error: pErr } = await supabaseAdmin
-      .from("plantel")
-      .select(
-        `
-        id, equipo_id, limite_jugadores,
-        inscripciones:inscripcion_jugador(
-          id, dorsal, posicion, estado,
-          jugador:jugador(id, nombre, apellido, foto_url)
-        )
-      `,
-      )
-      .eq("temporada_id", temporadaId);
+    const { data: planteles, error: pErr } = await inscripcionRepository.findPlantelesByTemporada(temporadaId);
 
     if (pErr)
       throw new AppError(`Error listando planteles: ${pErr.message}`, 500);
@@ -338,49 +252,27 @@ class InscripcionService {
     });
 
     return data;
-  }
+  },
 
   /**
    * Lista las inscripciones y planteles de un equipo específico en todas las temporadas.
    */
   async getInscripcionesByEquipo(equipoId, organizadorId) {
     // 1. Obtener equipo para verificar ownership
-    const { data: equipo, error: eqError } = await supabaseAdmin
-      .from("equipo")
-      .select("liga_id")
-      .eq("id", equipoId)
-      .maybeSingle();
+    const { data: equipo, error: eqError } = await inscripcionRepository.findEquipoById(equipoId);
 
     if (eqError || !equipo) throw new AppError("Equipo no encontrado", 404);
     // 2. Aislamiento
     await LigaService.verifyOwnership(equipo.liga_id, organizadorId);
 
     // 3. Obtener planteles con sus inscripciones de jugadores
-    const { data: planteles, error: pError } = await supabaseAdmin
-      .from("plantel")
-      .select(
-        `
-        id, limite_jugadores, equipo_id, temporada_id, created_at,
-        temporada:temporada(id, nombre, estado),
-        inscripciones:inscripcion_jugador(
-          id, dorsal, posicion, estado,
-          jugador:jugador(id, nombre, apellido, foto_url)
-        )
-      `,
-      )
-      .eq("equipo_id", equipoId)
-      .order("created_at", { ascending: false });
+    const { data: planteles, error: pError } = await inscripcionRepository.findPlantelesByEquipo(equipoId);
 
     if (pError)
       throw new AppError(`Error listando planteles: ${pError.message}`, 500);
 
     // 4. Obtener datos de pago (inscripcion_equipo) para cruzarlos
-    const { data: inscripciones, error: iError } = await supabaseAdmin
-      .from("inscripcion_equipo")
-      .select(
-        "id, temporada_id, estado_pago, monto_total, monto_abonado, fecha_inscripcion",
-      )
-      .eq("equipo_id", equipoId);
+    const { data: inscripciones, error: iError } = await inscripcionRepository.findInscripcionesByEquipo(equipoId);
 
     if (iError)
       throw new AppError(`Error listando pagos: ${iError.message}`, 500);
@@ -414,7 +306,7 @@ class InscripcionService {
     });
 
     return resultado;
-  }
+  },
 
   /**
    * Inscribe múltiples equipos en una temporada por bloques.
@@ -431,10 +323,7 @@ class InscripcionService {
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId);
 
     // 2. Obtener detalles de los equipos para validar que pertenecen a la misma liga
-    const { data: equipos, error: eqError } = await supabaseAdmin
-      .from("equipo")
-      .select("id, liga_id, nombre")
-      .in("id", equipoIds);
+    const { data: equipos, error: eqError } = await inscripcionRepository.findEquiposInIds(equipoIds);
 
     if (eqError)
       throw new AppError(`Error al validar equipos: ${eqError.message}`, 500);
@@ -449,12 +338,7 @@ class InscripcionService {
     }
 
     // 3. Verificar inscripciones existentes para evitar duplicados
-    const { data: inscripcionesExistentes, error: checkError } =
-      await supabaseAdmin
-        .from("inscripcion_equipo")
-        .select("equipo_id")
-        .eq("temporada_id", temporadaId)
-        .in("equipo_id", equipoIds);
+    const { data: inscripcionesExistentes, error: checkError } = await inscripcionRepository.findInscripcionesByTemporadaAndEquipos(temporadaId, equipoIds);
 
     if (checkError)
       throw new AppError(
@@ -483,11 +367,7 @@ class InscripcionService {
       estado_pago: "pendiente",
     }));
 
-    const { data: nuevasInscripciones, error: batchInscError } =
-      await supabaseAdmin
-        .from("inscripcion_equipo")
-        .insert(inscripcionesPayload)
-        .select("id, equipo_id");
+    const { data: nuevasInscripciones, error: batchInscError } = await inscripcionRepository.createInscripcionesEquipoBatch(inscripcionesPayload);
 
     if (batchInscError)
       throw new AppError(
@@ -501,9 +381,7 @@ class InscripcionService {
       limite_jugadores: Number(limite_jugadores),
     }));
 
-    const { error: batchPlantelError } = await supabaseAdmin
-      .from("plantel")
-      .insert(plantelesPayload);
+    const { error: batchPlantelError } = await inscripcionRepository.createPlantelesBatch(plantelesPayload);
 
     if (batchPlantelError) {
       console.error("Error al crear planteles en lote:", batchPlantelError);
@@ -514,7 +392,7 @@ class InscripcionService {
       count: idsAInscribir.length,
       inscripciones: nuevasInscripciones,
     };
-  }
+  },
 
   /**
    * Inscribe múltiples jugadores a un plantel en lote.
@@ -525,14 +403,7 @@ class InscripcionService {
     }
 
     // 1. Obtener plantel con su temporada y equipo para verificar ownership
-    const { data: plantel, error: plantelError } = await supabaseAdmin
-      .from("plantel")
-      .select(`
-        id, equipo_id, temporada_id, limite_jugadores,
-        equipo:equipo(liga_id, nombre)
-      `)
-      .eq("id", plantelId)
-      .maybeSingle();
+    const { data: plantel, error: plantelError } = await inscripcionRepository.findPlantelById(plantelId);
 
     if (plantelError || !plantel)
       throw new AppError("Plantel no encontrado", 404);
@@ -544,10 +415,7 @@ class InscripcionService {
     await TemporadaService.validateNotFinalizada(plantel.temporada_id);
 
     // 4. Verificar cupo actual
-    const { count: jugadoresActuales, error: countError } = await supabaseAdmin
-      .from("inscripcion_jugador")
-      .select("*", { count: "exact", head: true })
-      .eq("plantel_id", plantelId);
+    const { count: jugadoresActuales, error: countError } = await inscripcionRepository.countJugadoresInPlantel(plantelId);
 
     if (countError)
       throw new AppError(`Error verificando cupo: ${countError.message}`, 500);
@@ -562,14 +430,7 @@ class InscripcionService {
 
     // 5. Verificar duplicidad de jugadores en la misma temporada (en cualquier equipo)
     const jugadorIds = jugadores.map(j => j.jugador_id);
-    const { data: inscripcionesExistentes, error: dupError } = await supabaseAdmin
-      .from("inscripcion_jugador")
-      .select(`
-        jugador_id,
-        plantel:plantel!inner(equipo_id, temporada_id, equipo:equipo(nombre))
-      `)
-      .in("jugador_id", jugadorIds)
-      .eq("plantel.temporada_id", plantel.temporada_id);
+    const { data: inscripcionesExistentes, error: dupError } = await inscripcionRepository.findJugadoresInscripcionesInTemporada(jugadorIds, plantel.temporada_id);
 
     if (dupError) throw new AppError(`Error verificando duplicidad: ${dupError.message}`, 500);
 
@@ -591,10 +452,7 @@ class InscripcionService {
     }));
 
     // 7. Insertar en lote
-    const { data: nuevasInscripciones, error: insError } = await supabaseAdmin
-      .from("inscripcion_jugador")
-      .insert(payload)
-      .select("id, jugador_id, plantel_id, dorsal, posicion, estado");
+    const { data: nuevasInscripciones, error: insError } = await inscripcionRepository.createInscripcionesJugadorBatch(payload);
 
     if (insError) {
       if (insError.code === "23505") {
@@ -605,7 +463,6 @@ class InscripcionService {
 
     return nuevasInscripciones;
   }
-}
+};
 
-
-export default new InscripcionService();
+export default InscripcionService;

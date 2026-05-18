@@ -16,7 +16,7 @@ const ADMIN_B = {
   liga_id: 'liga-bbbb'
 }
 const EQUIPO_DE_B = {
-  id: 'equipo-de-b-001',
+  id: 'b3870526-3773-4f61-a3ef-98b50e2ddc99',
   liga_id: ADMIN_B.liga_id,
   nombre: 'Equipo Secreto de B'
 }
@@ -27,24 +27,39 @@ vi.mock('../../lib/supabase.js', () => {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn(),
+      maybeSingle: vi.fn(),
       order: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
     }
 
-    // Resolver según tabla y contexto
     chain.single.mockImplementation(async () => {
       if (table === 'admin_users') {
-        // Siempre devuelve liga de Admin A (simula que A está logueado)
         return { data: { liga_id: ADMIN_A.liga_id }, error: null }
       }
-      if (table === 'equipos') {
-        // Devuelve el equipo de B (Admin A intenta accederlo)
+      if (table === 'equipo') {
         return { data: EQUIPO_DE_B, error: null }
       }
       return { data: null, error: null }
     })
+
+    chain.maybeSingle.mockImplementation(async () => {
+      if (table === 'equipo') {
+        return { data: EQUIPO_DE_B, error: null }
+      }
+      if (table === 'liga') {
+        // Retorna null para simular que Admin A no es dueño de la liga de B (ataque tenant)
+        return { data: null, error: null }
+      }
+      return { data: null, error: null }
+    })
+
+    // Para la lista de inscripciones (buscar si tiene activa en deleteEquipo)
+    chain.limit = vi.fn().mockReturnThis()
+    // Retornamos array vacío para que no falle al verificar inscripciones
+    const resolveData = { data: [], error: null }
+    chain.then = (onfulfilled) => Promise.resolve(resolveData).then(onfulfilled)
 
     return chain
   })
@@ -59,26 +74,33 @@ vi.mock('../../middleware/auth.js', () => ({
   requireAuth: (req, _res, next) => {
     req.user = { id: ADMIN_A.id, email: ADMIN_A.email }
     next()
+  },
+  requireOrganizador: (req, _res, next) => {
+    req.organizador = { id: ADMIN_A.id, email: ADMIN_A.email }
+    next()
+  },
+  requireActiveStatus: (req, _res, next) => {
+    next()
+  },
+  requireVerified: (req, _res, next) => {
+    next()
   }
 }))
 
 import app from '../../index.js'
 
-describe('GET /api/equipos', () => {
+describe('GET /api/roster/equipos', () => {
   it('devuelve 400 sin liga_id', async () => {
-    const res = await request(app).get('/api/equipos')
+    const res = await request(app).get('/api/roster/equipos')
     expect(res.status).toBe(400)
-    expect(res.body.error).toBe('liga_id requerido')
+    expect(res.body.errors).toBeDefined() // express-validator returns errors array
   })
 })
 
-describe('POST /api/equipos', () => {
+describe('POST /api/roster/equipos', () => {
   it('devuelve 401 sin token (sin mock de auth)', async () => {
-    // Este test usa el app real sin el mock de auth
-    // pero como ya mockeamos auth arriba, creamos un test separado
-    // que verifica la validación
     const res = await request(app)
-      .post('/api/equipos')
+      .post('/api/roster/equipos')
       .send({ nombre: 'T' }) // nombre demasiado corto
     expect(res.status).toBe(400)
   })
@@ -90,25 +112,22 @@ describe('POST /api/equipos', () => {
 // El sistema DEBE devolver 403 Forbidden.
 // =============================================
 describe('🔒 TENANT ATTACK TEST — Admin A intenta borrar equipo de Admin B', () => {
-  it('DEBE devolver 403 cuando Admin A intenta DELETE /api/equipos/:id de otra liga', async () => {
+  it('DEBE devolver 403 cuando Admin A intenta DELETE /api/roster/equipos/:id de otra liga', async () => {
     const res = await request(app)
-      .delete(`/api/equipos/${EQUIPO_DE_B.id}`)
+      .delete(`/api/roster/equipos/${EQUIPO_DE_B.id}`)
       .set('Authorization', 'Bearer token-admin-a')
 
-    // El equipo pertenece a liga-bbbb, pero Admin A tiene liga-aaaa
-    // El middleware tenant resuelve liga_id = liga-aaaa
-    // La ruta compara equipo.liga_id (liga-bbbb) !== req.ligaId (liga-aaaa) → 403
     expect(res.status).toBe(403)
-    expect(res.body.error).toBe('No autorizado')
+    expect(res.body.message).toBe('Acceso denegado: La liga no te pertenece')
   })
 
-  it('DEBE devolver 403 cuando Admin A intenta PUT /api/equipos/:id de otra liga', async () => {
+  it('DEBE devolver 403 cuando Admin A intenta PUT /api/roster/equipos/:id de otra liga', async () => {
     const res = await request(app)
-      .put(`/api/equipos/${EQUIPO_DE_B.id}`)
+      .put(`/api/roster/equipos/${EQUIPO_DE_B.id}`)
       .set('Authorization', 'Bearer token-admin-a')
       .send({ nombre: 'Nombre Hackeado' })
 
     expect(res.status).toBe(403)
-    expect(res.body.error).toBe('No autorizado')
+    expect(res.body.message).toBe('Acceso denegado: La liga no te pertenece')
   })
 })

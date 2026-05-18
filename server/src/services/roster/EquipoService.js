@@ -1,8 +1,9 @@
+import { equipoRepository } from '../../repositories/equipoRepository.js'
 import { supabaseAdmin } from '../../lib/supabase.js'
 import LigaService from '../identity/LigaService.js'
 import AppError from '../../utils/AppError.js'
 
-class EquipoService {
+const EquipoService = {
   /**
    * Crea un equipo vinculado a una liga (con verificación de propiedad).
    */
@@ -27,18 +28,14 @@ class EquipoService {
     if (escudo_url) payload.escudo_url = escudo_url.trim()
     if (color_principal) payload.color_principal = color_principal
 
-    const { data: nuevoEquipo, error } = await supabaseAdmin
-      .from('equipo')
-      .insert([payload])
-      .select('id, nombre, escudo_url, color_principal, created_at')
-      .single()
+    const { data: nuevoEquipo, error } = await equipoRepository.createEquipo(payload)
 
     if (error) {
       throw new AppError(`Error al crear equipo: ${error.message}`, 500)
     }
 
     return nuevoEquipo
-  }
+  },
 
   /**
    * Lista equipos de una liga (con verificación de propiedad).
@@ -46,24 +43,7 @@ class EquipoService {
   async getEquiposByLiga(ligaId, organizadorId) {
     await LigaService.verifyOwnership(ligaId, organizadorId)
 
-    const { data, error } = await supabaseAdmin
-      .from('equipo')
-      .select(`
-        id, nombre, escudo_url, color_principal, created_at,
-        inscripciones:inscripcion_equipo(
-          id, 
-          temporada_id,
-          temporada:temporada(id, nombre, estado, deleted_at)
-        ),
-        planteles:plantel(
-          id,
-          temporada_id,
-          inscripciones:inscripcion_jugador(id)
-        )
-      `)
-      .eq('liga_id', ligaId)
-      .eq('activo', true)
-      .order('nombre', { ascending: true })
+    const { data, error } = await equipoRepository.findEquiposByLiga(ligaId)
 
     if (error) throw new AppError(`Error al listar equipos: ${error.message}`, 500)
 
@@ -83,27 +63,20 @@ class EquipoService {
     })
 
     return equiposMap || []
-  }
+  },
 
   /**
    * Borrado lógico de un equipo y eliminación de su escudo en Storage.
    */
   async deleteEquipo(equipoId, organizadorId) {
     // 1. Verificar existencia y propiedad
-    const { data: equipo, error: eqError } = await supabaseAdmin
-      .from('equipo')
-      .select('id, liga_id, nombre, escudo_url')
-      .eq('id', equipoId)
-      .maybeSingle()
+    const { data: equipo, error: eqError } = await equipoRepository.findEquipoById(equipoId)
 
     if (eqError || !equipo) throw new AppError('Equipo no encontrado', 404)
     await LigaService.verifyOwnership(equipo.liga_id, organizadorId)
 
     // 2. Verificar que no participe en temporadas activas
-    const { data: inscripciones, error: insError } = await supabaseAdmin
-      .from('inscripcion_equipo')
-      .select('id, temporada:temporada(estado)')
-      .eq('equipo_id', equipoId)
+    const { data: inscripciones, error: insError } = await equipoRepository.findInscripcionesByEquipo(equipoId)
 
     if (insError) throw new AppError(`Error verificando inscripciones: ${insError.message}`, 500)
 
@@ -113,10 +86,7 @@ class EquipoService {
     }
 
     // 3. Soft Delete del equipo en DB
-    const { error: delError } = await supabaseAdmin
-      .from('equipo')
-      .update({ activo: false })
-      .eq('id', equipoId)
+    const { error: delError } = await equipoRepository.updateEquipoActivo(equipoId, false)
 
     if (delError) throw new AppError(`Error al eliminar equipo: ${delError.message}`, 500)
 
@@ -133,18 +103,14 @@ class EquipoService {
     }
 
     return { message: `Equipo "${equipo.nombre}" eliminado correctamente` }
-  }
+  },
 
   /**
    * Actualiza datos del equipo (nombre, escudo, color).
    */
   async updateEquipo(equipoId, organizadorId, updateData) {
     // Primero verificar que el equipo existe y pertenece a una liga del organizador
-    const { data: equipo, error: eqError } = await supabaseAdmin
-      .from('equipo')
-      .select('liga_id, escudo_url')
-      .eq('id', equipoId)
-      .maybeSingle()
+    const { data: equipo, error: eqError } = await equipoRepository.findEquipoById(equipoId)
 
     if (eqError || !equipo) throw new AppError('Equipo no encontrado', 404)
 
@@ -167,12 +133,7 @@ class EquipoService {
       throw new AppError('No hay campos válidos para actualizar', 400)
     }
 
-    const { data: updated, error } = await supabaseAdmin
-      .from('equipo')
-      .update(payload)
-      .eq('id', equipoId)
-      .select('id, nombre, escudo_url, color_principal')
-      .single()
+    const { data: updated, error } = await equipoRepository.updateEquipo(equipoId, payload)
 
     if (error) throw new AppError(`Error actualizando equipo: ${error.message}`, 500)
 
@@ -196,4 +157,4 @@ class EquipoService {
   }
 }
 
-export default new EquipoService()
+export default EquipoService

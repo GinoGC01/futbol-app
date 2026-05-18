@@ -1,7 +1,7 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { ligaRepository } from '../../repositories/ligaRepository.js'
 import AppError from '../../utils/AppError.js'
 
-class LigaService {
+export const LigaService = {
   /**
    * Crea una nueva liga para el organizador dado
    */
@@ -9,18 +9,11 @@ class LigaService {
     const { nombre, slug, zona, tipo_futbol, descripcion, logo_url } = data
 
     // 1. Validar límite de ligas activas
-    const { data: org, error: orgErr } = await supabaseAdmin
-      .from('organizador')
-      .select('active_leagues_limit')
-      .eq('id', organizadorId)
-      .single()
+    const { data: org, error: orgErr } = await ligaRepository.getOrganizadorActiveLeaguesLimit(organizadorId)
 
     if (orgErr) throw new AppError('Error al validar capacidad', 500)
 
-    const { count, error: countErr } = await supabaseAdmin
-      .from('liga')
-      .select('*', { count: 'exact', head: true })
-      .eq('organizador_id', organizadorId)
+    const { count, error: countErr } = await ligaRepository.countLigasByOrganizador(organizadorId)
 
     if (countErr) throw new AppError('Error al contar ligas', 500)
 
@@ -49,11 +42,7 @@ class LigaService {
     if (data.monto_inscripcion) payload.monto_inscripcion = Number(data.monto_inscripcion)
     payload.tipo_futbol = tipo_futbol || 'f5' 
 
-    const { data: newLiga, error } = await supabaseAdmin
-      .from('liga')
-      .insert([payload])
-      .select('id, nombre, slug, zona, logo_url, tipo_futbol, monto_inscripcion, created_at')
-      .single()
+    const { data: newLiga, error } = await ligaRepository.createLiga(payload)
 
     if (error) {
       if (error.code === '23505' && error.message?.includes('slug')) {
@@ -63,7 +52,7 @@ class LigaService {
     }
 
     return newLiga
-  }
+  },
 
   /**
    * Valida formato y unicidad del slug
@@ -80,10 +69,7 @@ class LigaService {
       throw new AppError('El slug solo puede contener letras minúsculas, números y guiones, y no debe terminar ni empezar con guión', 400)
     }
 
-    const { count, error } = await supabaseAdmin
-      .from('liga')
-      .select('*', { count: 'exact', head: true })
-      .eq('slug', cleanSlug)
+    const { count, error } = await ligaRepository.countLigasBySlug(cleanSlug)
 
     if (error) {
       throw new AppError('Error al validar el slug identicador', 500, error)
@@ -94,7 +80,7 @@ class LigaService {
     }
 
     return true
-  }
+  },
 
   /**
    * Devuelve todas las ligas que pertenecen a un organizador específico
@@ -104,18 +90,14 @@ class LigaService {
        throw new AppError('ID de organizador requerido', 400)
     }
 
-    const { data: ligas, error } = await supabaseAdmin
-      .from('liga')
-      .select('id, nombre, slug, zona, logo_url, tipo_futbol, monto_inscripcion, created_at')
-      .eq('organizador_id', organizadorId)
-      .order('created_at', { ascending: false })
+    const { data: ligas, error } = await ligaRepository.findLigasByOrganizador(organizadorId)
 
     if (error) {
       throw new AppError('Error al obtener tus ligas', 500, error)
     }
 
     return ligas || []
-  }
+  },
 
   /**
    * Actualiza los datos de la liga, validando que el organizador sea el dueño
@@ -134,13 +116,7 @@ class LigaService {
       throw new AppError('No hay campos válidos para actualizar', 400)
     }
 
-    const { data: updatedLiga, error } = await supabaseAdmin
-      .from('liga')
-      .update(payload)
-      .eq('id', ligaId)
-      .eq('organizador_id', organizadorId)
-      .select('id, nombre, slug, zona, descripcion, logo_url, monto_inscripcion')
-      .single()
+    const { data: updatedLiga, error } = await ligaRepository.updateLiga(ligaId, organizadorId, payload)
 
     if (error) {
       throw new AppError('Error al actualizar los datos de la liga', 500, error)
@@ -151,7 +127,7 @@ class LigaService {
     }
 
     return updatedLiga
-  }
+  },
 
   /**
    * Verifica que la liga pertenece estrictamente al organizador actual.
@@ -161,12 +137,7 @@ class LigaService {
       throw new AppError('Faltan credenciales para verificar propiedad', 400)
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('liga')
-      .select('id')
-      .eq('id', ligaId)
-      .eq('organizador_id', organizadorId)
-      .maybeSingle()
+    const { data, error } = await ligaRepository.findLigaOwnership(ligaId, organizadorId)
 
     if (error) {
       throw new AppError('Error en validación de propiedad', 500, error)
@@ -177,7 +148,8 @@ class LigaService {
     }
 
     return true
-  }
+  },
+
   /**
    * Obtiene estadísticas rápidas para el dashboard del organizador.
    */
@@ -185,29 +157,8 @@ class LigaService {
     // 1. Verificar propiedad
     await this.verifyOwnership(ligaId, organizadorId)
 
-    // 2. Ejecutar queries en paralelo para eficiencia
-    const [matchesResult, paymentsResult] = await Promise.all([
-      // Partidos finalizados en toda la liga (todas las temporadas)
-      supabaseAdmin
-        .from('partido')
-        .select(`
-          id,
-          jornada!inner(
-            fase!inner(
-              temporada!inner(liga_id)
-            )
-          )
-        `, { count: 'exact', head: true })
-        .eq('estado', 'finalizado')
-        .eq('jornada.fase.temporada.liga_id', ligaId),
-
-      // Cobros pendientes (inscripciones no pagadas)
-      supabaseAdmin
-        .from('inscripcion_equipo')
-        .select('id, temporada!inner(liga_id)', { count: 'exact', head: true })
-        .eq('temporada.liga_id', ligaId)
-        .neq('estado_pago', 'pagado')
-    ])
+    // 2. Ejecutar queries
+    const { matchesResult, paymentsResult } = await ligaRepository.getDashboardStats(ligaId)
 
     if (matchesResult.error) throw new AppError(`Error al contar partidos: ${matchesResult.error.message}`, 500)
     if (paymentsResult.error) throw new AppError(`Error al contar cobros: ${paymentsResult.error.message}`, 500)
@@ -216,7 +167,7 @@ class LigaService {
       partidos_finalizados: matchesResult.count || 0,
       cobros_pendientes: paymentsResult.count || 0
     }
-  }
+  },
 
   /**
    * Elimina una liga en cascada usando el RPC de Supabase.
@@ -226,10 +177,7 @@ class LigaService {
     await this.verifyOwnership(ligaId, organizadorId)
 
     // 2. Ejecutar RPC
-    const { error } = await supabaseAdmin.rpc('delete_liga_cascade', {
-      p_liga_id: ligaId,
-      p_organizador_id: organizadorId
-    })
+    const { error } = await ligaRepository.deleteLigaCascade(ligaId, organizadorId)
 
     if (error) {
       console.error('Error al ejecutar delete_liga_cascade:', error)
@@ -240,4 +188,4 @@ class LigaService {
   }
 }
 
-export default new LigaService()
+export default LigaService

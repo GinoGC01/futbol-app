@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Search, Trophy, Shield, Users, Target, Rocket, Settings, Calendar, Award } from 'lucide-react'
-import { adminService } from '../../services/adminService'
+import { identityService } from '../../services/identityService'
+import { rosterService } from '../../services/rosterService'
 
 function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value)
@@ -44,14 +45,14 @@ export default function Omnisearch() {
     setLoading(true)
     try {
       // 1. Fetch ligas and filter
-      const ligasRes = await adminService.getLigas().catch(() => ({ data: [] }))
+      const ligasRes = await identityService.getLigas().catch(() => ({ data: [] }))
       const allLigas = ligasRes.data || []
       const matchedLigas = allLigas.filter((l) =>
         l.nombre.toLowerCase().includes(q.toLowerCase())
       )
 
       // 2. Fetch jugadores from backend
-      const jugRes = await adminService.searchJugadores(q).catch(() => ({ data: [] }))
+      const jugRes = await rosterService.searchJugadores(q).catch(() => ({ data: [] }))
       const matchedJugadores = jugRes.data || []
 
       setResults({ ligas: matchedLigas, jugadores: matchedJugadores })

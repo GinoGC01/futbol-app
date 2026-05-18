@@ -1,8 +1,9 @@
-import { supabaseAdmin } from "../../lib/supabase.js";
+import { temporadaRepository } from "../../repositories/temporadaRepository.js";
+import { ligaRepository } from "../../repositories/ligaRepository.js";
 import LigaService from "../identity/LigaService.js";
 import AppError from "../../utils/AppError.js";
 
-class TemporadaService {
+export const TemporadaService = {
   /**
    * Verifica transaccionalmente si la temporada está finalizada (y de paso el ownership,
    * aunque el ownership primario es la liga_id). Usada internamente.
@@ -10,12 +11,7 @@ class TemporadaService {
   async validateNotFinalizada(temporadaId) {
     if (!temporadaId) throw new AppError("ID de temporada requerido", 400);
 
-    const { data, error } = await supabaseAdmin
-      .from("temporada")
-      .select("estado, liga_id, liga:liga_id(monto_inscripcion)")
-      .eq("id", temporadaId)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data, error } = await temporadaRepository.findTemporadaCheck(temporadaId)
 
     if (error)
       throw new AppError(`Error al verificar temporada: ${error.message}`, 500);
@@ -29,7 +25,7 @@ class TemporadaService {
     }
 
     return data;
-  }
+  },
 
   async createTemporada(ligaId, organizadorId, data) {
     try {
@@ -46,21 +42,13 @@ class TemporadaService {
 
       // A. Intentar por ID si se proporciona (máxima consistencia)
       if (data.formato_id) {
-        const { data: f } = await supabaseAdmin
-          .from("formato_competencia")
-          .select("id, tipo, nombre")
-          .eq("id", data.formato_id)
-          .maybeSingle();
+        const { data: f } = await temporadaRepository.findFormatoCompetenciaById(data.formato_id);
         formato = f;
       }
 
       // B. Intentar coincidencia exacta por tipo (slug)
       if (!formato && formato_tipo) {
-        const { data: formats, error: formatError } = await supabaseAdmin
-          .from("formato_competencia")
-          .select("id, tipo, nombre")
-          .eq("tipo", formato_tipo.toLowerCase())
-          .limit(1); // Tomamos el primero si hay varios del mismo tipo (ej: copa)
+        const { data: formats } = await temporadaRepository.findFormatoCompetenciaByTipo(formato_tipo);
         
         if (formats && formats.length > 0) {
           formato = formats[0];
@@ -69,11 +57,7 @@ class TemporadaService {
 
       // C. Si aún no lo encuentra, intentar por nombre (case-insensitive)
       if (!formato && formato_tipo) {
-        const { data: fallbacks } = await supabaseAdmin
-          .from("formato_competencia")
-          .select("id, tipo, nombre")
-          .ilike("nombre", `%${formato_tipo}%`)
-          .limit(1);
+        const { data: fallbacks } = await temporadaRepository.findFormatoCompetenciaByNombre(formato_tipo);
         
         if (fallbacks && fallbacks.length > 0) {
           formato = fallbacks[0];
@@ -88,11 +72,8 @@ class TemporadaService {
       }
 
       // 3. Extraer modalidad por defecto de la liga
-      const { data: liga, error: ligaErr } = await supabaseAdmin
-        .from("liga")
-        .select("tipo_futbol")
-        .eq("id", ligaId)
-        .single();
+      const { data: liga, error: ligaErr } = await ligaRepository.findLigaTipoFutbol(ligaId)
+      if (ligaErr || !liga) throw new AppError("No se pudo obtener datos de la liga", 500);
       
       const modalidadDefault = liga.tipo_futbol ? parseInt(liga.tipo_futbol.replace(/\D/g, "")) : 5;
 
@@ -106,26 +87,7 @@ class TemporadaService {
       if (fecha_inicio) payload.fecha_inicio = fecha_inicio;
       if (fecha_fin) payload.fecha_fin = fecha_fin;
 
-      let result = await supabaseAdmin
-        .from("temporada")
-        .insert([payload])
-        .select("id, nombre, estado, fecha_inicio, fecha_fin, formato_id, modalidad, liga:liga_id(id, tipo_futbol)")
-        .maybeSingle();
-
-      // Si falla porque no existe la columna 'modalidad', reintentamos sin ella
-      if (result.error && (result.error.message.includes("modalidad") || result.error.code === '42703')) {
-        delete payload.modalidad;
-        result = await supabaseAdmin
-          .from("temporada")
-          .insert([payload])
-          .select("id, nombre, estado, fecha_inicio, fecha_fin, formato_id, liga:liga_id(id, tipo_futbol)")
-          .single();
-        
-        // Adjuntamos el valor en memoria para que el resto del sistema lo use
-        if (result.data) {
-           result.data.modalidad = Number(modalidad) || modalidadDefault;
-        }
-      }
+      const result = await temporadaRepository.createTemporada(payload)
 
       if (result.error) {
         if (result.error.code === "23503")
@@ -138,36 +100,19 @@ class TemporadaService {
       console.log("Error al crear temporada:", error);
       throw error;
     }
-  }
+  },
 
   async getTemporadasByLiga(ligaId, organizadorId, filterArchived = 'active') {
     await LigaService.verifyOwnership(ligaId, organizadorId);
 
-    // 2. Consultar BD con formato anidado para ligas
-    let query = supabaseAdmin
-      .from("temporada")
-      .select(`
-        id, nombre, estado, fecha_inicio, fecha_fin, modalidad,
-        liga:liga_id(id, tipo_futbol),
-        formato:formato_competencia(id, nombre, tipo)
-      `)
-      .eq("liga_id", ligaId)
-      .order("created_at", { ascending: false });
-
-    if (filterArchived === 'active') {
-      query = query.is("deleted_at", null);
-    } else if (filterArchived === 'archived') {
-      query = query.not("deleted_at", "is", null);
-    }
-
-    const { data: temporadas, error } = await query;
+    const { data: temporadas, error } = await temporadaRepository.findTemporadasByLiga(ligaId, filterArchived)
 
     if (error) {
       throw new AppError(`Error al listar temporadas: ${error.message}`, 500);
     }
 
     return temporadas || [];
-  }
+  },
 
   async updateEstado(temporadaId, organizadorId, nuevoEstado) {
     if (!["borrador", "activa", "finalizada"].includes(nuevoEstado)) {
@@ -175,12 +120,7 @@ class TemporadaService {
     }
 
     // Aislamiento a través del ID y el ownership del organizador
-    const { data: seasonCheck, error: checkError } = await supabaseAdmin
-      .from("temporada")
-      .select("estado, liga_id")
-      .eq("id", temporadaId)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data: seasonCheck, error: checkError } = await temporadaRepository.findTemporadaByIdCheck(temporadaId)
 
     if (checkError || !seasonCheck) {
       throw new AppError("Temporada no encontrada", 404);
@@ -204,18 +144,13 @@ class TemporadaService {
       );
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("temporada")
-      .update({ estado: nuevoEstado })
-      .eq("id", temporadaId)
-      .select("id, nombre, estado")
-      .single();
+    const { data, error } = await temporadaRepository.updateTemporadaEstado(temporadaId, nuevoEstado)
 
     if (error)
       throw new AppError(`Error al actualizar estado: ${error.message}`, 500);
 
     return data;
-  }
+  },
 
   /**
    * Obtiene la temporada con todas sus fases y jornadas anidadas.
@@ -223,34 +158,14 @@ class TemporadaService {
    */
   async getTemporadaCompleta(temporadaId, organizadorId) {
     // 1. Verificar existencia y Aislamiento Indirecto
-    const { data: temporadaCheck, error: tempError } = await supabaseAdmin
-      .from("temporada")
-      .select("liga_id")
-      .eq("id", temporadaId)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data: temporadaCheck, error: tempError } = await temporadaRepository.findTemporadaByIdCheck(temporadaId)
 
     if (tempError || !temporadaCheck)
       throw new AppError("Temporada no encontrada", 404);
     await LigaService.verifyOwnership(temporadaCheck.liga_id, organizadorId);
 
     // 2. Traer el árbol completo desde Supabase (Relaciones anidadas)
-    const { data: temporadaCompleta, error: arbolError } = await supabaseAdmin
-      .from("temporada")
-      .select(
-        `
-        id, nombre, estado, fecha_inicio, fecha_fin, modalidad,
-        liga:liga_id(id, tipo_futbol),
-        formato:formato_competencia(id, nombre, tipo),
-        fases:fase(
-          id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta,
-          jornadas:jornada(id, numero, estado, fecha_tentativa)
-        )
-      `,
-      )
-      .eq("id", temporadaId)
-      .is("deleted_at", null)
-      .single();
+    const { data: temporadaCompleta, error: arbolError } = await temporadaRepository.findTemporadaCompletaTree(temporadaId)
 
     if (arbolError)
       throw new AppError(
@@ -258,11 +173,7 @@ class TemporadaService {
         500,
       );
 
-    // 3. Ya no necesitamos post-procesar modalidad aquí, 
-    // la UI la calculará desde temporada.liga.tipo_futbol
-
     // Ordenar las fases por orden y sus jornadas por numero en memoria
-    // (A veces Supabase PostgREST no garantiza el orden anidado sin tricks sintácticos y es más robusto un simple sort aquí).
     if (temporadaCompleta.fases) {
       temporadaCompleta.fases.sort((a, b) => a.orden - b.orden);
       temporadaCompleta.fases.forEach((fase) => {
@@ -273,22 +184,19 @@ class TemporadaService {
     }
 
     return temporadaCompleta;
-  }
+  },
 
   /**
    * Obtiene todos los formatos de competencia disponibles
    */
   async getFormatos() {
-    const { data, error } = await supabaseAdmin
-      .from("formato_competencia")
-      .select("id, nombre, tipo")
-      .order("nombre", { ascending: true });
+    const { data, error } = await temporadaRepository.findFormatosCompetencia()
 
     if (error)
       throw new AppError(`Error al listar formatos: ${error.message}`, 500);
 
     return data || [];
-  }
+  },
 
   /**
    * Actualiza los detalles de una temporada (nombre, fechas)
@@ -297,12 +205,7 @@ class TemporadaService {
     const { nombre, fecha_inicio, fecha_fin, estado: nuevoEstado } = updateData;
 
     // 1. Verificar existencia y Aislamiento 
-    const { data: seasonCheck, error: checkError } = await supabaseAdmin
-      .from("temporada")
-      .select("id, estado, liga_id")
-      .eq("id", temporadaId)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data: seasonCheck, error: checkError } = await temporadaRepository.findTemporadaByIdCheck(temporadaId)
 
     if (checkError || !seasonCheck) {
       throw new AppError("Temporada no encontrada", 404);
@@ -344,39 +247,19 @@ class TemporadaService {
       throw new AppError("No hay datos para actualizar", 400);
     }
 
-    // 3. Actualizar en BD (Resiliencia ante esquema desactualizado)
-    let result = await supabaseAdmin
-      .from("temporada")
-      .update(payload)
-      .eq("id", temporadaId)
-      .select("id, nombre, estado, fecha_inicio, fecha_fin, modalidad, liga:liga_id(id, tipo_futbol)")
-      .maybeSingle();
-
-    // Si falla por la columna modalidad, reintentar omitiéndola
-    if (result.error && (result.error.message.includes("modalidad") || result.error.code === '42703')) {
-       delete payload.modalidad;
-       result = await supabaseAdmin
-         .from("temporada")
-         .update(payload)
-         .eq("id", temporadaId)
-         .select("id, nombre, estado, fecha_inicio, fecha_fin, liga:liga_id(id, tipo_futbol)")
-         .single();
-    }
+    // 3. Actualizar en BD
+    const result = await temporadaRepository.updateTemporada(temporadaId, payload)
 
     if (result.error) {
       throw new AppError(`Error al actualizar temporada: ${result.error.message}`, 500);
     }
 
     return result.data;
-  }
+  },
+
   async deleteTemporada(temporadaId, organizadorId) {
     // 1. Verify existence & ownership
-    const { data: seasonCheck, error: checkError } = await supabaseAdmin
-      .from("temporada")
-      .select("id, liga_id")
-      .eq("id", temporadaId)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data: seasonCheck, error: checkError } = await temporadaRepository.findTemporadaByIdCheck(temporadaId)
 
     if (checkError || !seasonCheck) {
       throw new AppError("Temporada no encontrada o ya archivada", 404);
@@ -385,28 +268,21 @@ class TemporadaService {
     await LigaService.verifyOwnership(seasonCheck.liga_id, organizadorId);
 
     // 2. Delete temporada (Soft Delete)
-    const { error } = await supabaseAdmin
-      .from("temporada")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", temporadaId);
+    const { error } = await temporadaRepository.updateTemporadaDeletedAt(temporadaId, new Date().toISOString())
 
     if (error) {
       throw new AppError(`Error al archivar temporada: ${error.message}`, 500);
     }
 
     return { message: "Temporada archivada exitosamente" };
-  }
+  },
 
   /**
    * Restaura una temporada archivada (limpia el deleted_at)
    */
   async restoreTemporada(temporadaId, organizadorId) {
     // 1. Verify existence & ownership (sin filtrar deleted_at para poder encontrarla)
-    const { data: seasonCheck, error: checkError } = await supabaseAdmin
-      .from("temporada")
-      .select("id, liga_id")
-      .eq("id", temporadaId)
-      .maybeSingle();
+    const { data: seasonCheck, error: checkError } = await temporadaRepository.findTemporadaByIdCheckNoDeletedFilter(temporadaId)
 
     if (checkError || !seasonCheck) {
       throw new AppError("Temporada no encontrada", 404);
@@ -415,10 +291,7 @@ class TemporadaService {
     await LigaService.verifyOwnership(seasonCheck.liga_id, organizadorId);
 
     // 2. Restore temporada
-    const { error } = await supabaseAdmin
-      .from("temporada")
-      .update({ deleted_at: null })
-      .eq("id", temporadaId);
+    const { error } = await temporadaRepository.updateTemporadaDeletedAt(temporadaId, null)
 
     if (error) {
       throw new AppError(`Error al restaurar temporada: ${error.message}`, 500);
@@ -428,4 +301,4 @@ class TemporadaService {
   }
 }
 
-export default new TemporadaService();
+export default TemporadaService;

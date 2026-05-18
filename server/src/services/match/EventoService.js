@@ -1,4 +1,5 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { eventoRepository } from '../../repositories/eventoRepository.js'
+import { partidoRepository } from '../../repositories/partidoRepository.js'
 import PartidoService from './PartidoService.js'
 import SancionService from './SancionService.js'
 import AppError from '../../utils/AppError.js'
@@ -11,14 +12,7 @@ class EventoService {
    * Impide que se registren goles o tarjetas de "jugadores fantasma".
    */
   async validarJugadorEnPartido(inscripcionJugadorId, partido) {
-    const { data: inscripcion, error } = await supabaseAdmin
-      .from('inscripcion_jugador')
-      .select(`
-        id, estado,
-        plantel:plantel!inner(equipo_id, temporada_id)
-      `)
-      .eq('id', inscripcionJugadorId)
-      .maybeSingle()
+    const { data: inscripcion, error } = await eventoRepository.findInscripcionWithPlantel(inscripcionJugadorId)
 
     if (error || !inscripcion) {
       throw new AppError('Inscripción de jugador no encontrada', 404)
@@ -68,11 +62,7 @@ class EventoService {
     }
     if (minuto !== undefined && minuto !== null) payload.minuto = Number(minuto)
 
-    const { data: gol, error } = await supabaseAdmin
-      .from('gol')
-      .insert([payload])
-      .select('id, partido_id, inscripcion_jugador_id, minuto, es_penal, es_contra')
-      .single()
+    const { data: gol, error } = await eventoRepository.createGol(payload)
 
     if (error) throw new AppError(`Error al registrar gol: ${error.message}`, 500)
 
@@ -88,24 +78,12 @@ class EventoService {
    */
   async _syncGolesPartido(partidoId) {
     // 1. Obtener datos del partido
-    const { data: partido, error: pError } = await supabaseAdmin
-      .from('partido')
-      .select('id, equipo_local_id, equipo_visitante_id')
-      .eq('id', partidoId)
-      .single()
+    const { data: partido, error: pError } = await partidoRepository.findPartidoForSync(partidoId)
     
     if (pError || !partido) return
 
     // 2. Traer todos los goles del partido con el equipo del jugador
-    const { data: goles, error: gError } = await supabaseAdmin
-      .from('gol')
-      .select(`
-        id, es_contra,
-        inscripcion_jugador:inscripcion_jugador!inner(
-          plantel:plantel!inner(equipo_id)
-        )
-      `)
-      .eq('partido_id', partidoId)
+    const { data: goles, error: gError } = await eventoRepository.findGolesWithEquiposByPartido(partidoId)
 
     if (gError) return
 
@@ -128,10 +106,7 @@ class EventoService {
     })
 
     // 4. Update tabla partido
-    await supabaseAdmin
-      .from('partido')
-      .update({ goles_local: local, goles_visitante: visitante })
-      .eq('id', partidoId)
+    await partidoRepository.updatePartidoMarcador(partidoId, local, visitante)
   }
 
   /**
@@ -171,11 +146,7 @@ class EventoService {
     }
     if (minuto !== undefined && minuto !== null) payload.minuto = Number(minuto)
 
-    const { data: tarjeta, error } = await supabaseAdmin
-      .from('tarjeta')
-      .insert([payload])
-      .select('id, partido_id, inscripcion_jugador_id, tipo, minuto')
-      .single()
+    const { data: tarjeta, error } = await eventoRepository.createTarjeta(payload)
 
     if (error) throw new AppError(`Error al registrar tarjeta: ${error.message}`, 500)
 
@@ -203,31 +174,8 @@ class EventoService {
     await PartidoService.resolveOwnershipChain(partidoId, organizadorId)
 
     const [golesResult, tarjetasResult] = await Promise.all([
-      supabaseAdmin
-        .from('gol')
-        .select(`
-          id, minuto, es_penal, es_contra,
-          inscripcion_jugador:inscripcion_jugador!inner(
-            id, dorsal,
-            jugador:jugador!inner(nombre, apellido),
-            plantel:plantel!inner(equipo:equipo!inner(id, nombre))
-          )
-        `)
-        .eq('partido_id', partidoId)
-        .order('minuto', { ascending: true }),
-
-      supabaseAdmin
-        .from('tarjeta')
-        .select(`
-          id, minuto, tipo,
-          inscripcion_jugador:inscripcion_jugador!inner(
-            id, dorsal,
-            jugador:jugador!inner(nombre, apellido),
-            plantel:plantel!inner(equipo:equipo!inner(id, nombre))
-          )
-        `)
-        .eq('partido_id', partidoId)
-        .order('minuto', { ascending: true })
+      eventoRepository.findGolesByPartido(partidoId),
+      eventoRepository.findTarjetasByPartido(partidoId)
     ])
 
     if (golesResult.error) throw new AppError(`Error obteniendo goles: ${golesResult.error.message}`, 500)
@@ -240,4 +188,5 @@ class EventoService {
   }
 }
 
-export default new EventoService()
+const instance = new EventoService()
+export default instance

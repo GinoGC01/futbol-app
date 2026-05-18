@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 // ============================================================
 
 // Mock de Mailer
-vi.mock('../../utils/mailer.js', () => ({
+vi.mock('../../utils/emails/mailer.js', () => ({
   sendVerificationEmail: vi.fn(),
   sendPasswordResetEmail: vi.fn().mockResolvedValue(true)
 }))
@@ -46,7 +46,7 @@ vi.mock('../../services/identity/OrganizadorService.js', () => ({
 
 import app from '../../index.js'
 import OrganizadorService from '../../services/identity/OrganizadorService.js'
-import { sendPasswordResetEmail } from '../../utils/mailer.js'
+import { sendPasswordResetEmail } from '../../utils/emails/mailer.js'
 
 describe('Password Recovery Routes', () => {
   beforeEach(() => {

@@ -1,11 +1,12 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { faseRepository } from '../../repositories/faseRepository.js'
+import { temporadaRepository } from '../../repositories/temporadaRepository.js'
 import TemporadaService from './TemporadaService.js'
 import LigaService from '../identity/LigaService.js'
 import AppError from '../../utils/AppError.js'
 
 const TIPOS_FASE_VALIDOS = ['todos_contra_todos', 'eliminacion_directa']
 
-class FaseService {
+export const FaseService = {
   async createFase(temporadaId, organizadorId, data) {
     const { nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta } = data
 
@@ -29,23 +30,16 @@ class FaseService {
     }
 
     if (tipo === 'todos_contra_todos') {
-      // Necesitamos puntos, si no vienen asumo estándar: Victoria=3, Empate=1
+      // Victoria=3, Empate=1 por defecto
       payload.puntos_victoria = puntos_victoria !== undefined ? Number(puntos_victoria) : 3
       payload.puntos_empate = puntos_empate !== undefined ? Number(puntos_empate) : 1
     } else {
-      // eliminacion_directa no suma puntos de tabla general usualmente, pero por si acaso.
       payload.puntos_victoria = 0
       payload.puntos_empate = 0
     }
 
     // 5. Determinar Orden (Auto-secuencial)
-    const { data: fasesExistentes, error: fasesError } = await supabaseAdmin
-      .from('fase')
-      .select('orden')
-      .eq('temporada_id', temporadaId)
-      .order('orden', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const { data: fasesExistentes, error: fasesError } = await faseRepository.findLatestFaseOrden(temporadaId)
 
     if (fasesError) throw new AppError(`Error al consultar fases: ${fasesError.message}`, 500)
 
@@ -53,56 +47,34 @@ class FaseService {
     payload.orden = nuevoOrden
 
     // 6. Insert en BD
-    const { data: nuevaFase, error: insertError } = await supabaseAdmin
-      .from('fase')
-      .insert([payload])
-      .select()
-      .single()
+    const { data: nuevaFase, error: insertError } = await faseRepository.createFase(payload)
 
     if (insertError) throw new AppError(`Error insertando fase: ${insertError.message}`, 500)
 
     return nuevaFase
-  }
+  },
 
   async getFasesByTemporada(temporadaId, organizadorId) {
-    // Validar aislamiento indirectamente desde la liga de la temporada
-    const { data: temporada, error: tempError } = await supabaseAdmin
-      .from('temporada')
-      .select('liga_id')
-      .eq('id', temporadaId)
-      .maybeSingle()
+    // Validar aislamiento
+    const { data: temporada, error: tempError } = await temporadaRepository.findTemporadaByIdCheckNoDeletedFilter(temporadaId)
 
     if (tempError || !temporada) throw new AppError('Temporada no encontrada', 404)
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId)
 
-    const { data: fases, error: fasesError } = await supabaseAdmin
-      .from('fase')
-      .select(`
-        id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta, estado,
-        jornadas:jornada(id, numero, estado, fecha_tentativa)
-      `)
-      .eq('temporada_id', temporadaId)
-      .order('orden', { ascending: true })
+    const { data: fases, error: fasesError } = await faseRepository.findFasesByTemporada(temporadaId)
 
     if (fasesError) throw new AppError(`Error listando fases: ${fasesError.message}`, 500)
 
     return fases || []
-  }
+  },
 
   /**
    * Actualiza una fase existente (nombre, tipo, puntos, ida_y_vuelta).
    * Solo si la temporada NO está finalizada.
    */
   async updateFase(faseId, organizadorId, updateData) {
-    // 1. Resolve ownership chain: fase → temporada → liga
-    const { data: fase, error: faseError } = await supabaseAdmin
-      .from('fase')
-      .select(`
-        id, temporada_id, nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta,
-        temporada:temporada(liga_id, estado)
-      `)
-      .eq('id', faseId)
-      .maybeSingle()
+    // 1. Resolve ownership chain
+    const { data: fase, error: faseError } = await faseRepository.findFaseOwnershipCheck(faseId)
 
     if (faseError || !fase) throw new AppError('Fase no encontrada', 404)
 
@@ -133,12 +105,7 @@ class FaseService {
       throw new AppError('No hay datos para actualizar', 400)
     }
 
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from('fase')
-      .update(payload)
-      .eq('id', faseId)
-      .select('id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta')
-      .single()
+    const { data: updated, error: updateError } = await faseRepository.updateFase(faseId, payload)
 
     if (updateError) throw new AppError(`Error al actualizar fase: ${updateError.message}`, 500)
 
@@ -146,4 +113,4 @@ class FaseService {
   }
 }
 
-export default new FaseService()
+export default FaseService

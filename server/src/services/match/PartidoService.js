@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { partidoRepository } from '../../repositories/partidoRepository.js'
 import LigaService from '../identity/LigaService.js'
 import TemporadaService from '../competition/TemporadaService.js'
 import FixtureEngine from './FixtureEngine.js'
@@ -28,24 +28,7 @@ class PartidoService {
    * Devuelve { partido, temporada_id, liga_id } o lanza AppError.
    */
   async resolveOwnershipChain(partidoId, organizadorId) {
-    const { data: partido, error } = await supabaseAdmin
-      .from('partido')
-      .select(`
-        id, estado, goles_local, goles_visitante,
-        equipo_local_id, equipo_visitante_id,
-        jornada_id, fecha_hora, cancha,
-        jornada:jornada!inner(
-          id, fase_id,
-          fase:fase!inner(
-            id, temporada_id,
-            temporada:temporada!inner(
-              id, estado, liga_id
-            )
-          )
-        )
-      `)
-      .eq('id', partidoId)
-      .maybeSingle()
+    const { data: partido, error } = await partidoRepository.findPartidoWithOwnership(partidoId)
 
     if (error || !partido) throw new AppError('Partido no encontrado', 404)
 
@@ -67,17 +50,7 @@ class PartidoService {
     const { equipo_local_id, equipo_visitante_id, fecha_hora, cancha } = data
 
     // 1. Resolver cadena: jornada → fase → temporada → liga
-    const { data: jornada, error: jErr } = await supabaseAdmin
-      .from('jornada')
-      .select(`
-        id,
-        fase:fase!inner(
-          temporada_id,
-          temporada:temporada!inner(estado, liga_id)
-        )
-      `)
-      .eq('id', jornadaId)
-      .maybeSingle()
+    const { data: jornada, error: jErr } = await partidoRepository.findJornadaForPartidoCreation(jornadaId)
 
     if (jErr || !jornada) throw new AppError('Jornada no encontrada', 404)
 
@@ -94,10 +67,7 @@ class PartidoService {
     }
 
     // 3. Validar que ambos equipos pertenezcan a la misma liga
-    const { data: equipos, error: eqErr } = await supabaseAdmin
-      .from('equipo')
-      .select('id, liga_id')
-      .in('id', [equipo_local_id, equipo_visitante_id])
+    const { data: equipos, error: eqErr } = await partidoRepository.findEquiposForValidation([equipo_local_id, equipo_visitante_id])
 
     if (eqErr || !equipos || equipos.length !== 2) {
       throw new AppError('Uno o ambos equipos no fueron encontrados', 404)
@@ -118,11 +88,7 @@ class PartidoService {
     if (fecha_hora) payload.fecha_hora = fecha_hora
     if (cancha) payload.cancha = cancha.trim()
 
-    const { data: nuevoPartido, error: insErr } = await supabaseAdmin
-      .from('partido')
-      .insert([payload])
-      .select('id, jornada_id, equipo_local_id, equipo_visitante_id, estado, fecha_hora, cancha')
-      .single()
+    const { data: nuevoPartido, error: insErr } = await partidoRepository.createPartido(payload)
 
     if (insErr) {
       if (insErr.message?.includes('equipos_distintos')) {
@@ -157,12 +123,7 @@ class PartidoService {
       )
     }
 
-    const { data: updated, error } = await supabaseAdmin
-      .from('partido')
-      .update({ estado: nuevoEstado })
-      .eq('id', partidoId)
-      .select('id, estado, goles_local, goles_visitante')
-      .single()
+    const { data: updated, error } = await partidoRepository.updatePartidoEstado(partidoId, nuevoEstado)
 
     if (error) throw new AppError(`Error cambiando estado: ${error.message}`, 500)
 
@@ -191,15 +152,7 @@ class PartidoService {
       )
     }
 
-    const { data: updated, error } = await supabaseAdmin
-      .from('partido')
-      .update({
-        goles_local: Number(golesLocal),
-        goles_visitante: Number(golesVisitante)
-      })
-      .eq('id', partidoId)
-      .select('id, estado, goles_local, goles_visitante')
-      .single()
+    const { data: updated, error } = await partidoRepository.updatePartidoResultado(partidoId, golesLocal, golesVisitante)
 
     if (error) throw new AppError(`Error registrando resultado: ${error.message}`, 500)
 
@@ -211,30 +164,12 @@ class PartidoService {
    */
   async getFixtureByJornada(jornadaId, organizadorId) {
     // Resolver ownership de la jornada
-    const { data: jornada, error: jErr } = await supabaseAdmin
-      .from('jornada')
-      .select(`
-        id, numero, estado, fecha_tentativa,
-        fase:fase!inner(
-          temporada_id,
-          temporada:temporada!inner(liga_id)
-        )
-      `)
-      .eq('id', jornadaId)
-      .maybeSingle()
+    const { data: jornada, error: jErr } = await partidoRepository.findJornadaWithOwnership(jornadaId)
 
     if (jErr || !jornada) throw new AppError('Jornada no encontrada', 404)
     await LigaService.verifyOwnership(jornada.fase.temporada.liga_id, organizadorId)
 
-    const { data: partidos, error: pErr } = await supabaseAdmin
-      .from('partido')
-      .select(`
-        id, estado, goles_local, goles_visitante, fecha_hora, cancha,
-        equipo_local:equipo!equipo_local_id(id, nombre, escudo_url, color_principal),
-        equipo_visitante:equipo!equipo_visitante_id(id, nombre, escudo_url, color_principal)
-      `)
-      .eq('jornada_id', jornadaId)
-      .order('fecha_hora', { ascending: true })
+    const { data: partidos, error: pErr } = await partidoRepository.findPartidosByJornada(jornadaId)
 
     if (pErr) throw new AppError(`Error obteniendo fixture: ${pErr.message}`, 500)
 
@@ -250,20 +185,13 @@ class PartidoService {
    */
   async getLiveMatches(temporadaId, organizadorId) {
     // Verify ownership through temporada → liga
-    const { data: temporada, error: tErr } = await supabaseAdmin
-      .from('temporada')
-      .select('id, liga_id')
-      .eq('id', temporadaId)
-      .maybeSingle()
+    const { data: temporada, error: tErr } = await partidoRepository.findTemporadaWithOwnership(temporadaId)
 
     if (tErr || !temporada) throw new AppError('Temporada no encontrada', 404)
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId)
 
     // Fetch all jornadas for this temporada
-    const { data: fases, error: fErr } = await supabaseAdmin
-      .from('fase')
-      .select('id, jornada(id)')
-      .eq('temporada_id', temporadaId)
+    const { data: fases, error: fErr } = await partidoRepository.findJornadasByTemporada(temporadaId)
 
     if (fErr) throw new AppError(`Error resolviendo jornadas: ${fErr.message}`, 500)
 
@@ -272,15 +200,7 @@ class PartidoService {
     if (jornadaIds.length === 0) return []
 
     // Fetch live matches using the array of jornadaIds
-    const { data: partidos, error: pErr } = await supabaseAdmin
-      .from('partido')
-      .select(`
-        id, estado, goles_local, goles_visitante,
-        equipo_local:equipo!equipo_local_id(id, nombre),
-        equipo_visitante:equipo!equipo_visitante_id(id, nombre)
-      `)
-      .in('estado', ['en_juego', 'entre_tiempo'])
-      .in('jornada_id', jornadaIds)
+    const { data: partidos, error: pErr } = await partidoRepository.findLiveMatchesByJornadas(jornadaIds)
 
     if (pErr) throw new AppError(`Error obteniendo partidos en vivo: ${pErr.message}`, 500)
 
@@ -311,12 +231,7 @@ class PartidoService {
       throw new AppError('No hay campos válidos para actualizar', 400)
     }
 
-    const { data: updated, error } = await supabaseAdmin
-      .from('partido')
-      .update(payload)
-      .eq('id', partidoId)
-      .select('id, fecha_hora, cancha, estado')
-      .single()
+    const { data: updated, error } = await partidoRepository.updatePartidoLogistica(partidoId, payload)
 
     if (error) throw new AppError(`Error actualizando partido: ${error.message}`, 500)
 
@@ -333,18 +248,7 @@ class PartidoService {
    */
   async generateRoundRobin(faseId, organizadorId, equipoIds) {
     // 1. Obtener datos de la fase y liga asociada
-    const { data: fase, error: faseErr } = await supabaseAdmin
-      .from('fase')
-      .select(`
-        id, nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta,
-        temporada:temporada_id(
-          id, liga_id, estado,
-          liga:liga_id(id, tipo_futbol)
-        ),
-        jornadas:jornada(id, numero)
-      `)
-      .eq('id', faseId)
-      .single()
+    const { data: fase, error: faseErr } = await partidoRepository.findFaseForGeneration(faseId)
 
     if (faseErr || !fase) throw new AppError('Fase no encontrada', 404)
 
@@ -359,11 +263,7 @@ class PartidoService {
     }
 
     // Validar que todos los equipos pertenecen a la liga
-    const { data: equiposValidos, error: eqErr } = await supabaseAdmin
-      .from('equipo')
-      .select('id')
-      .eq('liga_id', fase.temporada.liga_id)
-      .in('id', equipoIds)
+    const { data: equiposValidos, error: eqErr } = await partidoRepository.findEquiposValidosInLiga(fase.temporada.liga_id, equipoIds)
 
     if (eqErr) throw new AppError(`Error validando equipos: ${eqErr.message}`, 500)
     if (equiposValidos.length !== equipoIds.length) {
@@ -371,11 +271,7 @@ class PartidoService {
     }
 
     // 1.1 Validar que todos los equipos están inscritos en esta temporada específica
-    const { data: inscripcionesTemporada, error: insCheckErr } = await supabaseAdmin
-      .from('inscripcion_equipo')
-      .select('equipo_id')
-      .eq('temporada_id', fase.temporada.id)
-      .in('equipo_id', equipoIds)
+    const { data: inscripcionesTemporada, error: insCheckErr } = await partidoRepository.findInscripcionesTemporada(fase.temporada.id, equipoIds)
 
     if (insCheckErr) throw new AppError(`Error validando inscripciones: ${insCheckErr.message}`, 500)
     if (inscripcionesTemporada.length !== equipoIds.length) {
@@ -383,14 +279,7 @@ class PartidoService {
     }
 
     // 2. Validación de Jugadores Activos por Equipo
-    const { data: planteles, error: pError } = await supabaseAdmin
-      .from('plantel')
-      .select(`
-        equipo_id,
-        inscripciones:inscripcion_jugador(id, estado)
-      `)
-      .eq('temporada_id', fase.temporada.id)
-      .in('equipo_id', equipoIds)
+    const { data: planteles, error: pError } = await partidoRepository.findPlantelesForRosterCheck(fase.temporada.id, equipoIds)
 
     if (pError) throw new AppError(`Error al validar planteles: ${pError.message}`, 500)
 
@@ -430,10 +319,7 @@ class PartidoService {
         })
       }
 
-      const { data: insertadas, error: jorErr } = await supabaseAdmin
-        .from('jornada')
-        .insert(nuevasJornadas)
-        .select('id, numero')
+      const { data: insertadas, error: jorErr } = await partidoRepository.createJornadas(nuevasJornadas)
 
       if (jorErr) throw new AppError(`Error creando jornadas automáticas: ${jorErr.message}`, 500)
 
@@ -442,10 +328,7 @@ class PartidoService {
 
     // 4. Borrar partidos existentes de TODAS las jornadas de esta fase
     const jornadaIds = jornadas.map(j => j.id)
-    const { error: deleteErr } = await supabaseAdmin
-      .from('partido')
-      .delete()
-      .in('jornada_id', jornadaIds)
+    const { error: deleteErr } = await partidoRepository.deletePartidosByJornadas(jornadaIds)
 
     if (deleteErr) throw new AppError(`Error eliminando partidos existentes: ${deleteErr.message}`, 500)
 
@@ -467,10 +350,7 @@ class PartidoService {
     }
 
     // 7. Insertar en batch
-    const { data: insertados, error: insErr } = await supabaseAdmin
-      .from('partido')
-      .insert(allPartidos)
-      .select('id, jornada_id, equipo_local_id, equipo_visitante_id')
+    const { data: insertados, error: insErr } = await partidoRepository.createPartidosBatch(allPartidos)
 
     if (insErr) throw new AppError(`Error insertando partidos: ${insErr.message}`, 500)
 
@@ -494,24 +374,12 @@ class PartidoService {
    */
   async generateKnockout(faseId, organizadorId, equipoIds) {
     // 1. Obtener datos de la fase y liga asociada
-    const { data: fase, error: faseErr } = await supabaseAdmin
-      .from('fase')
-      .select(`
-        id, nombre, tipo, ida_y_vuelta, orden,
-        temporada:temporada_id(
-          id, liga_id, estado,
-          liga:liga_id(id, tipo_futbol)
-        ),
-        jornadas:jornada(id, numero)
-      `)
-      .eq('id', faseId)
-      .single()
+    const { data: fase, error: faseErr } = await partidoRepository.findFaseForGeneration(faseId)
 
     if (faseErr || !fase) throw new AppError('Fase no encontrada', 404)
 
     // Reglas de negocio C-02: Dependencia de fases
     // R1: Si la fase de eliminación no es la primera, no se permite generación automática.
-    // El organizador debe gestionar los cruces manualmente para asegurar seeding correcto desde la fase previa.
     if (fase.orden > 1) {
       throw new AppError('No se permite la generación automática de brackets para fases que dependen de una etapa anterior. Debes crear los partidos manualmente para definir los cruces según la clasificación.', 403)
     }
@@ -531,11 +399,7 @@ class PartidoService {
     }
 
     // Validar que todos los equipos pertenecen a la liga
-    const { data: equiposValidos, error: eqErr } = await supabaseAdmin
-      .from('equipo')
-      .select('id')
-      .eq('liga_id', fase.temporada.liga_id)
-      .in('id', equipoIds)
+    const { data: equiposValidos, error: eqErr } = await partidoRepository.findEquiposValidosInLiga(fase.temporada.liga_id, equipoIds)
 
     if (eqErr) throw new AppError(`Error validando equipos: ${eqErr.message}`, 500)
     if (equiposValidos.length !== equipoIds.length) {
@@ -543,11 +407,7 @@ class PartidoService {
     }
 
     // Validar inscripciones en la temporada
-    const { data: inscripcionesTemporada, error: insCheckErr } = await supabaseAdmin
-      .from('inscripcion_equipo')
-      .select('equipo_id')
-      .eq('temporada_id', fase.temporada.id)
-      .in('equipo_id', equipoIds)
+    const { data: inscripcionesTemporada, error: insCheckErr } = await partidoRepository.findInscripcionesTemporada(fase.temporada.id, equipoIds)
 
     if (insCheckErr) throw new AppError(`Error validando inscripciones: ${insCheckErr.message}`, 500)
     if (inscripcionesTemporada.length !== equipoIds.length) {
@@ -555,14 +415,7 @@ class PartidoService {
     }
 
     // Validación de planteles
-    const { data: planteles, error: pError } = await supabaseAdmin
-      .from('plantel')
-      .select(`
-        equipo_id,
-        inscripciones:inscripcion_jugador(id, estado)
-      `)
-      .eq('temporada_id', fase.temporada.id)
-      .in('equipo_id', equipoIds)
+    const { data: planteles, error: pError } = await partidoRepository.findPlantelesForRosterCheck(fase.temporada.id, equipoIds)
 
     if (pError) throw new AppError(`Error al validar planteles: ${pError.message}`, 500)
 
@@ -600,10 +453,6 @@ class PartidoService {
 
       const nuevasJornadas = []
       for (let i = 0; i < faltantes; i++) {
-        const roundIdx = fase.ida_y_vuelta ? Math.floor((jornadas.length + i) / 2) : jornadas.length + i
-        const roundName = knockoutResult.roundNames[roundIdx] || `Ronda ${roundIdx + 1}`
-        const suffix = fase.ida_y_vuelta && (jornadas.length + i) % 2 === 1 ? ' (Vuelta)' : ''
-
         nuevasJornadas.push({
           fase_id: faseId,
           numero: startNumber + i,
@@ -611,10 +460,7 @@ class PartidoService {
         })
       }
 
-      const { data: insertadas, error: jorErr } = await supabaseAdmin
-        .from('jornada')
-        .insert(nuevasJornadas)
-        .select('id, numero')
+      const { data: insertadas, error: jorErr } = await partidoRepository.createJornadas(nuevasJornadas)
 
       if (jorErr) throw new AppError(`Error creando jornadas automáticas: ${jorErr.message}`, 500)
 
@@ -623,10 +469,7 @@ class PartidoService {
 
     // 4. Borrar partidos existentes de TODAS las jornadas de esta fase
     const jornadaIds = jornadas.map(j => j.id)
-    const { error: deleteErr } = await supabaseAdmin
-      .from('partido')
-      .delete()
-      .in('jornada_id', jornadaIds)
+    const { error: deleteErr } = await partidoRepository.deletePartidosByJornadas(jornadaIds)
 
     if (deleteErr) throw new AppError(`Error eliminando partidos existentes: ${deleteErr.message}`, 500)
 
@@ -636,7 +479,6 @@ class PartidoService {
 
     for (let r = 0; r < knockoutResult.rounds.length; r++) {
       const round = knockoutResult.rounds[r]
-      // Map round to jornada (ida y vuelta gets 2 jornadas per round)
       const jornadaIdx = fase.ida_y_vuelta ? r * 2 : r
 
       for (const match of round.matches) {
@@ -679,10 +521,7 @@ class PartidoService {
     // 6. Insertar en batch
     let insertados = []
     if (allPartidos.length > 0) {
-      const { data: inserted, error: insErr } = await supabaseAdmin
-        .from('partido')
-        .insert(allPartidos)
-        .select('id, jornada_id, equipo_local_id, equipo_visitante_id')
+      const { data: inserted, error: insErr } = await partidoRepository.createPartidosBatch(allPartidos)
 
       if (insErr) throw new AppError(`Error insertando partidos: ${insErr.message}`, 500)
       insertados = inserted
@@ -706,4 +545,5 @@ class PartidoService {
   }
 }
 
-export default new PartidoService()
+const instance = new PartidoService()
+export default instance

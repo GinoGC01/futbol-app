@@ -12,7 +12,7 @@ import { useAlertas } from '../hooks/useAdmin'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../components/ui/Toast'
 import { useQueryClient } from '@tanstack/react-query'
-import NoLeagueScreen from '../pages/admin/NoLeagueScreen'
+import NoLeagueScreen from '../features/alerts/components/NoLeagueScreen'
 
 const AdminLayoutContent = memo(function AdminLayoutContent() {
   const { user, signOut } = useAuth()

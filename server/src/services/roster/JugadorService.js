@@ -1,7 +1,7 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { jugadorRepository } from '../../repositories/jugadorRepository.js'
 import AppError from '../../utils/AppError.js'
 
-class JugadorService {
+const JugadorService = {
   /**
    * Soft-Duplicate Check + Create.
    */
@@ -16,11 +16,7 @@ class JugadorService {
     }
 
     if (dni && dni.trim() !== '') {
-      const { data: dniMatch, error: dniError } = await supabaseAdmin
-        .from('jugador')
-        .select('id, nombre, apellido, fecha_nacimiento, dni, foto_url')
-        .eq('dni', dni.trim())
-        .maybeSingle()
+      const { data: dniMatch, error: dniError } = await jugadorRepository.findJugadorByDni(dni.trim())
 
       if (dniError) throw new AppError('Error al verificar identidad por DNI', 500, dniError)
       
@@ -29,17 +25,7 @@ class JugadorService {
       }
     }
 
-    let query = supabaseAdmin
-      .from('jugador')
-      .select('id, nombre, apellido, fecha_nacimiento, dni, foto_url')
-      .ilike('nombre', nombre.trim())
-      .ilike('apellido', apellido.trim())
-
-    if (fecha_nacimiento) {
-      query = query.eq('fecha_nacimiento', fecha_nacimiento)
-    }
-
-    const { data: candidatos, error: searchError } = await query.limit(5)
+    const { data: candidatos, error: searchError } = await jugadorRepository.findCandidatos(nombre, apellido, fecha_nacimiento)
 
     if (searchError) {
       throw new AppError('Error al buscar jugadores existentes', 500, searchError)
@@ -62,18 +48,14 @@ class JugadorService {
     if (dni) payload.dni = dni.trim()
     if (foto_url) payload.foto_url = foto_url.trim()
 
-    const { data: nuevoJugador, error: createError } = await supabaseAdmin
-      .from('jugador')
-      .insert([payload])
-      .select('id, nombre, apellido, fecha_nacimiento, dni, foto_url')
-      .single()
+    const { data: nuevoJugador, error: createError } = await jugadorRepository.createJugador(payload)
 
     if (createError) {
       throw new AppError('No se pudo registrar al jugador', 500, createError)
     }
 
     return { jugador: nuevoJugador, created: true }
-  }
+  },
 
   /**
    * Búsqueda global de jugadores.
@@ -101,14 +83,7 @@ class JugadorService {
         )`
     }
 
-    let query = supabaseAdmin
-      .from('jugador')
-      .select(select)
-      .or(`nombre.ilike.${searchTerm},apellido.ilike.${searchTerm},dni.ilike.${searchTerm}`)
-      .order('apellido', { ascending: true })
-      .limit(20)
-
-    const { data, error } = await query
+    const { data, error } = await jugadorRepository.searchJugadores(searchTerm, select)
 
     if (error) throw new AppError('Ocurrió un error al procesar la búsqueda', 500, error)
 
@@ -131,7 +106,7 @@ class JugadorService {
       delete result.inscripciones
       return result
     })
-  }
+  },
 
   /**
    * Obtiene jugadores por liga.
@@ -139,19 +114,7 @@ class JugadorService {
   async getJugadoresByLiga(ligaId) {
     if (!ligaId) throw new AppError('ID de liga requerido', 400)
 
-    const { data, error } = await supabaseAdmin
-      .from('jugador')
-      .select(`
-        id, nombre, apellido, fecha_nacimiento, dni, foto_url,
-        inscripcion_jugador!inner (
-          plantel!inner (
-            equipo!inner (
-              liga_id
-            )
-          )
-        )
-      `)
-      .eq('inscripcion_jugador.plantel.equipo.liga_id', ligaId)
+    const { data, error } = await jugadorRepository.findJugadoresByLiga(ligaId)
 
     if (error) throw new AppError('Error al listar los jugadores de la liga', 500, error)
 
@@ -166,7 +129,7 @@ class JugadorService {
     }
 
     return unique
-  }
+  },
 
   /**
    * Mercado Global de jugadores con seguridad de DNI.
@@ -177,20 +140,7 @@ class JugadorService {
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    const { data, error, count } = await supabaseAdmin
-      .from('jugador')
-      .select(`
-        id, nombre, apellido, fecha_nacimiento, dni, foto_url, created_at,
-        inscripciones:inscripcion_jugador(
-          plantel:plantel(
-            equipo:equipo(
-              liga:liga(id, nombre, organizador_id)
-            )
-          )
-        )
-      `, { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to)
+    const { data, error, count } = await jugadorRepository.findJugadoresByOrganizador(from, to)
 
     if (error) throw new AppError('Error al obtener el listado global de jugadores', 500, error)
 
@@ -235,4 +185,4 @@ class JugadorService {
   }
 }
 
-export default new JugadorService()
+export default JugadorService

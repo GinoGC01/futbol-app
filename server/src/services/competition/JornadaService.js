@@ -1,13 +1,11 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { jornadaRepository } from '../../repositories/jornadaRepository.js'
 import TemporadaService from './TemporadaService.js'
 import LigaService from '../identity/LigaService.js'
 import AppError from '../../utils/AppError.js'
 
-class JornadaService {
+export const JornadaService = {
   /**
    * Generación atómica en batch de N jornadas.
-   * Supabase insert([...]) realiza una transacción a nivel de API sobre la tabla. 
-   * Si falla internamente (ej: un constraint de unicidad de numero de jornada en misma fase), revertirá todo el bloque insertado en esa petición.
    */
   async createJornadasBatch(faseId, organizadorId, cantidad) {
     if (!cantidad || cantidad < 1 || cantidad > 100) {
@@ -15,14 +13,7 @@ class JornadaService {
     }
 
     // 1. Obtener la Fase y la Temporada para verificar Estado "Bóveda" y Propiedad
-    const { data: fase, error: faseError } = await supabaseAdmin
-      .from('fase')
-      .select(`
-        temporada_id,
-        temporada:temporada(liga_id)
-      `)
-      .eq('id', faseId)
-      .maybeSingle()
+    const { data: fase, error: faseError } = await jornadaRepository.findFaseTemporadaLiga(faseId)
 
     if (faseError || !fase) throw new AppError('La Fase no existe', 404)
 
@@ -33,13 +24,7 @@ class JornadaService {
     await TemporadaService.validateNotFinalizada(fase.temporada_id)
 
     // 4. Determinar número de arranque (Evitar duplicidad de números en la misma fase)
-    const { data: ultimasJornadas, error: uqError } = await supabaseAdmin
-      .from('jornada')
-      .select('numero')
-      .eq('fase_id', faseId)
-      .order('numero', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const { data: ultimasJornadas, error: uqError } = await jornadaRepository.findLatestJornadaNumero(faseId)
 
     if (uqError) throw new AppError(`Error al verificar jornadas previas: ${uqError.message}`, 500)
 
@@ -51,19 +36,15 @@ class JornadaService {
        payloadBuffer.push({
          fase_id: faseId,
          numero: startNumber + i,
-         estado: 'programada', // Valor inicial validado en el schema
+         estado: 'programada',
        })
     }
 
     try {
       // 6. Transacción en API (Supabase Postgres)
-      const { data: jornadasInsertadas, error: batchError } = await supabaseAdmin
-        .from('jornada')
-        .insert(payloadBuffer)
-        .select('id, numero, estado')
+      const { data: jornadasInsertadas, error: batchError } = await jornadaRepository.insertJornadas(payloadBuffer)
 
       if (batchError) {
-        // Falló la operación en bloque
         throw new AppError(`Falló la creación atómica de jornadas: ${batchError.message}`, 500)
       }
 
@@ -72,28 +53,17 @@ class JornadaService {
         jornadas: jornadasInsertadas
       }
     } catch (e) {
-      // Si fue AppError lo arrojamos directo
       if (e instanceof AppError) throw e
       throw new AppError(`Error fatal generando batch: ${e.message}`, 500)
     }
-  }
+  },
 
   /**
    * Actualiza una jornada (fecha_tentativa).
    */
   async updateJornada(jornadaId, organizadorId, updateData) {
     // 1. Resolve: jornada → fase → temporada → liga
-    const { data: jornada, error: jErr } = await supabaseAdmin
-      .from('jornada')
-      .select(`
-        id, fase_id,
-        fase:fase(
-          temporada_id,
-          temporada:temporada(liga_id, estado)
-        )
-      `)
-      .eq('id', jornadaId)
-      .maybeSingle()
+    const { data: jornada, error: jErr } = await jornadaRepository.findJornadaOwnershipCheck(jornadaId)
 
     if (jErr || !jornada) throw new AppError('Jornada no encontrada', 404)
 
@@ -116,20 +86,10 @@ class JornadaService {
 
     // 5. Si se está cerrando, podemos querer lógica adicional (ej: marcar partidos pendientes)
     if (payload.estado === 'cerrada') {
-      // Opcional: Marcar partidos programados como postergados si se cierra la fecha sin jugarlos
-      await supabaseAdmin
-        .from('partido')
-        .update({ estado: 'postergado' })
-        .eq('jornada_id', jornadaId)
-        .eq('estado', 'programado')
+      await jornadaRepository.postponeProgrammedMatchesByJornada(jornadaId)
     }
 
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from('jornada')
-      .update(payload)
-      .eq('id', jornadaId)
-      .select('id, numero, estado, fecha_tentativa')
-      .single()
+    const { data: updated, error: updateError } = await jornadaRepository.updateJornada(jornadaId, payload)
 
     if (updateError) throw new AppError(`Error al actualizar jornada: ${updateError.message}`, 500)
 
@@ -137,4 +97,4 @@ class JornadaService {
   }
 }
 
-export default new JornadaService()
+export default JornadaService
