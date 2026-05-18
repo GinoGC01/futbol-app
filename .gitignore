@@ -44,3 +44,4 @@ backups/
 .env*.local
 
 .vercel/
+doc.md
