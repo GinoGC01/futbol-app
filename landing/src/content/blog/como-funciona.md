@@ -7,9 +7,7 @@ image: "../images/blog/funcion_app.webp"
 tags: ["tecnologia", "gestion", "tutorial", "organizadores"]
 ---
 
-# ¿Cómo funciona Cancha Libre?
-
-## De futboleros, para futboleros
+# De futboleros, para futboleros
 
 Seamos sinceros, si alguna vez te tocó ponerte la cinta de capitán o armar un torneo de cero, sabes que organizar fútbol amateur es, muchas veces, un dolor de cabeza.
 
@@ -32,7 +30,7 @@ Sabemos exactamente por lo que pasas, y por eso armamos herramientas pensadas pa
 ### 2. los jugadores: Tus números, como los de primera
 
 Hiciste el gol de tu vida el sábado y para el martes ya nadie se acuerda. Nos parecía injusto que no quedara registro de eso. Por eso creamos perfiles individuales. Si metes un gol, una asistencia, o te sacan amarilla, todo queda en tu historial personal. Vas a poder ver tu rendimiento histórico y compararte con tus amigos. ¡Toda la mística del profesionalismo, pero en el barrio!
-Ademas, tenes acceso a la informacion de tu equipo en tiempo real, rapido, simple y comodo. No más excusas para no saber dónde jugás o a qué hora. Y lo mejor de todo, podes ver tus estadisticas y comparartirla en tus redes 😉.
+Además, tenés acceso a la información de tu equipo en tiempo real, rápido, simple y cómodo. No más excusas para no saber dónde jugás o a qué hora. Y lo mejor de todo, podés ver tus estadisticas y compartirlas en tus redes 😉.
 
 ---
 
@@ -46,9 +44,9 @@ Queríamos que la app fuera tan fácil de usar que cualquiera la entienda en dos
 2. **Entran los equipos:** Los capitanes anotan a sus equipos y a sus jugadores, le pasan la planilla al organizador. Desde ese momento, cada jugador ya tiene su lugar en la historia del torneo.
 3. **El fixture se arma solo:** El sistema cruza a los equipos y te arma el calendario. (Obvio, si tenés que hacer algún cambio manual, lo podés mover a mano sin problema).
 4. **Los partidos se pueden manejar en tiempo real:** Cuando se da una jornada, en cada partido, los veedores pueden gestionar el partido en tiempo real y se ve reflejado en la tabla de posiciones al instante, y los equipos pueden ver el partido en tiempo real y seguirlo desde sus celulares. Basta del "Amigo, cuanto van?", ahora lo pueden ver en vivo 😉.
-   Ademas, esto se sincroniza todo, anotas y se sube al momento! nada de volver y tener que cargar todo, hacer las fotitos de los fixtures nuevos y todo eso! Se hace a medida que se da la jornada!
+   Además, esto se sincroniza todo, anotas y se sube al momento! nada de volver y tener que cargar todo, hacer las fotitos de los fixtures nuevos y todo eso! Se hace a medida que se da la jornada!
 5. **La magia automática:** Con solo darle a guardar, se actualizan las tablas de posiciones, los goleadores, y hasta los suspendidos para la próxima fecha.
-6. **Simpleza y rapidez:** Se suspende la fecha, existe algun incoveniente, lo subis en 2 segundos y listo! Se reprograma para otra fecha y es otra la historia!
+6. **Simpleza y rapidez:** Se suspende la fecha, existe algún incoveniente, lo subís en 2 segundos y listo! Se reprograma para otra fecha y es otra la historia!
 
 ---
 
