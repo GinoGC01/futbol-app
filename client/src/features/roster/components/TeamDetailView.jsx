@@ -379,7 +379,7 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
   )
 }
 
-function StatItem({ label, value, subValue, icon: Icon, color, action, isAlert }) {
+function StatItem({ label, value, subValue, icon: color, action, isAlert }) {
   return (
     <GlassCard className={`group relative overflow-hidden border-none p-6 ring-1 transition-all hover:ring-2 ${
       isAlert ? 'ring-danger/30 bg-danger/5' : 'ring-white/5 hover:ring-primary/30'

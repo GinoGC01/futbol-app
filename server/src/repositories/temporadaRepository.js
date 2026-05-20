@@ -111,7 +111,14 @@ export const temporadaRepository = {
         formato:formato_competencia(id, nombre, tipo),
         fases:fase(
           id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta,
-          jornadas:jornada(id, numero, estado, fecha_tentativa)
+          jornadas:jornada(id, numero, estado, fecha_tentativa),
+          grupos:grupo(
+            id, nombre, orden, created_at,
+            grupo_equipo(
+              id, equipo_id,
+              equipo:equipo(id, nombre, escudo_url, color_principal)
+            )
+          )
         )
       `,
       )

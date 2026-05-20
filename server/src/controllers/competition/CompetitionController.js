@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator'
 import TemporadaService from '../../services/competition/TemporadaService.js'
 import FaseService from '../../services/competition/FaseService.js'
 import JornadaService from '../../services/competition/JornadaService.js'
+import GrupoService from '../../services/competition/GrupoService.js'
 
 // ===============================
 // TEMPORADAS
@@ -180,6 +181,86 @@ export async function updateJornada(req, res, next) {
   } catch (error) { next(error) }
 }
 
+// ===============================
+// GRUPOS
+// ===============================
+export async function createGrupo(req, res, next) {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const { fase_id, nombre } = req.body
+    const organizadorId = req.organizador.id
+
+    const nuevoGrupo = await GrupoService.createGrupo(fase_id, organizadorId, { nombre })
+
+    res.status(201).json({ status: 'success', data: nuevoGrupo })
+  } catch (error) { next(error) }
+}
+
+export async function getGruposByFase(req, res, next) {
+  try {
+    const { faseId } = req.params
+    const organizadorId = req.organizador.id
+
+    const grupos = await GrupoService.getGruposByFase(faseId, organizadorId)
+
+    res.status(200).json({ status: 'success', data: grupos })
+  } catch (error) { next(error) }
+}
+
+export async function updateGrupo(req, res, next) {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const { id } = req.params
+    const { nombre } = req.body
+    const organizadorId = req.organizador.id
+
+    const actualizado = await GrupoService.updateGrupo(id, organizadorId, { nombre })
+
+    res.status(200).json({ status: 'success', data: actualizado })
+  } catch (error) { next(error) }
+}
+
+export async function deleteGrupo(req, res, next) {
+  try {
+    const { id } = req.params
+    const organizadorId = req.organizador.id
+
+    const result = await GrupoService.deleteGrupo(id, organizadorId)
+
+    res.status(200).json({ status: 'success', data: result })
+  } catch (error) { next(error) }
+}
+
+export async function assignEquiposToGrupo(req, res, next) {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const { id } = req.params // grupoId
+    const { equipo_ids } = req.body
+    const organizadorId = req.organizador.id
+
+    const asignaciones = await GrupoService.assignEquiposToGrupo(id, organizadorId, equipo_ids)
+
+    res.status(200).json({ status: 'success', data: asignaciones })
+  } catch (error) { next(error) }
+}
+
+export async function removeEquipoFromGrupo(req, res, next) {
+  try {
+    const { grupoId, equipoId } = req.params
+    const organizadorId = req.organizador.id
+
+    const result = await GrupoService.removeEquipoFromGrupo(grupoId, equipoId, organizadorId)
+
+    res.status(200).json({ status: 'success', data: result })
+  } catch (error) { next(error) }
+}
+
 export const CompetitionController = {
   createTemporada,
   getTemporadas,
@@ -192,7 +273,13 @@ export const CompetitionController = {
   createFase,
   createJornadasBatch,
   updateFase,
-  updateJornada
+  updateJornada,
+  createGrupo,
+  getGruposByFase,
+  updateGrupo,
+  deleteGrupo,
+  assignEquiposToGrupo,
+  removeEquipoFromGrupo
 }
 
 export default CompetitionController

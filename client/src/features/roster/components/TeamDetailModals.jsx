@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useUpdateEquipo, useAddJugador, useTemporadas, useInscribirEquipo, useUpdatePago } from '../../../hooks/useAdmin'
 import { rosterService } from '../../../services/rosterService'
 import { useToast } from '../../../components/ui/Toast'
@@ -29,7 +29,7 @@ export function EditTeamModal({ open, onClose, equipo }) {
       await updateMutation.mutateAsync(payload)
       toast.success('Equipo actualizado exitosamente')
       onClose()
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar el equipo')
     }
   }
@@ -288,7 +288,7 @@ export function InscribeTeamModal({ open, onClose, equipoId, ligaId }) {
       await inscribeMutation.mutateAsync({ equipo_id: equipoId, ...form })
       toast.success('Equipo inscrito exitosamente')
       onClose()
-    } catch (error) {
+    } catch {
       toast.error('Error al inscribir equipo')
     }
   }

@@ -124,7 +124,7 @@ export default function Register() {
             style={{ clipPath: 'polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%)' }}
           >
             {step === 1 && (
-              <form onSubmit={handleStep1} className="flex flex-col gap-6">
+              <form onSubmit={handleStep1} className="flex flex-col gap-6" data-testid="step1-form">
                 <h3 className="text-sm font-black italic uppercase tracking-[0.3em] mb-2">UNIRSE A LA ÉLITE</h3>
                 
                 <div>
@@ -144,34 +144,34 @@ export default function Register() {
                 <div className="grid gap-6">
                   <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                     NOMBRE COMPLETO
-                    <input type="text" value={form.nombre} onChange={set('nombre')} required placeholder="INGRESÁ TU NOMBRE"
+                    <input type="text" value={form.nombre} onChange={set('nombre')} required placeholder="INGRESÁ TU NOMBRE" data-testid="register-nombre"
                       className="w-full mt-2 px-4 py-4 bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/10 outline-none focus:border-primary/50 transition-all" />
                   </label>
 
                   <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                     CORREO ELECTRÓNICO
-                    <input type="email" value={form.email} onChange={set('email')} required placeholder="EJ: ORGANIZADOR@CANCHALIBRE.COM"
+                    <input type="email" value={form.email} onChange={set('email')} required placeholder="EJ: ORGANIZADOR@CANCHALIBRE.COM" data-testid="register-email"
                       className="w-full mt-2 px-4 py-4 bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/10 outline-none focus:border-primary/50 transition-all" />
                   </label>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                       CONTRASEÑA
-                      <input type="password" value={form.password} onChange={set('password')} required minLength={6} placeholder="••••••••"
+                      <input type="password" value={form.password} onChange={set('password')} required minLength={6} placeholder="••••••••" data-testid="register-password"
                         className="w-full mt-2 px-4 py-4 bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/10 outline-none focus:border-primary/50 transition-all" />
                     </label>
 
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                       TELÉFONO
-                      <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="+XX 000 0000"
+                      <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="+XX 000 0000" data-testid="register-telefono"
                         className="w-full mt-2 px-4 py-4 bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/10 outline-none focus:border-primary/50 transition-all" />
                     </label>
                   </div>
                 </div>
 
-                {error && <p className="text-xs text-danger bg-danger-dim p-4 font-bold uppercase tracking-widest text-center">{error}</p>}
+                {error && <p className="text-xs text-danger bg-danger-dim p-4 font-bold uppercase tracking-widest text-center" data-testid="register-error">{error}</p>}
 
-                <button type="submit" disabled={loading} className="w-full bg-primary text-black py-5 text-lg font-black italic uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-3 group disabled:opacity-50">
+                <button type="submit" disabled={loading} data-testid="register-continuar" className="w-full bg-primary text-black py-5 text-lg font-black italic uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-3 group disabled:opacity-50">
                   CONTINUAR
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M13 10V3L4 14H11V21L20 10H13Z" />
@@ -185,20 +185,20 @@ export default function Register() {
             )}
 
             {step === 2 && (
-              <form onSubmit={handleStep2} className="flex flex-col gap-6">
+              <form onSubmit={handleStep2} className="flex flex-col gap-6" data-testid="step2-form">
                 <h3 className="text-sm font-black italic uppercase tracking-[0.3em] mb-2">CONFIGURAR LIGA</h3>
                 
                 <div className="grid gap-6">
                   <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                     NOMBRE DE LA LIGA
-                    <input type="text" value={form.ligaNombre} onChange={set('ligaNombre')} required placeholder="EJ: COPA DE CAMPEONES"
+                    <input type="text" value={form.ligaNombre} onChange={set('ligaNombre')} required placeholder="EJ: COPA DE CAMPEONES" data-testid="register-liga-nombre"
                       className="w-full mt-2 px-4 py-4 bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/10 outline-none focus:border-primary/50 transition-all" />
                   </label>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                       TIPO DE FÚTBOL
-                      <select value={form.tipoFutbol} onChange={set('tipoFutbol')}
+                      <select value={form.tipoFutbol} onChange={set('tipoFutbol')} data-testid="register-tipo-futbol"
                         className="w-full mt-2 px-4 py-4 bg-white/5 border border-white/10 text-sm text-white outline-none focus:border-primary/50 transition-all appearance-none uppercase font-bold">
                         <option value="f5">Fútbol 5</option>
                         <option value="f7">Fútbol 7</option>
@@ -209,19 +209,19 @@ export default function Register() {
 
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                       ZONA / CIUDAD
-                      <input type="text" value={form.zona} onChange={set('zona')} placeholder="EJ: PALERMO, CABA"
+                      <input type="text" value={form.zona} onChange={set('zona')} placeholder="EJ: PALERMO, CABA" data-testid="register-zona"
                         className="w-full mt-2 px-4 py-4 bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/10 outline-none focus:border-primary/50 transition-all" />
                     </label>
                   </div>
                 </div>
 
-                {error && <p className="text-xs text-danger bg-danger-dim p-4 font-bold uppercase tracking-widest text-center">{error}</p>}
+                {error && <p className="text-xs text-danger bg-danger-dim p-4 font-bold uppercase tracking-widest text-center" data-testid="register-error">{error}</p>}
 
                 <div className="flex flex-col md:flex-row gap-4">
-                  <button type="button" onClick={() => setStep(1)} className="flex-1 py-4 border border-white/20 text-xs font-black uppercase tracking-widest hover:bg-white/5">
+                  <button type="button" onClick={() => setStep(1)} data-testid="register-volver" className="flex-1 py-4 border border-white/20 text-xs font-black uppercase tracking-widest hover:bg-white/5">
                     VOLVER
                   </button>
-                  <button type="submit" disabled={loading} className="flex-[2] bg-primary text-black py-4 text-sm font-black italic uppercase tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50">
+                  <button type="submit" disabled={loading} data-testid="register-submit" className="flex-[2] bg-primary text-black py-4 text-sm font-black italic uppercase tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50">
                     {loading ? 'CREANDO...' : 'FUNDAR LIGA'}
                   </button>
                 </div>

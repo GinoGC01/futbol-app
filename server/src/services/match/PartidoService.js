@@ -3,6 +3,7 @@ import LigaService from '../identity/LigaService.js'
 import TemporadaService from '../competition/TemporadaService.js'
 import FixtureEngine from './FixtureEngine.js'
 import AppError from '../../utils/AppError.js'
+import { grupoRepository } from '../../repositories/grupoRepository.js'
 
 /**
  * Máquina de estados válida para partido:
@@ -258,28 +259,59 @@ class PartidoService {
       throw new AppError('Temporada finalizada: no se puede generar fixture (Modo Bóveda)', 403)
     }
 
-    if (!equipoIds || equipoIds.length < 2) {
-      throw new AppError('Se necesitan al menos 2 equipos para generar el fixture', 400)
+    // Consultar si existen grupos asociados a esta fase
+    const { data: grupos, error: gruposErr } = await grupoRepository.findGruposByFase(faseId)
+    if (gruposErr) throw new AppError(`Error al consultar grupos de la fase: ${gruposErr.message}`, 500)
+
+    const tieneGrupos = grupos && grupos.length > 0
+    let effectiveEquipoIds = equipoIds
+    let totalRoundsNeeded = 0
+    let warnings = []
+
+    if (tieneGrupos) {
+      // Si la fase tiene grupos, validar cada grupo e ignorar el parámetro equipoIds
+      effectiveEquipoIds = []
+      let maxRounds = 0
+
+      for (const g of grupos) {
+        const equipoIdsGrupo = g.grupo_equipo.map(ge => ge.equipo_id)
+        if (equipoIdsGrupo.length < 4) {
+          throw new AppError(`El grupo "${g.nombre}" tiene ${equipoIdsGrupo.length} equipos. Cada grupo debe tener al menos 4 equipos (tipo mundial).`, 400)
+        }
+        effectiveEquipoIds.push(...equipoIdsGrupo)
+
+        const groupRounds = FixtureEngine.calculateRequiredRounds(equipoIdsGrupo.length, fase.ida_y_vuelta)
+        if (groupRounds > maxRounds) {
+          maxRounds = groupRounds
+        }
+      }
+
+      totalRoundsNeeded = maxRounds
+    } else {
+      if (!equipoIds || equipoIds.length < 2) {
+        throw new AppError('Se necesitan al menos 2 equipos para generar el fixture', 400)
+      }
+      totalRoundsNeeded = FixtureEngine.calculateRequiredRounds(equipoIds.length, fase.ida_y_vuelta)
     }
 
     // Validar que todos los equipos pertenecen a la liga
-    const { data: equiposValidos, error: eqErr } = await partidoRepository.findEquiposValidosInLiga(fase.temporada.liga_id, equipoIds)
+    const { data: equiposValidos, error: eqErr } = await partidoRepository.findEquiposValidosInLiga(fase.temporada.liga_id, effectiveEquipoIds)
 
     if (eqErr) throw new AppError(`Error validando equipos: ${eqErr.message}`, 500)
-    if (equiposValidos.length !== equipoIds.length) {
+    if (equiposValidos.length !== effectiveEquipoIds.length) {
       throw new AppError('Uno o más equipos no pertenecen a esta liga', 400)
     }
 
     // 1.1 Validar que todos los equipos están inscritos en esta temporada específica
-    const { data: inscripcionesTemporada, error: insCheckErr } = await partidoRepository.findInscripcionesTemporada(fase.temporada.id, equipoIds)
+    const { data: inscripcionesTemporada, error: insCheckErr } = await partidoRepository.findInscripcionesTemporada(fase.temporada.id, effectiveEquipoIds)
 
     if (insCheckErr) throw new AppError(`Error validando inscripciones: ${insCheckErr.message}`, 500)
-    if (inscripcionesTemporada.length !== equipoIds.length) {
+    if (inscripcionesTemporada.length !== effectiveEquipoIds.length) {
       throw new AppError('Uno o más equipos seleccionados no están inscritos en esta temporada', 400)
     }
 
     // 2. Validación de Jugadores Activos por Equipo
-    const { data: planteles, error: pError } = await partidoRepository.findPlantelesForRosterCheck(fase.temporada.id, equipoIds)
+    const { data: planteles, error: pError } = await partidoRepository.findPlantelesForRosterCheck(fase.temporada.id, effectiveEquipoIds)
 
     if (pError) throw new AppError(`Error al validar planteles: ${pError.message}`, 500)
 
@@ -287,7 +319,7 @@ class PartidoService {
     const tipoFutbol = fase.temporada.liga?.tipo_futbol || 'f5'
     const modalidad = parseInt(tipoFutbol.replace(/\D/g, '')) || 5
 
-    equipoIds.forEach(eid => {
+    effectiveEquipoIds.forEach(eid => {
       const p = planteles.find(plt => plt.equipo_id === eid)
       const activos = p?.inscripciones?.filter(i => i.estado === 'activo')?.length || 0
       
@@ -298,9 +330,6 @@ class PartidoService {
         })
       }
     })
-
-    // 3. Calcular jornadas necesarias vía FixtureEngine
-    const totalRoundsNeeded = FixtureEngine.calculateRequiredRounds(equipoIds.length, fase.ida_y_vuelta)
 
     // Sort jornadas existentes by number
     let jornadas = (fase.jornadas || []).sort((a, b) => a.numero - b.numero)
@@ -332,35 +361,72 @@ class PartidoService {
 
     if (deleteErr) throw new AppError(`Error eliminando partidos existentes: ${deleteErr.message}`, 500)
 
-    // 5. Generar fixture con FixtureEngine (R1-R7)
-    const fixtureResult = FixtureEngine.generate(equipoIds, fase.ida_y_vuelta)
-
-    // 6. Mapear rounds a jornadas y construir payload de inserciones
     const allPartidos = []
-    for (let r = 0; r < fixtureResult.rounds.length; r++) {
-      const jornadaId = jornadas[r].id
-      for (const match of fixtureResult.rounds[r].matches) {
-        allPartidos.push({
-          jornada_id: jornadaId,
-          equipo_local_id: match.local,
-          equipo_visitante_id: match.visitante,
-          estado: 'programado'
-        })
+
+    if (tieneGrupos) {
+      // 5. Generar fixture por grupo
+      for (const g of grupos) {
+        const equipoIdsGrupo = g.grupo_equipo.map(ge => ge.equipo_id)
+        const fixtureResult = FixtureEngine.generate(equipoIdsGrupo, fase.ida_y_vuelta)
+        
+        // Agregar los warnings de FixtureEngine
+        if (fixtureResult.warnings && fixtureResult.warnings.length > 0) {
+          warnings.push(...fixtureResult.warnings.map(w => `[${g.nombre}] ${w}`))
+        }
+
+        // Mapear rounds a jornadas asignando grupo_id
+        for (let r = 0; r < fixtureResult.rounds.length; r++) {
+          const jornadaId = jornadas[r].id
+          for (const match of fixtureResult.rounds[r].matches) {
+            allPartidos.push({
+              jornada_id: jornadaId,
+              equipo_local_id: match.local,
+              equipo_visitante_id: match.visitante,
+              estado: 'programado',
+              grupo_id: g.id
+            })
+          }
+        }
+      }
+    } else {
+      // 5. Generar fixture con FixtureEngine (R1-R7) sin grupos
+      const fixtureResult = FixtureEngine.generate(effectiveEquipoIds, fase.ida_y_vuelta)
+      if (fixtureResult.warnings && fixtureResult.warnings.length > 0) {
+        warnings.push(...fixtureResult.warnings)
+      }
+
+      // Mapear rounds a jornadas y construir payload de inserciones
+      for (let r = 0; r < fixtureResult.rounds.length; r++) {
+        const jornadaId = jornadas[r].id
+        for (const match of fixtureResult.rounds[r].matches) {
+          allPartidos.push({
+            jornada_id: jornadaId,
+            equipo_local_id: match.local,
+            equipo_visitante_id: match.visitante,
+            estado: 'programado',
+            grupo_id: null
+          })
+        }
       }
     }
 
     // 7. Insertar en batch
-    const { data: insertados, error: insErr } = await partidoRepository.createPartidosBatch(allPartidos)
-
-    if (insErr) throw new AppError(`Error insertando partidos: ${insErr.message}`, 500)
+    let insertados = []
+    if (allPartidos.length > 0) {
+      const { data: inserted, error: insErr } = await partidoRepository.createPartidosBatch(allPartidos)
+      if (insErr) throw new AppError(`Error insertando partidos: ${insErr.message}`, 500)
+      insertados = inserted
+    }
 
     return {
-      message: `Fixture generado: ${insertados.length} partidos en ${fixtureResult.totalRounds} jornadas`,
+      message: tieneGrupos
+        ? `Fixture generado por grupos: ${insertados.length} partidos en ${totalRoundsNeeded} jornadas`
+        : `Fixture generado: ${insertados.length} partidos en ${totalRoundsNeeded} jornadas`,
       partidos_creados: insertados.length,
-      jornadas_usadas: fixtureResult.totalRounds,
+      jornadas_usadas: totalRoundsNeeded,
       jornadas_autocreadas: Math.max(0, totalRoundsNeeded - (fase.jornadas || []).length),
       ida_y_vuelta: fase.ida_y_vuelta,
-      warnings: [...fixtureResult.warnings, ...rosterWarnings.map(w => w.mensaje)]
+      warnings: [...warnings, ...rosterWarnings.map(w => w.mensaje)]
     }
   }
 

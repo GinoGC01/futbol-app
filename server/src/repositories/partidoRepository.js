@@ -90,9 +90,10 @@ export const partidoRepository = {
     return await supabaseAdmin
       .from('partido')
       .select(`
-        id, estado, goles_local, goles_visitante, fecha_hora, cancha,
+        id, estado, goles_local, goles_visitante, fecha_hora, cancha, grupo_id,
         equipo_local:equipo!equipo_local_id(id, nombre, escudo_url, color_principal),
-        equipo_visitante:equipo!equipo_visitante_id(id, nombre, escudo_url, color_principal)
+        equipo_visitante:equipo!equipo_visitante_id(id, nombre, escudo_url, color_principal),
+        grupo:grupo(id, nombre)
       `)
       .eq('jornada_id', jornadaId)
       .order('fecha_hora', { ascending: true })
@@ -117,9 +118,10 @@ export const partidoRepository = {
     return await supabaseAdmin
       .from('partido')
       .select(`
-        id, estado, goles_local, goles_visitante,
+        id, estado, goles_local, goles_visitante, grupo_id,
         equipo_local:equipo!equipo_local_id(id, nombre),
-        equipo_visitante:equipo!equipo_visitante_id(id, nombre)
+        equipo_visitante:equipo!equipo_visitante_id(id, nombre),
+        grupo:grupo(id, nombre)
       `)
       .in('estado', ['en_juego', 'entre_tiempo'])
       .in('jornada_id', jornadaIds)

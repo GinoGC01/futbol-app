@@ -1,6 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { motion } from 'motion/react'
+
 import { ArrowLeft, Shield, Users, Calendar, Trophy, AlertTriangle, Target, Activity } from 'lucide-react'
 import { useEquipoDetalle } from '../../hooks/useStats'
 import GlassCard from '../../components/ui/GlassCard'

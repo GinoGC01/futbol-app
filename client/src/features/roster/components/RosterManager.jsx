@@ -1,6 +1,6 @@
 // Aggressive UI Modernization - Roster Management
 import { useState } from 'react'
-import { useLigas, useEquipos, useCreateEquipo, useDeleteEquipo, useTemporadas, useInscribirEquiposBatch } from '../../../hooks/useAdmin'
+import { useEquipos, useCreateEquipo, useDeleteEquipo, useTemporadas, useInscribirEquiposBatch } from '../../../hooks/useAdmin'
 import { rosterService } from '../../../services/rosterService'
 import ImageUploader from '../../../components/ui/ImageUploader'
 import GlassCard from '../../../components/ui/GlassCard'

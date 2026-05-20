@@ -142,4 +142,59 @@ router.patch(
   CompetitionController.updateJornada // Podemos usar el mismo controller si pasamos el estado en el payload
 )
 
+// ============================================
+// GRUPOS
+// ============================================
+router.post(
+  '/grupos',
+  [
+    body('fase_id').isUUID().withMessage('ID de fase inválido'),
+    body('nombre').optional().isString().isLength({ min: 1, max: 100 }).withMessage('Nombre inválido')
+  ],
+  CompetitionController.createGrupo
+)
+
+router.get(
+  '/grupos/fase/:faseId',
+  [
+    param('faseId').isUUID().withMessage('ID de fase inválido')
+  ],
+  CompetitionController.getGruposByFase
+)
+
+router.patch(
+  '/grupos/:id',
+  [
+    param('id').isUUID().withMessage('ID de grupo inválido'),
+    body('nombre').isString().isLength({ min: 1, max: 100 }).withMessage('Nombre es requerido')
+  ],
+  CompetitionController.updateGrupo
+)
+
+router.delete(
+  '/grupos/:id',
+  [
+    param('id').isUUID().withMessage('ID de grupo inválido')
+  ],
+  CompetitionController.deleteGrupo
+)
+
+router.post(
+  '/grupos/:id/equipos',
+  [
+    param('id').isUUID().withMessage('ID de grupo inválido'),
+    body('equipo_ids').isArray({ min: 1 }).withMessage('Se requiere una lista de IDs de equipos')
+  ],
+  CompetitionController.assignEquiposToGrupo
+)
+
+router.delete(
+  '/grupos/:grupoId/equipos/:equipoId',
+  [
+    param('grupoId').isUUID().withMessage('ID de grupo inválido'),
+    param('equipoId').isUUID().withMessage('ID de equipo inválido')
+  ],
+  CompetitionController.removeEquipoFromGrupo
+)
+
 export default router

@@ -97,3 +97,66 @@ export function useCerrarJornada() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["temporada-tree"] }),
   });
 }
+
+export function useGruposByFase(faseId) {
+  return useQuery({
+    queryKey: ["grupos", faseId],
+    queryFn: () => competitionService.getGruposByFase(faseId),
+    enabled: !!faseId,
+  });
+}
+
+export function useCreateGrupo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: competitionService.createGrupo,
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["grupos", vars.fase_id] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}
+
+export function useUpdateGrupo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }) => competitionService.updateGrupo(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["grupos"] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}
+
+export function useDeleteGrupo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: competitionService.deleteGrupo,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["grupos"] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}
+
+export function useAssignEquiposToGrupo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, equipoIds }) => competitionService.assignEquiposToGrupo(id, equipoIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["grupos"] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}
+
+export function useRemoveEquipoFromGrupo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ grupoId, equipoId }) => competitionService.removeEquipoFromGrupo(grupoId, equipoId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["grupos"] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}

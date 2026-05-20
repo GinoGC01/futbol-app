@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'motion/react'
+
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'

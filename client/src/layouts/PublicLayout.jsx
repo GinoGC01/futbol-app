@@ -1,12 +1,11 @@
 import React from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { motion } from 'motion/react'
+
 import { ChevronLeft } from 'lucide-react'
 import PublicNavbar from '../components/ui/PublicNavbar'
 
 export default function PublicLayout() {
-  const location = useLocation()
-  const isHome = location.pathname === '/'
+    
 
   return (
     <div className="min-h-screen bg-bg-deep text-text-primary selection:bg-primary selection:text-black flex flex-col relative overflow-x-hidden">

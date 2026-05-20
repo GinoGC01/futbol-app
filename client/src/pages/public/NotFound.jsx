@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'motion/react'
 import { Home, ChevronLeft, Search, AlertTriangle } from 'lucide-react'
 
 export default function NotFound() {

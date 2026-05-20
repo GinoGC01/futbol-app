@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'motion/react'
 import { ArrowLeft, Mail, Shield, Scale, Info, Zap } from 'lucide-react'
 
 export default function Terms() {

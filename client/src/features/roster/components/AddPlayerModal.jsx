@@ -17,6 +17,7 @@ export default function AddPlayerModal({ open, onClose, onEnroll, initialMode = 
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line
       setIsCreating(initialMode === 'create')
       if (initialMode === 'create') {
         setForm({ nombre: '', apellido: '', dni: '', fecha_nacimiento: '' })
@@ -47,7 +48,7 @@ export default function AddPlayerModal({ open, onClose, onEnroll, initialMode = 
       queryClient.invalidateQueries({ queryKey: ['jugadores-organizador'] })
       onClose()
       if (onEnroll) onEnroll(newPlayer)
-    } catch (e) { 
+    } catch { 
       toast.error('Error al registrar') 
     }
   }

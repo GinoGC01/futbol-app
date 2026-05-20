@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import { useUpdateJornada, useCerrarJornada, useFixtureAdmin, useCreatePartido } from '../../../hooks/useAdmin'
+import { useUpdateJornada, useCerrarJornada, useCreatePartido } from '../../../hooks/useAdmin'
+import { useJornadaMatches } from '../hooks/useJornadaMatches'
+import { GroupedMatchList } from './GroupedMatchList'
 import { useToast } from '../../../components/ui/Toast'
 import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
 import { Calendar, ChevronDown, Lock as LockIcon, Swords } from 'lucide-react'
+import ConfirmModal from '../../../components/ui/ConfirmModal'
 
 export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, ligaId, currentTemporada }) {
   const updateJornada = useUpdateJornada()
   const cerrarJornada = useCerrarJornada()
-  const { data: fixtureData } = useFixtureAdmin(isExpanded ? jornada.id : null)
-  const partidos = fixtureData?.partidos || []
+  const { groupedMatches, partidos } = useJornadaMatches(isExpanded ? jornada.id : null)
   const [editingDate, setEditingDate] = useState(false)
   const [dateValue, setDateValue] = useState(jornada.fecha_tentativa?.split('T')[0] || '')
+  const [showConfirmCerrar, setShowConfirmCerrar] = useState(false)
   const toast = useToast()
 
   function saveDate() {
@@ -20,6 +23,19 @@ export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equ
       onSuccess: () => { setEditingDate(false); toast.success('Fecha actualizada') },
       onError: () => toast.error('Error al actualizar fecha')
     })
+  }
+
+  function handleCerrarJornada() {
+    cerrarJornada.mutate(jornada.id, {
+      onSuccess: () => {
+        toast.success('Jornada cerrada')
+        setShowConfirmCerrar(false)
+      },
+      onError: (err) => {
+        toast.error(err.message)
+        setShowConfirmCerrar(false)
+      }
+    });
   }
 
   return (
@@ -83,12 +99,7 @@ export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equ
                       className="text-danger hover:bg-danger/10 border-danger/20 h-10 px-4 font-black uppercase italic tracking-wide text-[10px]"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm('¿Cerrar esta fecha? Todos los partidos se marcarán como postergados.')) {
-                          cerrarJornada.mutate(jornada.id, {
-                             onSuccess: () => toast.success('Jornada cerrada'),
-                             onError: (err) => toast.error(err.message)
-                          });
-                        }
+                        setShowConfirmCerrar(true);
                       }}
                       loading={cerrarJornada.isPending}
                     >
@@ -112,41 +123,23 @@ export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equ
           )}
 
           {/* Match list */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-3 bg-secondary skew-x-[-15deg]" />
-              <p className="text-[10px] font-black text-text-dim uppercase tracking-widest">Encuentros ({partidos.length})</p>
-            </div>
-            
-            {partidos.length > 0 ? (
-              <div className="space-y-2">
-                {partidos.map(p => (
-                  <div key={p.id} className="flex items-center gap-4 p-4 rounded-2xl bg-bg-deep/50 border border-white/5 hover:border-primary/30 transition-all">
-                    <div className="flex-1 flex items-center justify-between min-w-0 gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                         <div className="w-1.5 h-6 rounded-full shrink-0" style={{ backgroundColor: p.equipo_local?.color_principal || '#CEDE0B' }} />
-                         <span className="text-[11px] font-black uppercase italic tracking-wide truncate">{p.equipo_local?.nombre}</span>
-                      </div>
-                      <div className="px-2 text-[9px] font-black text-primary italic shrink-0">VS</div>
-                      <div className="flex items-center gap-2 min-w-0 text-right justify-end">
-                         <span className="text-[11px] font-black uppercase italic tracking-wide truncate">{p.equipo_visitante?.nombre}</span>
-                         <div className="w-1.5 h-6 rounded-full shrink-0" style={{ backgroundColor: p.equipo_visitante?.color_principal || '#ffffff' }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-12 text-center bg-white/2 rounded-2xl border border-dashed border-white/10">
-                <p className="text-[10px] font-black text-text-dim uppercase tracking-widest italic">Vacío</p>
-              </div>
-            )}
-          </div>
+          <GroupedMatchList groupedMatches={groupedMatches} partidosLength={partidos.length} />
 
           {/* Manual match creator */}
           {!isVault && <MatchCreator jornadaId={jornada.id} equipos={equipos || []} />}
         </div>
       )}
+
+      <ConfirmModal
+        open={showConfirmCerrar}
+        onClose={() => setShowConfirmCerrar(false)}
+        onConfirm={handleCerrarJornada}
+        title="Cerrar Jornada"
+        message="¿Cerrar esta fecha? Todos los partidos sin resultado se marcarán como postergados y no se podrán agregar más encuentros."
+        confirmText="Sí, Cerrar"
+        isDestructive={true}
+        isLoading={cerrarJornada.isPending}
+      />
     </div>
   )
 }

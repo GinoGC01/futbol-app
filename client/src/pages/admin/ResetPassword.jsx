@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import { motion } from 'motion/react'
+
 import { Lock as LockIcon, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'

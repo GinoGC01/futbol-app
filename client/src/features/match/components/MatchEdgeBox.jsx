@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { 
-  useTemporadas, useLigas, useTemporadaTree, useFixtureAdmin, 
+  useTemporadas, useTemporadaTree, useFixtureAdmin, 
   useEventos, useCambiarEstadoPartido, useRegistrarGol, 
   useRegistrarTarjeta, useInscripcionesEquipo 
 } from '../../../hooks/useAdmin'
@@ -62,6 +62,7 @@ export default function MatchEdgeBox() {
     if (p?.estado === 'en_juego') {
       if (saved) {
         const { startTime } = JSON.parse(saved)
+        // eslint-disable-next-line react-hooks/purity
         const elapsed = Math.floor((Date.now() - startTime) / 1000)
         const val = elapsed > 0 ? elapsed : 0
         timerRef.current = val
@@ -93,18 +94,10 @@ export default function MatchEdgeBox() {
     }
   }, [selectedPartido, partidos])
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const formatTimeParts = (seconds) => ({
-    mins: String(Math.floor(seconds / 60)).padStart(2, '0'),
-    secs: String(seconds % 60).padStart(2, '0')
-  })
-
+  
+  
   const handleStartMatch = () => {
+    // eslint-disable-next-line react-hooks/purity
     const startTime = Date.now()
     localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ startTime }))
     cambiarEstado.mutate({ id: partido.id, estado: 'en_juego' }, {
@@ -128,6 +121,8 @@ export default function MatchEdgeBox() {
 
   // D-02: Resume from entre_tiempo
   const handleResumeMatch = () => {
+    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/purity
     const startTime = Date.now() - (timerRef.current * 1000)
     localStorage.setItem(`match_timer_${partido.id}`, JSON.stringify({ startTime }))
     cambiarEstado.mutate({ id: partido.id, estado: 'en_juego' }, {

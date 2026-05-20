@@ -26,7 +26,14 @@ export const faseRepository = {
       .from('fase')
       .select(`
         id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta, estado,
-        jornadas:jornada(id, numero, estado, fecha_tentativa)
+        jornadas:jornada(id, numero, estado, fecha_tentativa),
+        grupos:grupo(
+          id, nombre, orden, created_at,
+          grupo_equipo(
+            id, equipo_id,
+            equipo:equipo(id, nombre, escudo_url, color_principal)
+          )
+        )
       `)
       .eq('temporada_id', temporadaId)
       .order('orden', { ascending: true })

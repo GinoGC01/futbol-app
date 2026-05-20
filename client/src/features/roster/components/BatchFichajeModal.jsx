@@ -34,7 +34,7 @@ export default function BatchFichajeModal({ open, onClose, selectedPlayers, setS
       })
       setPlayerData(initial)
     }
-  }, [step, selectedPlayers])
+  }, [step, selectedPlayers, playerData])
 
   const validateDorsals = () => {
     const dorsals = Object.values(playerData).map(d => d.dorsal).filter(d => d !== '')

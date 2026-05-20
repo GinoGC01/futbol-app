@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'motion/react'
 import { Search, Trophy, ArrowRight, Target, Zap, Users, MapPin } from 'lucide-react'
 
 export default function Home() {
   const [query, setQuery] = useState('')
-  const [searching, setSearching] = useState(false)
+  const [searching] = useState(false)
   const navigate = useNavigate()
 
   function handleSearch(e) {

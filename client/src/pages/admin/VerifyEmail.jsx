@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { motion } from 'motion/react'
+
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/Button'

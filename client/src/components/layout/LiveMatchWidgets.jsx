@@ -60,6 +60,7 @@ export function LiveMatchHeaderWidget() {
             ? <Pause className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
             : <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           }
+          {p.grupo && <span className="bg-white/10 px-1 rounded text-[7px] text-white shrink-0">{p.grupo.nombre}</span>}
           <span className="truncate max-w-[25px] lg:max-w-[40px]">{p.equipo_local?.nombre?.slice(0, 3)}</span>
           <span className="font-mono font-black text-[9px] lg:text-[10px]">
             {p.goles_local ?? 0}-{p.goles_visitante ?? 0}
@@ -165,6 +166,11 @@ export function LiveMatchBubble() {
                   }`}>
                     {isHalftime ? <><Pause className="w-2.5 h-2.5" /> ET</> : <><Clock className="w-2.5 h-2.5" /> Live</>}
                   </div>
+                  {p.grupo && (
+                    <span className="text-[9px] font-black uppercase tracking-widest text-text-dim border border-white/10 px-2 py-0.5 rounded-md ml-2 mr-auto">
+                      {p.grupo.nombre}
+                    </span>
+                  )}
                   <span className={`stopwatch-display text-lg font-black ${isHalftime ? 'text-warning' : 'text-primary'}`}>
                     <MatchTimer partido={p} formatTime={formatTime} /><span className="text-xs opacity-50">'</span>
                   </span>

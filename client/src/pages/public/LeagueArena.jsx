@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'motion/react'
+
 import { ArrowLeft, Shield, Trophy, Target, AlertTriangle, Award } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useTabla, useGoleadores, useTarjetas, useFixture, usePremiosPublicados } from '../../hooks/useStats'
@@ -154,7 +154,7 @@ export default function LeagueArena() {
   )
 }
 
-function StandingsTab({ data }) {
+export function StandingsTab({ data }) {
   if (!data?.length) return <EmptyState icon={Trophy} title="Sin datos aún" description="Los resultados aparecerán cuando se jueguen partidos." />
   return (
     <GlassCard hover={false}>
@@ -250,7 +250,7 @@ function FixtureTab({ fixture, jornadas, selected, onSelect }) {
   )
 }
 
-function ScorersTab({ data }) {
+export function ScorersTab({ data }) {
   if (!data?.length) return <EmptyState icon={Target} title="Sin goleadores" description="Aparecerán cuando se registren goles." />
   return (
     <GlassCard hover={false}>

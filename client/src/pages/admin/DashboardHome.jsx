@@ -110,7 +110,7 @@ export default function DashboardHome() {
                   try {
                     await evaluarMutation.mutateAsync()
                     toast.success('Evaluación de alertas completada')
-                  } catch (err) {
+                  } catch {
                     toast.error('Error al evaluar alertas')
                   }
                 }}
