@@ -39,7 +39,7 @@ export default function TournamentArchitect() {
             isVault={state.isVault}
             isDeleting={state.isDeletingTemporada}
             onEdit={() => actions.setShowEditTemp(true)}
-            onDelete={actions.handleDeleteTemporada}
+            onDelete={actions.requestDeleteTemporada}
           >
             <FaseList 
               fases={state.tree.fases}

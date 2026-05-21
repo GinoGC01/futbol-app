@@ -74,7 +74,9 @@ CREATE POLICY "grupo_equipo: escritura solo dueño"
 -- ============================================================
 -- 6. ACTUALIZACIÓN DE VISTA_TABLA_POSICIONES
 -- ============================================================
-CREATE OR REPLACE VIEW vista_tabla_posiciones AS
+CREATE OR REPLACE VIEW vista_tabla_posiciones
+WITH (security_invoker = true)
+AS
 WITH partidos_por_equipo AS (
   SELECT
     f.id              AS fase_id,
