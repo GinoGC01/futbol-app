@@ -2,7 +2,7 @@ import cors from "cors";
 
 // --- Orígenes estáticos permitidos ---
 const allowedOrigins = [
-  "https://staging.canchalibre.pro",
+  "https://app.canchalibre.pro",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
