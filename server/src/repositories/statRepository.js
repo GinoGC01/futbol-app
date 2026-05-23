@@ -31,11 +31,20 @@ export const statRepository = {
   async findLatestInscripcionEquipo(equipoId) {
     return await supabaseAdmin
       .from('inscripcion_equipo')
-      .select('id, temporada_id, plantel_id, temporada!inner(deleted_at)')
+      .select('id, temporada_id, temporada!inner(deleted_at)')
       .eq('equipo_id', equipoId)
       .is('temporada.deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(1)
+      .maybeSingle()
+  },
+
+  async findPlantelByEquipoAndTemporada(equipoId, temporadaId) {
+    return await supabaseAdmin
+      .from('plantel')
+      .select('id')
+      .eq('equipo_id', equipoId)
+      .eq('temporada_id', temporadaId)
       .maybeSingle()
   },
 
@@ -68,6 +77,32 @@ export const statRepository = {
       .from('vista_pagos')
       .select('*')
       .eq('equipo_id', equipoId)
+  },
+
+  async findJugadorDetalle(inscripcionJugadorId) {
+    return await supabaseAdmin
+      .from('inscripcion_jugador')
+      .select('*, jugador(*), plantel:plantel_id(*, equipo:equipo_id(*))')
+      .eq('id', inscripcionJugadorId)
+      .maybeSingle()
+  },
+
+  async findGoleadorByJugadorAndTemporada(jugadorId, temporadaId) {
+    return await supabaseAdmin
+      .from('vista_goleadores')
+      .select('goles')
+      .eq('jugador_id', jugadorId)
+      .eq('temporada_id', temporadaId)
+      .maybeSingle()
+  },
+
+  async findTarjetasByJugadorAndTemporada(jugadorId, temporadaId) {
+    return await supabaseAdmin
+      .from('vista_tarjetas')
+      .select('amarillas, rojas')
+      .eq('jugador_id', jugadorId)
+      .eq('temporada_id', temporadaId)
+      .maybeSingle()
   },
 
   async findPremiosPublicados(temporadaId) {

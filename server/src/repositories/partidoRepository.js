@@ -141,11 +141,13 @@ export const partidoRepository = {
       .from('fase')
       .select(`
         id, nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta, orden,
+        duracion_tiempo, duracion_entretiempo, tiempo_entre_partidos,
+        hora_inicio, hora_fin, canchas_disponibles, dias_juego,
         temporada:temporada_id(
           id, liga_id, estado,
           liga:liga_id(id, tipo_futbol)
         ),
-        jornadas:jornada(id, numero)
+        jornadas:jornada(id, numero, fecha_tentativa)
       `)
       .eq('id', faseId)
       .single()
@@ -182,7 +184,7 @@ export const partidoRepository = {
     return await supabaseAdmin
       .from('jornada')
       .insert(nuevasJornadas)
-      .select('id, numero')
+      .select('id, numero, fecha_tentativa')
   },
 
   async deletePartidosByJornadas(jornadaIds) {

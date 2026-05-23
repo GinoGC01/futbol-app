@@ -133,10 +133,10 @@ export async function createJornadasBatch(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
 
-    const { fase_id, cantidad } = req.body
+    const { fase_id, cantidad, fecha_tentativa } = req.body
     const organizadorId = req.organizador.id
 
-    const batchResult = await JornadaService.createJornadasBatch(fase_id, organizadorId, cantidad)
+    const batchResult = await JornadaService.createJornadasBatch(fase_id, organizadorId, cantidad, fecha_tentativa)
 
     res.status(201).json({ status: 'success', data: batchResult })
   } catch (error) { next(error) }
@@ -178,6 +178,16 @@ export async function updateJornada(req, res, next) {
     const updated = await JornadaService.updateJornada(id, organizadorId, updateData)
 
     res.status(200).json({ status: 'success', data: updated })
+  } catch (error) { next(error) }
+}
+
+// ===============================
+// AUTO-EXPIRACIÓN DE JORNADAS
+// ===============================
+export async function autoExpirarJornadas(req, res, next) {
+  try {
+    const result = await JornadaService.autoExpirarJornadasVencidas()
+    res.status(200).json({ status: 'success', data: result })
   } catch (error) { next(error) }
 }
 
@@ -274,6 +284,7 @@ export const CompetitionController = {
   createJornadasBatch,
   updateFase,
   updateJornada,
+  autoExpirarJornadas,
   createGrupo,
   getGruposByFase,
   updateGrupo,

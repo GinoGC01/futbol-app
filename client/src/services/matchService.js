@@ -6,6 +6,10 @@ export const matchService = {
     api.post(`/match/partidos/generate/${faseId}`, { equipo_ids: equipoIds }),
   generateKnockout: (faseId, equipoIds) =>
     api.post(`/match/partidos/knockout/${faseId}`, { equipo_ids: equipoIds }),
+  generateHorariosJornada: (jornadaId) =>
+    api.post(`/match/horarios/jornada/${jornadaId}`),
+  generateHorariosFase: (faseId) =>
+    api.post(`/match/horarios/fase/${faseId}`),
   cambiarEstadoPartido: (id, estado) =>
     api.patch(`/match/partidos/${id}/estado`, { estado }),
   registrarResultado: (id, data) =>

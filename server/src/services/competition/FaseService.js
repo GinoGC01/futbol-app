@@ -8,7 +8,9 @@ const TIPOS_FASE_VALIDOS = ['todos_contra_todos', 'eliminacion_directa']
 
 export const FaseService = {
   async createFase(temporadaId, organizadorId, data) {
-    const { nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta } = data
+    const { nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta,
+            duracion_tiempo, duracion_entretiempo, tiempo_entre_partidos,
+            hora_inicio, hora_fin, canchas_disponibles, dias_juego } = data
 
     // 1. Hard Lock: ¿Temporada finalizada? (Y obtenemos liga_id)
     const temporada = await TemporadaService.validateNotFinalizada(temporadaId)
@@ -30,13 +32,21 @@ export const FaseService = {
     }
 
     if (tipo === 'todos_contra_todos') {
-      // Victoria=3, Empate=1 por defecto
       payload.puntos_victoria = puntos_victoria !== undefined ? Number(puntos_victoria) : 3
       payload.puntos_empate = puntos_empate !== undefined ? Number(puntos_empate) : 1
     } else {
       payload.puntos_victoria = 0
       payload.puntos_empate = 0
     }
+
+    // Fixture config defaults
+    payload.duracion_tiempo = duracion_tiempo !== undefined ? Number(duracion_tiempo) : 20
+    payload.duracion_entretiempo = duracion_entretiempo !== undefined ? Number(duracion_entretiempo) : 5
+    payload.tiempo_entre_partidos = tiempo_entre_partidos !== undefined ? Number(tiempo_entre_partidos) : 15
+    payload.hora_inicio = hora_inicio || '17:00'
+    payload.hora_fin = hora_fin || '22:00'
+    payload.canchas_disponibles = canchas_disponibles !== undefined ? Number(canchas_disponibles) : 1
+    payload.dias_juego = dias_juego !== undefined ? dias_juego : '{1,3,5}'
 
     // 5. Determinar Orden (Auto-secuencial)
     const { data: fasesExistentes, error: fasesError } = await faseRepository.findLatestFaseOrden(temporadaId)
@@ -87,7 +97,9 @@ export const FaseService = {
     }
 
     // 4. Build payload — only allowed fields
-    const { nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta } = updateData
+    const { nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta,
+            duracion_tiempo, duracion_entretiempo, tiempo_entre_partidos,
+            hora_inicio, hora_fin, canchas_disponibles, dias_juego } = updateData
     const payload = {}
 
     if (nombre !== undefined) payload.nombre = nombre.trim()
@@ -100,6 +112,13 @@ export const FaseService = {
     if (puntos_victoria !== undefined) payload.puntos_victoria = Number(puntos_victoria)
     if (puntos_empate !== undefined) payload.puntos_empate = Number(puntos_empate)
     if (ida_y_vuelta !== undefined) payload.ida_y_vuelta = Boolean(ida_y_vuelta)
+    if (duracion_tiempo !== undefined) payload.duracion_tiempo = Number(duracion_tiempo)
+    if (duracion_entretiempo !== undefined) payload.duracion_entretiempo = Number(duracion_entretiempo)
+    if (tiempo_entre_partidos !== undefined) payload.tiempo_entre_partidos = Number(tiempo_entre_partidos)
+    if (hora_inicio !== undefined) payload.hora_inicio = hora_inicio
+    if (hora_fin !== undefined) payload.hora_fin = hora_fin
+    if (canchas_disponibles !== undefined) payload.canchas_disponibles = Number(canchas_disponibles)
+    if (dias_juego !== undefined) payload.dias_juego = dias_juego
 
     if (Object.keys(payload).length === 0) {
       throw new AppError('No hay datos para actualizar', 400)

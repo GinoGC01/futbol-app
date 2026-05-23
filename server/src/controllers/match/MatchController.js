@@ -97,6 +97,30 @@ export const generateKnockout = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+export const generateHorariosJornada = async (req, res, next) => {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const { jornadaId } = req.params
+    const result = await PartidoService.generateHorariosForJornada(jornadaId, req.organizador.id)
+
+    res.status(200).json({ status: 'success', data: result })
+  } catch (error) { next(error) }
+}
+
+export const generateHorariosFase = async (req, res, next) => {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const { faseId } = req.params
+    const result = await PartidoService.generateHorariosForFase(faseId, req.organizador.id)
+
+    res.status(200).json({ status: 'success', data: result })
+  } catch (error) { next(error) }
+}
+
 const MatchController = {
   create,
   cambiarEstado,
@@ -105,7 +129,9 @@ const MatchController = {
   getLiveMatches,
   updateLogistica,
   generateFixture,
-  generateKnockout
+  generateKnockout,
+  generateHorariosJornada,
+  generateHorariosFase
 }
 
 export default MatchController

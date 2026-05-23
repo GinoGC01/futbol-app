@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useTemporadas, useTemporadaTree, useFormatos, useInscripcionesTemporada, useDeleteTemporada } from '../../../hooks/useAdmin'
+import { useTemporadas, useTemporadaTree, useFormatos, useInscripcionesTemporada, useDeleteTemporada, useGenerateHorariosFase } from '../../../hooks/useAdmin'
 import { useToast } from '../../../components/ui/Toast'
 
 export function useTournamentArchitect(liga) {
@@ -31,6 +31,7 @@ export function useTournamentArchitect(liga) {
   
   const isVault = tree?.estado === 'finalizada'
   const deleteTemporada = useDeleteTemporada()
+  const generateHorariosFase = useGenerateHorariosFase()
 
   // Effects
   useEffect(() => {
@@ -58,6 +59,17 @@ export function useTournamentArchitect(liga) {
     });
   };
 
+  const handleGenerateHorarios = (fase) => {
+    generateHorariosFase.mutate(fase.id, {
+      onSuccess: (data) => {
+        toast.success(data?.message || 'Horarios generados para todas las jornadas');
+      },
+      onError: (err) => {
+        toast.error(err?.message || 'Error generando horarios');
+      }
+    });
+  };
+
   return {
     state: {
       temporadas, loadingTemporadas, formatos, equipos, tree, loadingTree, isVault,
@@ -71,7 +83,8 @@ export function useTournamentArchitect(liga) {
       setSelectedTemp, setExpandedJornada,
       setShowNewTemp, setShowEditTemp, setShowNewFase, setShowNewJornadas,
       setEditingFase, setShowGenerateFixture, setSelectedFase, setManagingGroupsFase,
-      setShowConfirmDelete, requestDeleteTemporada, executeDeleteTemporada
+      setShowConfirmDelete, requestDeleteTemporada, executeDeleteTemporada,
+      handleGenerateHorarios
     }
   }
 }

@@ -91,6 +91,25 @@ router.post(
 )
 
 // ============================================
+// HORARIOS AUTOMÁTICOS
+// ============================================
+router.post(
+  '/horarios/jornada/:jornadaId',
+  [
+    param('jornadaId').isUUID().withMessage('ID de jornada inválido')
+  ],
+  MatchController.generateHorariosJornada
+)
+
+router.post(
+  '/horarios/fase/:faseId',
+  [
+    param('faseId').isUUID().withMessage('ID de fase inválido')
+  ],
+  MatchController.generateHorariosFase
+)
+
+// ============================================
 // EVENTOS — Goles y Tarjetas (Minuto a Minuto)
 // ============================================
 router.post(

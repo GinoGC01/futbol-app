@@ -451,6 +451,7 @@ const InscripcionService = {
       estado: "activo"
     }));
 
+
     // 7. Insertar en lote
     const { data: nuevasInscripciones, error: insError } = await inscripcionRepository.createInscripcionesJugadorBatch(payload);
 

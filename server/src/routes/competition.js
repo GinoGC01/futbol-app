@@ -89,7 +89,15 @@ router.post(
     body('tipo').isIn(['todos_contra_todos', 'eliminacion_directa']).withMessage('Tipo de fase no válido'),
     body('puntos_victoria').optional().isInt({ min: 0 }),
     body('puntos_empate').optional().isInt({ min: 0 }),
-    body('ida_y_vuelta').optional().isBoolean()
+    body('ida_y_vuelta').optional().isBoolean(),
+    body('duracion_tiempo').optional().isInt({ min: 1, max: 60 }),
+    body('duracion_entretiempo').optional().isInt({ min: 0, max: 30 }),
+    body('tiempo_entre_partidos').optional().isInt({ min: 0, max: 60 }),
+    body('hora_inicio').optional().matches(/^\d{2}:\d{2}$/).withMessage('hora_inicio debe ser HH:MM'),
+    body('hora_fin').optional().matches(/^\d{2}:\d{2}$/).withMessage('hora_fin debe ser HH:MM'),
+    body('canchas_disponibles').optional().isInt({ min: 1, max: 20 }),
+    body('dias_juego').optional().isArray({ min: 1, max: 7 }).withMessage('dias_juego debe ser un array de enteros (0-6)'),
+    body('dias_juego.*').optional().isInt({ min: 0, max: 6 }).withMessage('Cada día debe estar entre 0 (Dom) y 6 (Sáb)')
   ],
   CompetitionController.createFase
 )
@@ -101,7 +109,8 @@ router.post(
   '/jornadas/batch',
   [
     body('fase_id').isUUID().withMessage('ID de fase inválido'),
-    body('cantidad').isInt({ min: 1, max: 100 }).withMessage('La cantidad debe ser un entero entre 1 y 100')
+    body('cantidad').isInt({ min: 1, max: 100 }).withMessage('La cantidad debe ser un entero entre 1 y 100'),
+    body('fecha_tentativa').optional().isISO8601().withMessage('Fecha inválida (ISO 8601)')
   ],
   CompetitionController.createJornadasBatch
 )
@@ -117,7 +126,15 @@ router.patch(
     body('tipo').optional().isIn(['todos_contra_todos', 'eliminacion_directa']),
     body('puntos_victoria').optional().isInt({ min: 0 }),
     body('puntos_empate').optional().isInt({ min: 0 }),
-    body('ida_y_vuelta').optional().isBoolean()
+    body('ida_y_vuelta').optional().isBoolean(),
+    body('duracion_tiempo').optional().isInt({ min: 1, max: 60 }),
+    body('duracion_entretiempo').optional().isInt({ min: 0, max: 30 }),
+    body('tiempo_entre_partidos').optional().isInt({ min: 0, max: 60 }),
+    body('hora_inicio').optional().matches(/^\d{2}:\d{2}$/).withMessage('hora_inicio debe ser HH:MM'),
+    body('hora_fin').optional().matches(/^\d{2}:\d{2}$/).withMessage('hora_fin debe ser HH:MM'),
+    body('canchas_disponibles').optional().isInt({ min: 1, max: 20 }),
+    body('dias_juego').optional().isArray({ min: 1, max: 7 }).withMessage('dias_juego debe ser un array de enteros (0-6)'),
+    body('dias_juego.*').optional().isInt({ min: 0, max: 6 }).withMessage('Cada día debe estar entre 0 (Dom) y 6 (Sáb)')
   ],
   CompetitionController.updateFase
 )
@@ -129,7 +146,8 @@ router.patch(
   '/jornadas/:id',
   [
     param('id').isUUID().withMessage('ID de jornada inválido'),
-    body('fecha_tentativa').optional().isISO8601().withMessage('Fecha inválida')
+    body('fecha_tentativa').optional().isISO8601().withMessage('Fecha inválida. Debe incluir hora (ISO 8601).'),
+    body('estado').optional().isIn(['programada', 'jugada', 'postergada', 'cerrada', 'vencida'])
   ],
   CompetitionController.updateJornada
 )
@@ -140,6 +158,14 @@ router.patch(
     param('id').isUUID().withMessage('ID de jornada inválido')
   ],
   CompetitionController.updateJornada // Podemos usar el mismo controller si pasamos el estado en el payload
+)
+
+// ============================================
+// AUTO-EXPIRACIÓN DE JORNADAS VENCIDAS
+// ============================================
+router.post(
+  '/jornadas/auto-expirar',
+  CompetitionController.autoExpirarJornadas
 )
 
 // ============================================

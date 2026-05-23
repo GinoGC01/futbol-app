@@ -55,6 +55,13 @@ router.get(
   StatController.getEquipoDetalle
 )
 
+// Detalle de un jugador (inscripcion_jugador)
+router.get(
+  '/jugador/:id/detalle',
+  [param('id').isUUID().withMessage('ID de jugador inválido')],
+  StatController.getJugadorDetalle
+)
+
 // Premios publicados de una temporada (solo publicados=true)
 router.get(
   '/premios',

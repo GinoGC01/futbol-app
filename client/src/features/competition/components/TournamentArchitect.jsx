@@ -42,23 +42,24 @@ export default function TournamentArchitect() {
             onDelete={actions.requestDeleteTemporada}
           >
             <FaseList 
-              fases={state.tree.fases}
-              isVault={state.isVault}
-              onNewFase={() => actions.setShowNewFase(true)}
-              // Props para FaseCard
-              equipos={state.equipos}
-              ligaId={liga?.id}
-              tree={state.tree}
-              expandedJornada={state.expandedJornada}
-              onToggleJornada={actions.setExpandedJornada}
-              onEditFase={actions.setEditingFase}
-              onShowFixture={actions.setShowGenerateFixture}
-              onShowJornadas={(faseId) => { 
-                actions.setSelectedFase(faseId); 
-                actions.setShowNewJornadas(true) 
-              }}
-              onManageGroups={actions.setManagingGroupsFase}
-            />
+                fases={state.tree.fases}
+                isVault={state.isVault}
+                onNewFase={() => actions.setShowNewFase(true)}
+                // Props para FaseCard
+                equipos={state.equipos}
+                ligaId={liga?.id}
+                tree={state.tree}
+                expandedJornada={state.expandedJornada}
+                onToggleJornada={(id) => actions.setExpandedJornada(prev => prev === id ? null : id)}
+                onEditFase={actions.setEditingFase}
+                onShowFixture={actions.setShowGenerateFixture}
+                onShowJornadas={(faseId) => { 
+                  actions.setSelectedFase(faseId); 
+                  actions.setShowNewJornadas(true) 
+                }}
+                onManageGroups={actions.setManagingGroupsFase}
+                onGenerateHorarios={actions.handleGenerateHorarios}
+              />
           </TemporadaActiveCard>
         </div>
       )}

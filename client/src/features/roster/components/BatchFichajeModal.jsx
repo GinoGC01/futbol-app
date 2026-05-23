@@ -80,6 +80,9 @@ export default function BatchFichajeModal({ open, onClose, selectedPlayers, setS
       }))
     }
 
+      console.log(payload)
+
+
     try {
       await addBatchMutation.mutateAsync(payload)
       toast.success(`${selectedPlayers.length} jugadores fichados correctamente`)
@@ -88,7 +91,8 @@ export default function BatchFichajeModal({ open, onClose, selectedPlayers, setS
       setStep(1)
       setPlayerData({})
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Error al procesar el fichaje en bloque')
+      console.error("Batch fichaje error:", e.response?.data || e)
+      toast.error('Error al procesar el fichaje en bloque')
     }
   }
 

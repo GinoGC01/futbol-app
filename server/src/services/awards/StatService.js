@@ -106,7 +106,17 @@ class StatService {
     // 2. Obtener la inscripción más reciente para saber la temporada actual del equipo (excluyendo archivadas)
     const { data: latestInscripcion } = await statRepository.findLatestInscripcionEquipo(equipoId)
 
-    // 3. Ejecutar queries de soporte en paralelo
+    // 3. Obtener el plantel_id desde la tabla plantel (hermana de inscripcion_equipo, ambas linked por equipo_id + temporada_id)
+    let plantelId = null
+    if (latestInscripcion) {
+      const { data: plantelRecord } = await statRepository.findPlantelByEquipoAndTemporada(
+        equipoId,
+        latestInscripcion.temporada_id
+      )
+      plantelId = plantelRecord?.id
+    }
+
+    // 4. Ejecutar queries de soporte en paralelo
     const [statsResult, plantelResult, fixtureResult, pagosResult] = await Promise.all([
       // Estadísticas en la tabla de posiciones
       latestInscripcion 
@@ -114,8 +124,8 @@ class StatService {
         : Promise.resolve({ data: null }),
       
       // Plantel actual
-      latestInscripcion?.plantel_id
-        ? statRepository.findInscripcionJugadorWithJugador(latestInscripcion.plantel_id)
+      plantelId
+        ? statRepository.findInscripcionJugadorWithJugador(plantelId)
         : Promise.resolve({ data: [] }),
 
       // Fixture del equipo (en la temporada actual)
@@ -134,6 +144,52 @@ class StatService {
       plantel: plantelResult.data?.map(p => ({ ...p.jugador, ...p })) || [], // Flatten for easier UI consumption
       fixture: fixtureResult.data?.map(p => ({ ...p, estado: p.partido_estado })) || [],
       historial_pagos: pagosResult.data || []
+    }
+  }
+
+  /**
+   * Detalle de un jugador: datos personales, equipo actual y estadísticas.
+   */
+  async getJugadorDetalle(inscripcionJugadorId) {
+    if (!inscripcionJugadorId) throw new AppError('inscripcion_jugador_id es requerido', 400)
+
+    const { data: inscripcion, error } = await statRepository.findJugadorDetalle(inscripcionJugadorId)
+    if (error || !inscripcion) throw new AppError('Jugador no encontrado', 404)
+
+    const jugador = inscripcion.jugador
+    const plantel = inscripcion.plantel
+    const equipo = plantel?.equipo
+
+    let goles = 0, amarillas = 0, rojas = 0
+    if (jugador && plantel?.temporada_id) {
+      const [golesRes, tarjetasRes] = await Promise.all([
+        statRepository.findGoleadorByJugadorAndTemporada(jugador.id, plantel.temporada_id),
+        statRepository.findTarjetasByJugadorAndTemporada(jugador.id, plantel.temporada_id)
+      ])
+      goles = golesRes.data?.goles ?? 0
+      amarillas = tarjetasRes.data?.amarillas ?? 0
+      rojas = tarjetasRes.data?.rojas ?? 0
+    }
+
+    return {
+      jugador: {
+        id: jugador.id,
+        nombre: jugador.nombre,
+        apellido: jugador.apellido,
+        dni: jugador.dni,
+        foto_url: jugador.foto_url
+      },
+      equipo: equipo ? {
+        id: equipo.id,
+        nombre: equipo.nombre
+      } : null,
+      stats: {
+        goles,
+        asistencias: 0,
+        amarillas,
+        rojas,
+        mvps: 0
+      }
     }
   }
 

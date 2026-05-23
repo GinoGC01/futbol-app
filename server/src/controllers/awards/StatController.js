@@ -35,6 +35,13 @@ export const getEquipoDetalle = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+export const getJugadorDetalle = async (req, res, next) => {
+  try {
+    const detalle = await StatService.getJugadorDetalle(req.params.id)
+    res.status(200).json({ status: 'success', data: detalle })
+  } catch (error) { next(error) }
+}
+
 export const getPremiosPublicados = async (req, res, next) => {
   try {
     const premios = await StatService.getPremiosPublicados(req.query.temporada_id)
@@ -48,6 +55,7 @@ const StatController = {
   getTarjetas,
   getFixture,
   getEquipoDetalle,
+  getJugadorDetalle,
   getPremiosPublicados
 }
 

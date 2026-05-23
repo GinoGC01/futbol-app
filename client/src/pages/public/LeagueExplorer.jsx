@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion as Motion, AnimatePresence } from 'motion/react'
 import { Search, Shield, ChevronLeft, ChevronRight, Trophy, Share2, Rss, Users } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import Badge from '../../components/ui/Badge'
@@ -94,7 +94,7 @@ export default function LeagueExplorer() {
         <div className="space-y-4 min-h-[600px]">
           <AnimatePresence mode="wait">
             {loading ? (
-              <motion.div
+              <Motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -103,16 +103,16 @@ export default function LeagueExplorer() {
               >
                 <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                 <p className="text-xs font-bold tracking-widest text-text-dim">SINCRONIZANDO LIGAS...</p>
-              </motion.div>
+              </Motion.div>
             ) : ligas.length > 0 ? (
-              <motion.div
+              <Motion.div
                 key="results"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="grid gap-4"
               >
                 {ligas.map((liga, i) => (
-                  <motion.div
+                  <Motion.div
                     key={liga.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -150,11 +150,11 @@ export default function LeagueExplorer() {
                         </div>
                       </div>
                     </Link>
-                  </motion.div>
+                  </Motion.div>
                 ))}
-              </motion.div>
+              </Motion.div>
             ) : (
-              <motion.div
+              <Motion.div
                 key="empty"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -169,7 +169,7 @@ export default function LeagueExplorer() {
                 >
                   LIMPIAR FILTROS
                 </button>
-              </motion.div>
+              </Motion.div>
             )}
           </AnimatePresence>
         </div>

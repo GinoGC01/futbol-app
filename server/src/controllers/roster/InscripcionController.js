@@ -125,9 +125,13 @@ export const inscribirEquiposBatch = async (req, res, next) => {
 
 export const agregarJugadoresBatch = async (req, res, next) => {
   try {
+    console.log("ROSTER BATCH REQUEST:", JSON.stringify(req.body, null, 2));
+
     const errors = validationResult(req);
-    if (!errors.isEmpty())
+    if (!errors.isEmpty()) {
+      console.log("ROSTER BATCH VALIDATION ERRORS:", errors.array());
       return res.status(400).json({ status: "fail", errors: errors.array() });
+    }
 
     const { plantel_id, jugadores } = req.body;
 

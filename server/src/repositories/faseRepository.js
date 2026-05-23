@@ -26,6 +26,8 @@ export const faseRepository = {
       .from('fase')
       .select(`
         id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta, estado,
+        duracion_tiempo, duracion_entretiempo, tiempo_entre_partidos,
+        hora_inicio, hora_fin, canchas_disponibles, dias_juego,
         jornadas:jornada(id, numero, estado, fecha_tentativa),
         grupos:grupo(
           id, nombre, orden, created_at,
@@ -45,6 +47,8 @@ export const faseRepository = {
       .from('fase')
       .select(`
         id, temporada_id, nombre, tipo, puntos_victoria, puntos_empate, ida_y_vuelta,
+        duracion_tiempo, duracion_entretiempo, tiempo_entre_partidos,
+        hora_inicio, hora_fin, canchas_disponibles,
         temporada:temporada(liga_id, estado)
       `)
       .eq('id', id)
@@ -57,7 +61,7 @@ export const faseRepository = {
       .from('fase')
       .update(updates)
       .eq('id', id)
-      .select('id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta')
+      .select('id, nombre, tipo, orden, puntos_victoria, puntos_empate, ida_y_vuelta, duracion_tiempo, duracion_entretiempo, tiempo_entre_partidos, hora_inicio, hora_fin, canchas_disponibles')
       .single()
     return { data, error }
   }

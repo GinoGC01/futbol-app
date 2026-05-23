@@ -1,3 +1,17 @@
+const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+
+function formatFechaHora(iso) {
+  if (!iso) return null
+  const d = new Date(iso)
+  const dia = DIAS[d.getUTCDay()]
+  const diaNum = String(d.getUTCDate()).padStart(2, '0')
+  const mes = MESES[d.getUTCMonth()]
+  const hh = String(d.getUTCHours()).padStart(2, '0')
+  const mm = String(d.getUTCMinutes()).padStart(2, '0')
+  return { linea1: `${dia} ${diaNum}/${mes}`, linea2: `${hh}:${mm}` }
+}
+
 export function GroupedMatchList({ groupedMatches, partidosLength }) {
   const groupEntries = Object.entries(groupedMatches);
 
@@ -39,8 +53,16 @@ export function GroupedMatchList({ groupedMatches, partidosLength }) {
                         {p.equipo_local?.nombre}
                       </span>
                     </div>
-                    <div className="px-2 text-[9px] font-black text-primary italic shrink-0">
-                      VS
+                    <div className="flex flex-col items-center shrink-0">
+                      <span className="text-[9px] font-black text-primary italic leading-none">VS</span>
+                      {(() => {
+                        const f = formatFechaHora(p.fecha_hora)
+                        return f ? (
+                          <span className="text-[7px] text-text-dim font-medium mt-1 leading-none whitespace-nowrap">
+                            {f.linea1}<br/>{f.linea2}
+                          </span>
+                        ) : null
+                      })()}
                     </div>
                     <div className="flex items-center gap-2 min-w-0 text-right justify-end">
                       <span className="text-[11px] font-black uppercase italic tracking-wide truncate">

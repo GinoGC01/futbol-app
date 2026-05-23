@@ -92,6 +92,28 @@ export function useRegistrarResultado() {
   });
 }
 
+export function useGenerateHorariosJornada() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: matchService.generateHorariosJornada,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fixture-admin"] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}
+
+export function useGenerateHorariosFase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: matchService.generateHorariosFase,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fixture-admin"] });
+      qc.invalidateQueries({ queryKey: ["temporada-tree"] });
+    },
+  });
+}
+
 export function useCambiarEstadoPartido() {
   const qc = useQueryClient();
   return useMutation({

@@ -1,27 +1,45 @@
 import { useState } from 'react'
-import { useUpdateJornada, useCerrarJornada, useCreatePartido } from '../../../hooks/useAdmin'
+import { useUpdateJornada, useCerrarJornada, useCreatePartido, useGenerateHorariosJornada } from '../../../hooks/useAdmin'
 import { useJornadaMatches } from '../hooks/useJornadaMatches'
 import { GroupedMatchList } from './GroupedMatchList'
 import { useToast } from '../../../components/ui/Toast'
 import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
-import { Calendar, ChevronDown, Lock as LockIcon, Swords } from 'lucide-react'
+import { Calendar, ChevronDown, Clock, Lock as LockIcon, Swords, Timer } from 'lucide-react'
 import ConfirmModal from '../../../components/ui/ConfirmModal'
 
-export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equipos, ligaId, currentTemporada }) {
+function formatDateTimeForInput(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function formatDisplayDateTime(iso) {
+  if (!iso) return null
+  const d = new Date(iso)
+  return d.toLocaleDateString('es-AR', {
+    day: '2-digit', month: 'short',
+    hour: '2-digit', minute: '2-digit'
+  })
+}
+
+export function JornadaRow({ jornada, isExpanded, onToggle, isVault, equipos }) {
   const updateJornada = useUpdateJornada()
   const cerrarJornada = useCerrarJornada()
+  const genHorarios = useGenerateHorariosJornada()
   const { groupedMatches, partidos } = useJornadaMatches(isExpanded ? jornada.id : null)
   const [editingDate, setEditingDate] = useState(false)
-  const [dateValue, setDateValue] = useState(jornada.fecha_tentativa?.split('T')[0] || '')
+  const [dateValue, setDateValue] = useState(formatDateTimeForInput(jornada.fecha_tentativa) || '')
   const [showConfirmCerrar, setShowConfirmCerrar] = useState(false)
   const toast = useToast()
 
   function saveDate() {
     if (!dateValue) return
-    updateJornada.mutate({ id: jornada.id, fecha_tentativa: dateValue }, {
-      onSuccess: () => { setEditingDate(false); toast.success('Fecha actualizada') },
-      onError: () => toast.error('Error al actualizar fecha')
+    const isoDate = new Date(dateValue).toISOString()
+    updateJornada.mutate({ id: jornada.id, fecha_tentativa: isoDate }, {
+      onSuccess: () => { setEditingDate(false); toast.success('Fecha y hora actualizadas') },
+      onError: (err) => toast.error(err?.message || 'Error al actualizar')
     })
   }
 
@@ -39,7 +57,7 @@ export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equ
   }
 
   return (
-    <div className={`rounded-3xl border transition-all overflow-hidden h-fit ${
+    <div className={`rounded-3xl border transition-all overflow-hidden h-fit w-full ${
       isExpanded 
         ? 'border-secondary/40 bg-secondary/5 ring-1 ring-secondary/20 shadow-2xl z-20' 
         : 'border-white/5 bg-bg-surface hover:border-white/20'
@@ -56,8 +74,9 @@ export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equ
             <Badge status={jornada.estado} className="text-[8px] h-4" />
           </div>
           {jornada.fecha_tentativa && (
-            <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">
-              {new Date(jornada.fecha_tentativa).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}
+            <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {formatDisplayDateTime(jornada.fecha_tentativa)}
             </p>
           )}
         </div>
@@ -76,7 +95,7 @@ export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equ
               {editingDate ? (
                 <div className="flex flex-col gap-2">
                   <input 
-                    type="date" 
+                    type="datetime-local" 
                     value={dateValue} 
                     onChange={e => setDateValue(e.target.value)}
                     className="w-full h-12 px-4 bg-bg-input border border-secondary/30 rounded-xl text-sm outline-none focus:ring-1 focus:ring-secondary font-bold text-text-primary"
@@ -89,35 +108,65 @@ export function JornadaRow({ jornada, faseId, isExpanded, onToggle, isVault, equ
               ) : (
                 <div className="flex items-center justify-between gap-4">
                   <button onClick={() => setEditingDate(true)} className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] hover:underline flex items-center gap-2 italic">
-                    <Calendar className="w-3.5 h-3.5" /> {jornada.fecha_tentativa ? 'Reprogramar' : 'Asignar Fecha'}
+                    <Calendar className="w-3.5 h-3.5" /> {jornada.fecha_tentativa ? 'Reprogramar' : 'Asignar Fecha y Hora'}
                   </button>
 
-                  {jornada.estado !== 'cerrada' && (
-                    <Button 
-                      size="xs" 
-                      variant="outline" 
-                      className="text-danger hover:bg-danger/10 border-danger/20 h-10 px-4 font-black uppercase italic tracking-wide text-[10px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowConfirmCerrar(true);
-                      }}
-                      loading={cerrarJornada.isPending}
-                    >
-                      Cerrar Fecha
-                    </Button>
+                  {jornada.estado !== 'cerrada' && jornada.estado !== 'vencida' && (
+                    <div className="flex gap-2">
+                      {partidos?.length > 0 && (
+                        <Button 
+                          size="xs" 
+                          variant="outline"
+                          className="text-primary hover:bg-primary/10 border-primary/20 h-10 px-4 font-black uppercase italic tracking-wide text-[10px]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            genHorarios.mutate(jornada.id, {
+                              onSuccess: (d) => toast.success(d?.message || 'Horarios generados'),
+                              onError: (err) => toast.error(err?.message || 'Error generando horarios')
+                            });
+                          }}
+                          loading={genHorarios.isPending}
+                        >
+                          <Timer className="w-3 h-3 mr-1" /> Horarios
+                        </Button>
+                      )}
+                      <Button 
+                        size="xs" 
+                        variant="outline" 
+                        className="text-danger hover:bg-danger/10 border-danger/20 h-10 px-4 font-black uppercase italic tracking-wide text-[10px]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowConfirmCerrar(true);
+                        }}
+                        loading={cerrarJornada.isPending}
+                      >
+                        Cerrar Fecha
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
             </div>
           )}
 
-          {jornada.estado === 'cerrada' && (
-            <div className="p-4 rounded-xl bg-danger/10 border border-danger/20 flex items-center gap-4 relative overflow-hidden">
+          {(jornada.estado === 'cerrada' || jornada.estado === 'vencida') && (
+            <div className={`p-4 rounded-xl flex items-center gap-4 relative overflow-hidden ${
+              jornada.estado === 'vencida' ? 'bg-warning/10 border border-warning/20' : 'bg-danger/10 border border-danger/20'
+            }`}>
                <div className="absolute top-0 right-0 w-12 h-full bg-danger/5 skew-x-[-20deg] translate-x-6" />
-              <LockIcon className="w-6 h-6 text-danger shrink-0" />
+              {jornada.estado === 'vencida' ? (
+                <Clock className="w-6 h-6 text-warning shrink-0" />
+              ) : (
+                <LockIcon className="w-6 h-6 text-danger shrink-0" />
+              )}
               <div className="min-w-0">
-                <p className="text-[11px] font-black text-danger uppercase tracking-widest italic leading-none mb-1">Blindada</p>
-                <p className="text-[9px] text-text-dim uppercase font-bold truncate">Edición bloqueada.</p>
+                <p className="text-[11px] font-black uppercase tracking-widest italic leading-none mb-1"
+                   style={{ color: jornada.estado === 'vencida' ? 'var(--color-warning)' : 'var(--color-danger)' }}>
+                  {jornada.estado === 'vencida' ? 'Vencida' : 'Blindada'}
+                </p>
+                <p className="text-[9px] text-text-dim uppercase font-bold truncate">
+                  {jornada.estado === 'vencida' ? 'La fecha ya pasó.' : 'Edición bloqueada.'}
+                </p>
               </div>
             </div>
           )}

@@ -1,24 +1,23 @@
 import { useParams, Link } from 'react-router-dom'
+import { motion } from 'motion/react'
 
 import { ArrowLeft, User, Target, AlertTriangle, Medal, Activity, Users } from 'lucide-react'
+import { useJugadorDetalle } from '../../hooks/useStats'
 import GlassCard from '../../components/ui/GlassCard'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
-// For the purpose of the UI task, simulating a hook if not present in useStats. 
-// In a real scenario, this connects to the Phase 5 stats endpoint for a single player.
 
 export default function PlayerProfile() {
   const { id } = useParams()
-  // const { data, isLoading } = useJugadorDetalle(id) 
-  // Placeholder mock data to fulfill the Elite UI implementation req:
-  const isLoading = false
-  const data = {
-    jugador: { nombre: 'Jugador', apellido: 'Estrella', dni: id, foto_url: null },
-    equipo: { nombre: 'Equipo Local', id: 'eq-1' },
-    stats: { goles: 14, asistencias: 5, amarillas: 2, rojas: 0, mvps: 3 }
-  }
+  const { data, isLoading, isError, error } = useJugadorDetalle(id)
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><div className="spinner" /></div>
+
+  if (isError) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <EmptyState icon={AlertTriangle} title="Error al cargar" description={error?.message || 'Ocurrió un error al obtener los datos del jugador.'} />
+    </div>
+  )
   
   if (!data) return (
     <div className="min-h-screen flex items-center justify-center">

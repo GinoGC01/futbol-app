@@ -98,6 +98,14 @@ export function useCerrarJornada() {
   });
 }
 
+export function useAutoExpirarJornadas() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: competitionService.autoExpirarJornadas,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["temporada-tree"] }),
+  });
+}
+
 export function useGruposByFase(faseId) {
   return useQuery({
     queryKey: ["grupos", faseId],

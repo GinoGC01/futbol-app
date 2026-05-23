@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
+import { motion } from 'motion/react'
 
 import { ArrowLeft, Shield, Users, Calendar, Trophy, AlertTriangle, Target, Activity } from 'lucide-react'
 import { useEquipoDetalle } from '../../hooks/useStats'
@@ -8,17 +9,23 @@ import EmptyState from '../../components/ui/EmptyState'
 
 export default function TeamProfile() {
   const { id } = useParams()
-  const { data, isLoading } = useEquipoDetalle(id)
+  const { data, isLoading, isError, error } = useEquipoDetalle(id)
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><div className="spinner" /></div>
   
+  if (isError) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <EmptyState icon={AlertTriangle} title="Error al cargar" description={error?.message || 'Ocurrió un error al obtener los datos del equipo.'} />
+    </div>
+  )
+
   if (!data) return (
     <div className="min-h-screen flex items-center justify-center">
       <EmptyState icon={Shield} title="Equipo no encontrado" description="El equipo que buscas no existe o fue eliminado." />
     </div>
   )
 
-  const { equipo, liga, stats, plantel, fixture } = data // Fallback structure assumption
+  const { equipo, liga, stats, plantel, fixture } = data
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -121,7 +128,7 @@ export default function TeamProfile() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {fixture.map((p) => (
-                  <div key={p.id} className="p-4 rounded-xl bg-white/5 border border-white/10 relative overflow-hidden group">
+                  <div key={p.partido_id} className="p-4 rounded-xl bg-white/5 border border-white/10 relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary opacity-50 group-hover:opacity-100 transition-opacity" />
                     <div className="flex justify-between items-center mb-3">
                       <span className="text-[10px] text-text-dim uppercase tracking-wider">Fecha {p.jornada_numero}</span>
@@ -129,7 +136,7 @@ export default function TeamProfile() {
                     </div>
                     <div className="flex items-center justify-between">
                       <p className={`text-sm font-semibold truncate flex-1 ${p.local_id === equipo?.id ? 'text-primary' : ''}`}>{p.local_nombre}</p>
-                      <p className="font-heading font-black text-xl px-3 tabular-nums">{p.goles_local} - {p.goles_visitante}</p>
+                      <p className="font-heading font-black text-xl px-3 tabular-nums">{p.goles_local ?? '--'} - {p.goles_visitante ?? '--'}</p>
                       <p className={`text-sm font-semibold truncate flex-1 text-right ${p.visitante_id === equipo?.id ? 'text-primary' : ''}`}>{p.visitante_nombre}</p>
                     </div>
                   </div>

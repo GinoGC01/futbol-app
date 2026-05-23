@@ -8,6 +8,8 @@ import { useTabla, useGoleadores, useTarjetas, useFixture, usePremiosPublicados 
 import Badge from '../../components/ui/Badge'
 import GlassCard from '../../components/ui/GlassCard'
 import EmptyState from '../../components/ui/EmptyState'
+import { motion as Motion } from 'framer-motion'
+
 
 export default function LeagueArena() {
   const { slug } = useParams()
@@ -143,13 +145,13 @@ export default function LeagueArena() {
       </div>
 
       {/* Content */}
-      <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+      <Motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
         {activeTab === 'posiciones' && <StandingsTab data={tabla} />}
         {activeTab === 'fixture' && <FixtureTab fixture={fixture} jornadas={jornadas} selected={jornadaId} onSelect={setSelectedJornada} />}
         {activeTab === 'goleadores' && <ScorersTab data={goleadores} />}
         {activeTab === 'tarjetas' && <CardsTab data={tarjetas} />}
         {activeTab === 'premios' && <AwardsTab data={premios} />}
-      </motion.div>
+      </Motion.div>
     </div>
   )
 }

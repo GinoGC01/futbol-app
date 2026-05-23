@@ -16,6 +16,7 @@ export const competitionService = {
   updateFase: (id, data) => api.patch(`/competition/fases/${id}`, data),
   updateJornada: (id, data) => api.patch(`/competition/jornadas/${id}`, data),
   cerrarJornada: (id) => api.patch(`/competition/jornadas/${id}/cerrar`),
+  autoExpirarJornadas: () => api.post("/competition/jornadas/auto-expirar"),
   getGruposByFase: (faseId) => api.get(`/competition/grupos/fase/${faseId}`),
   createGrupo: (data) => api.post("/competition/grupos", data),
   updateGrupo: (id, data) => api.patch(`/competition/grupos/${id}`, data),

@@ -2,8 +2,10 @@ import { partidoRepository } from '../../repositories/partidoRepository.js'
 import LigaService from '../identity/LigaService.js'
 import TemporadaService from '../competition/TemporadaService.js'
 import FixtureEngine from './FixtureEngine.js'
+import FixtureHorarioService from './FixtureHorarioService.js'
 import AppError from '../../utils/AppError.js'
 import { grupoRepository } from '../../repositories/grupoRepository.js'
+import { jornadaRepository } from '../../repositories/jornadaRepository.js'
 
 /**
  * Máquina de estados válida para partido:
@@ -240,6 +242,108 @@ class PartidoService {
   }
 
   /**
+   * Genera y asigna horarios automáticos para todos los partidos de una jornada.
+   */
+  async generateHorariosForJornada(jornadaId, organizadorId) {
+    const { data: faseConfig, error: fcErr } = await jornadaRepository.findFaseConfigByJornada(jornadaId)
+
+    if (fcErr || !faseConfig) throw new AppError('Jornada no encontrada', 404)
+    if (!faseConfig.fase) throw new AppError('Configuración de horario no disponible en la fase', 400)
+
+    const ligaId = faseConfig.fase?.temporada?.liga_id
+    if (ligaId) {
+      await LigaService.verifyOwnership(ligaId, organizadorId)
+    } else {
+      const { data: j } = await partidoRepository.findJornadaWithOwnership(jornadaId)
+      if (j) await LigaService.verifyOwnership(j.fase.temporada.liga_id, organizadorId)
+    }
+
+    const config = {
+      duracion_tiempo: faseConfig.fase.duracion_tiempo || 20,
+      duracion_entretiempo: faseConfig.fase.duracion_entretiempo || 5,
+      tiempo_entre_partidos: faseConfig.fase.tiempo_entre_partidos || 15,
+      hora_inicio: faseConfig.fase.hora_inicio || '17:00',
+      hora_fin: faseConfig.fase.hora_fin || '22:00',
+      canchas_disponibles: faseConfig.fase.canchas_disponibles || 1,
+      dias_juego: faseConfig.fase.dias_juego || [1, 3, 5]
+    }
+
+
+    const fechaJornada = faseConfig.fecha_tentativa
+    if (!fechaJornada) throw new AppError('La jornada debe tener una fecha_tentativa asignada', 400)
+
+    const { data: partidos } = await partidoRepository.findPartidosByJornada(jornadaId)
+    if (!partidos || partidos.length === 0) {
+      return { message: 'No hay partidos en esta jornada', partidos_actualizados: 0 }
+    }
+
+    const asignados = FixtureHorarioService.assignMatchTimes(config, fechaJornada, partidos)
+
+    for (const p of asignados) {
+      await partidoRepository.updatePartidoLogistica(p.id, {
+        fecha_hora: p.fecha_hora,
+        cancha: p.cancha
+      })
+    }
+
+    return {
+      message: `${asignados.length} horarios generados para la jornada`,
+      partidos_actualizados: asignados.length
+    }
+  }
+
+  /**
+   * Genera horarios para todas las jornadas de una fase que tengan partidos.
+   */
+  async generateHorariosForFase(faseId, organizadorId) {
+    const { data: fase, error: faseErr } = await partidoRepository.findFaseForGeneration(faseId)
+    if (faseErr || !fase) throw new AppError('Fase no encontrada', 404)
+    await LigaService.verifyOwnership(fase.temporada.liga_id, organizadorId)
+
+    const config = {
+      duracion_tiempo: fase.duracion_tiempo || 20,
+      duracion_entretiempo: fase.duracion_entretiempo || 5,
+      tiempo_entre_partidos: fase.tiempo_entre_partidos || 15,
+      hora_inicio: fase.hora_inicio || '17:00',
+      hora_fin: fase.hora_fin || '22:00',
+      canchas_disponibles: fase.canchas_disponibles || 1,
+      dias_juego: fase.dias_juego || [1, 3, 5]
+    }
+
+    const jornadas = fase.jornadas || []
+    if (jornadas.length === 0) throw new AppError('No hay jornadas en esta fase', 400)
+
+    const results = []
+    for (const j of jornadas) {
+      if (!j.fecha_tentativa) continue
+
+      const { data: partidos } = await partidoRepository.findPartidosByJornada(j.id)
+      if (!partidos || partidos.length === 0) {
+        results.push({ jornada: j.numero, partidos: 0, status: 'sin_partidos' })
+        continue
+      }
+
+      try {
+        const asignados = FixtureHorarioService.assignMatchTimes(config, j.fecha_tentativa, partidos)
+        for (const p of asignados) {
+          await partidoRepository.updatePartidoLogistica(p.id, {
+            fecha_hora: p.fecha_hora,
+            cancha: p.cancha
+          })
+        }
+        results.push({ jornada: j.numero, partidos: asignados.length, status: 'ok' })
+      } catch (err) {
+        results.push({ jornada: j.numero, partidos: partidos.length, status: 'error', mensaje: err.message })
+      }
+    }
+
+    return {
+      message: `Horarios generados para ${results.filter(r => r.status === 'ok').length} jornadas`,
+      resultados: results
+    }
+  }
+
+  /**
    * Genera fixture automático usando el FixtureEngine (R1-R7 compliant).
    * - Valida ownership, equipos y planteles.
    * - Auto-crea jornadas faltantes si es necesario.
@@ -338,12 +442,18 @@ class PartidoService {
     if (jornadas.length < totalRoundsNeeded) {
       const faltantes = totalRoundsNeeded - jornadas.length
       const startNumber = jornadas.length > 0 ? jornadas[jornadas.length - 1].numero + 1 : 1
+      const fechaBase = jornadas.length > 0
+        ? new Date(jornadas[jornadas.length - 1].fecha_tentativa || Date.now())
+        : new Date()
 
       const nuevasJornadas = []
       for (let i = 0; i < faltantes; i++) {
+        const fechaJornada = new Date(fechaBase)
+        fechaJornada.setDate(fechaJornada.getDate() + (i + 1) * 7)
         nuevasJornadas.push({
           fase_id: faseId,
           numero: startNumber + i,
+          fecha_tentativa: fechaJornada.toISOString(),
           estado: 'programada'
         })
       }
@@ -416,6 +526,51 @@ class PartidoService {
       const { data: inserted, error: insErr } = await partidoRepository.createPartidosBatch(allPartidos)
       if (insErr) throw new AppError(`Error insertando partidos: ${insErr.message}`, 500)
       insertados = inserted
+    }
+
+    // 8. Asignar horarios automáticos si la fase tiene configuración horaria
+    const hasHorarioConfig = fase.duracion_tiempo && fase.hora_inicio && fase.hora_fin
+    if (hasHorarioConfig && insertados.length > 0) {
+      const horarioConfig = {
+        duracion_tiempo: fase.duracion_tiempo,
+        duracion_entretiempo: fase.duracion_entretiempo,
+        tiempo_entre_partidos: fase.tiempo_entre_partidos,
+        hora_inicio: fase.hora_inicio,
+        hora_fin: fase.hora_fin,
+        canchas_disponibles: fase.canchas_disponibles,
+        dias_juego: fase.dias_juego || [1, 3, 5]
+      }
+
+      // Agrupar partidos insertados por jornada
+      const partidosPorJornada = {}
+      for (const p of insertados) {
+        if (!partidosPorJornada[p.jornada_id]) partidosPorJornada[p.jornada_id] = []
+        partidosPorJornada[p.jornada_id].push(p)
+      }
+
+      for (const [jId, partidosJornada] of Object.entries(partidosPorJornada)) {
+        const jornadaData = jornadas.find(j => j.id === jId)
+        if (!jornadaData || !jornadaData.fecha_tentativa) continue
+
+        try {
+          const asignados = FixtureHorarioService.assignMatchTimes(
+            horarioConfig,
+            jornadaData.fecha_tentativa,
+            partidosJornada
+          )
+
+          for (const p of asignados) {
+            await partidoRepository.updatePartidoLogistica(p.id, {
+              fecha_hora: p.fecha_hora,
+              cancha: p.cancha
+            })
+          }
+
+          warnings.push(`Jornada ${jornadaData.numero}: ${partidosJornada.length} partidos con horarios asignados`)
+        } catch (err) {
+          warnings.push(`Jornada ${jornadaData.numero}: No se pudieron asignar horarios - ${err.message}`)
+        }
+      }
     }
 
     return {
@@ -516,12 +671,18 @@ class PartidoService {
     if (jornadas.length < totalJornadasNeeded) {
       const faltantes = totalJornadasNeeded - jornadas.length
       const startNumber = jornadas.length > 0 ? jornadas[jornadas.length - 1].numero + 1 : 1
+      const fechaBase = jornadas.length > 0
+        ? new Date(jornadas[jornadas.length - 1].fecha_tentativa || Date.now())
+        : new Date()
 
       const nuevasJornadas = []
       for (let i = 0; i < faltantes; i++) {
+        const fechaJornada = new Date(fechaBase)
+        fechaJornada.setDate(fechaJornada.getDate() + (i + 1) * 7)
         nuevasJornadas.push({
           fase_id: faseId,
           numero: startNumber + i,
+          fecha_tentativa: fechaJornada.toISOString(),
           estado: 'programada'
         })
       }

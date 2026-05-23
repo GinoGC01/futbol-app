@@ -28,7 +28,7 @@ export const jornadaRepository = {
     const { data, error } = await supabaseAdmin
       .from('jornada')
       .insert(payloads)
-      .select('id, numero, estado')
+      .select('id, numero, estado, fecha_tentativa')
     return { data, error }
   },
 
@@ -36,7 +36,7 @@ export const jornadaRepository = {
     const { data, error } = await supabaseAdmin
       .from('jornada')
       .select(`
-        id, fase_id,
+        id, fase_id, estado, fecha_tentativa,
         fase:fase(
           temporada_id,
           temporada:temporada(liga_id, estado)
@@ -64,6 +64,50 @@ export const jornadaRepository = {
       .eq('id', id)
       .select('id, numero, estado, fecha_tentativa')
       .single()
+    return { data, error }
+  },
+
+  /**
+   * Busca jornadas cuya fecha_tentativa ya pasó y aún están en estado activo (programada/jugada).
+   */
+  async findExpiredJornadas() {
+    const { data, error } = await supabaseAdmin
+      .from('jornada')
+      .select('id, fase_id, numero, fecha_tentativa, estado')
+      .in('estado', ['programada', 'jugada'])
+      .lt('fecha_tentativa', new Date().toISOString())
+    return { data, error }
+  },
+
+  /**
+   * Actualiza el estado de múltiples jornadas en batch.
+   */
+  async batchUpdateEstado(ids, estado) {
+    const { data, error } = await supabaseAdmin
+      .from('jornada')
+      .update({ estado })
+      .in('id', ids)
+      .select('id, numero, estado')
+    return { data, error }
+  },
+
+  /**
+   * Obtiene la configuración horaria de la fase a la que pertenece una jornada.
+   */
+  async findFaseConfigByJornada(jornadaId) {
+    const { data, error } = await supabaseAdmin
+      .from('jornada')
+      .select(`
+        id, fecha_tentativa,
+        fase:fase(
+          duracion_tiempo, duracion_entretiempo,
+          tiempo_entre_partidos, hora_inicio, hora_fin,
+          canchas_disponibles, dias_juego,
+          temporada:temporada(liga_id, estado)
+        )
+      `)
+      .eq('id', jornadaId)
+      .maybeSingle()
     return { data, error }
   }
 }

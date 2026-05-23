@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion as Motion } from 'framer-motion'
 import { Search, Trophy, ArrowRight, Target, Zap, Users, MapPin } from 'lucide-react'
 
 export default function Home() {
@@ -17,7 +18,7 @@ export default function Home() {
     <div className="text-text-primary">
       {/* Hero Section */}
       <section className="relative pb-32 md:pt-12 md:pb-56 px-6 text-center flex flex-col justify-center min-h-[80vh]">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -82,7 +83,7 @@ export default function Home() {
               </button>
             </form>
           </div>
-        </motion.div>
+        </Motion.div>
       </section>
 
       {/* Stats Section */}

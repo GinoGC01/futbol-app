@@ -3,9 +3,14 @@ const styles = {
   finalizado:  'bg-bg-elevated text-text-secondary border-border-default',
   finalizada:  'bg-bg-elevated text-text-secondary border-border-default',
   programado:  'bg-info-dim text-info border-info/30',
+  programada:  'bg-info-dim text-info border-info/30',
   en_juego:    'bg-primary/15 text-primary border-primary/30 animate-pulse-live',
   suspendido:  'bg-danger-dim text-danger border-danger/30',
   postergado:  'bg-warning-dim text-warning border-warning/30',
+  postergada:  'bg-warning-dim text-warning border-warning/30',
+  cerrada:     'bg-danger/15 text-danger border-danger/30',
+  jugada:      'bg-bg-elevated text-text-secondary border-border-default',
+  vencida:     'bg-warning/15 text-warning border-warning/30',
   activa:      'bg-primary/15 text-primary border-primary/30',
   borrador:    'bg-bg-elevated text-text-dim border-border-default',
   pagado:      'bg-primary/15 text-primary border-primary/30',
@@ -16,7 +21,8 @@ const styles = {
 
 const labels = {
   live: 'EN VIVO', finalizado: 'FINALIZADO', finalizada: 'FINALIZADA', programado: 'PROGRAMADO',
-  en_juego: 'EN JUEGO', suspendido: 'SUSPENDIDO', postergado: 'POSTERGADO',
+  programada: 'PROGRAMADA', en_juego: 'EN JUEGO', suspendido: 'SUSPENDIDO', postergado: 'POSTERGADO',
+  postergada: 'POSTERGADA', cerrada: 'CERRADA', jugada: 'JUGADA', vencida: 'VENCIDA',
   activa: 'ACTIVA', borrador: 'BORRADOR', pagado: 'PAGADO',
   parcial: 'PARCIAL', pendiente: 'PENDIENTE', gold: 'GANADOR'
 }
