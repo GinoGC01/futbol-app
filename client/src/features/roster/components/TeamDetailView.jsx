@@ -379,7 +379,8 @@ export default function TeamDetailView({ equipo, onBack, ligaId }) {
   )
 }
 
-function StatItem({ label, value, subValue, color, action, isAlert }) {
+// eslint-disable-next-line no-unused-vars
+function StatItem({ label, value, subValue, color, action, isAlert, icon: Icon }) {
   const iconColor = isAlert ? '#EF4444' : color
 
   return (
@@ -411,12 +412,12 @@ function StatItem({ label, value, subValue, color, action, isAlert }) {
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${
           isAlert ? 'bg-danger/10 border-danger/20' : 'bg-white/5 border-white/10'
         }`}>
-          <IconComponent className="w-7 h-7" style={{ color: isAlert ? '#EF4444' : iconColor }} />
+          <Icon className="w-7 h-7" style={{ color: isAlert ? '#EF4444' : iconColor }} />
         </div>
       </div>
       
       {/* Watermark Icon */}
-      <IconComponent className="absolute -right-6 -bottom-6 w-32 h-32 opacity-[0.02] group-hover:opacity-[0.04] transition-all duration-700 pointer-events-none group-hover:scale-125" style={{ color: iconColor }} />
+      <Icon className="absolute -right-6 -bottom-6 w-32 h-32 opacity-[0.02] group-hover:opacity-[0.04] transition-all duration-700 pointer-events-none group-hover:scale-125" style={{ color: iconColor }} />
     </GlassCard>
   )
 }
