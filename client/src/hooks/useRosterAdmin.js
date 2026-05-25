@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { rosterService } from "../services/rosterService";
 
@@ -24,6 +25,22 @@ export const useJugadoresOrganizador = (page = 1, limit = 20) => {
     keepPreviousData: true,
   });
 };
+
+export function useGlobalMarket(limit = 12) {
+  const [page, setPage] = useState(1);
+  const { data, isFetching } = useJugadoresOrganizador(page, limit);
+
+  return {
+    allJugadores: data?.list || [],
+    totalPages: data?.totalPages || 1,
+    totalCount: data?.count || 0,
+    isFetching,
+    page,
+    setPage,
+    prevPage: () => setPage(p => Math.max(1, p - 1)),
+    nextPage: () => setPage(p => Math.min(data?.totalPages || 1, p + 1)),
+  };
+}
 
 export const useSearchGlobalJugadores = (queryTexto, ligaId) => {
   return useQuery({

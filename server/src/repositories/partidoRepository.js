@@ -214,5 +214,14 @@ export const partidoRepository = {
       .from('partido')
       .update({ goles_local: golesLocal, goles_visitante: golesVisitante })
       .eq('id', partidoId)
+  },
+
+  async updatePartidoTiempoAdicionado(partidoId, segundos) {
+    return await supabaseAdmin
+      .from('partido')
+      .update({ tiempo_adicionado: segundos })
+      .eq('id', partidoId)
+      .select('id, tiempo_adicionado')
+      .single()
   }
 }

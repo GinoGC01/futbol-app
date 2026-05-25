@@ -105,6 +105,37 @@ export const statRepository = {
       .maybeSingle()
   },
 
+  async findEventosByPartido(partidoId) {
+    const [golesResult, tarjetasResult] = await Promise.all([
+      supabaseAdmin
+        .from('gol')
+        .select(`
+          id, minuto, es_penal, es_contra,
+          inscripcion_jugador:inscripcion_jugador!inner(
+            id, dorsal,
+            jugador:jugador!inner(nombre, apellido),
+            plantel:plantel!inner(equipo:equipo!inner(id, nombre))
+          )
+        `)
+        .eq('partido_id', partidoId)
+        .order('minuto', { ascending: true }),
+      supabaseAdmin
+        .from('tarjeta')
+        .select(`
+          id, minuto, tipo,
+          inscripcion_jugador:inscripcion_jugador!inner(
+            id, dorsal,
+            jugador:jugador!inner(nombre, apellido),
+            plantel:plantel!inner(equipo:equipo!inner(id, nombre))
+          )
+        `)
+        .eq('partido_id', partidoId)
+        .order('minuto', { ascending: true }),
+    ])
+
+    return { goles: golesResult.data || [], tarjetas: tarjetasResult.data || [] }
+  },
+
   async findPremiosPublicados(temporadaId) {
     return await supabaseAdmin
       .from('premio')

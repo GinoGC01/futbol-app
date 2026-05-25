@@ -31,6 +31,56 @@ export const registrarTarjeta = async (req, res, next) => {
 }
 
 /**
+ * PATCH /api/match/partidos/:id/goles/:golId
+ */
+export const actualizarGol = async (req, res, next) => {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const updated = await EventoService.actualizarGol(req.params.id, req.organizador.id, req.params.golId, req.body)
+
+    res.status(200).json({ status: 'success', data: updated })
+  } catch (error) { next(error) }
+}
+
+/**
+ * DELETE /api/match/partidos/:id/goles/:golId
+ */
+export const eliminarGol = async (req, res, next) => {
+  try {
+    await EventoService.eliminarGol(req.params.id, req.organizador.id, req.params.golId)
+
+    res.status(200).json({ status: 'success', data: null })
+  } catch (error) { next(error) }
+}
+
+/**
+ * PATCH /api/match/partidos/:id/tarjetas/:tarjetaId
+ */
+export const actualizarTarjeta = async (req, res, next) => {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const updated = await EventoService.actualizarTarjeta(req.params.id, req.organizador.id, req.params.tarjetaId, req.body)
+
+    res.status(200).json({ status: 'success', data: updated })
+  } catch (error) { next(error) }
+}
+
+/**
+ * DELETE /api/match/partidos/:id/tarjetas/:tarjetaId
+ */
+export const eliminarTarjeta = async (req, res, next) => {
+  try {
+    await EventoService.eliminarTarjeta(req.params.id, req.organizador.id, req.params.tarjetaId)
+
+    res.status(200).json({ status: 'success', data: null })
+  } catch (error) { next(error) }
+}
+
+/**
  * GET /api/match/partidos/:id/eventos
  */
 export const getEventos = async (req, res, next) => {
@@ -80,6 +130,10 @@ export const verificarElegibilidad = async (req, res, next) => {
 const IncidentController = {
   registrarGol,
   registrarTarjeta,
+  actualizarGol,
+  eliminarGol,
+  actualizarTarjeta,
+  eliminarTarjeta,
   getEventos,
   crearSancionManual,
   cumplirSancion,

@@ -68,7 +68,7 @@ export default function AddPlayerModal({ open, onClose, onEnroll, initialMode = 
                 value={query} 
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder="DNI, NOMBRE O APELLIDO..." 
+                placeholder="NOMBRE O APELLIDO..." 
                 className="w-full pl-20 pr-6 py-8 bg-transparent border-none outline-none text-lg font-black uppercase italic tracking-[0.05em] placeholder:text-text-dim/20 text-text-primary"
               />
             </div>
@@ -108,7 +108,7 @@ export default function AddPlayerModal({ open, onClose, onEnroll, initialMode = 
                       <div className="min-w-0">
                         <p className="text-base font-black uppercase italic tracking-normal text-text-primary group-hover:text-primary transition-colors">{j.nombre} {j.apellido}</p>
                         <div className="flex items-center gap-3 mt-0.5">
-                          <p className="text-[10px] text-text-dim font-bold tracking-widest uppercase italic">DNI: {j.dni || '—'}</p>
+                          <p className="text-[10px] text-text-dim font-bold tracking-widest uppercase italic">GLOBAL</p>
                           <span className="w-1 h-1 bg-white/20 rounded-full" />
                           <p className="text-[10px] text-text-dim font-bold tracking-widest uppercase italic">GLOBAL</p>
                         </div>

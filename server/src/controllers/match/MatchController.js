@@ -97,6 +97,19 @@ export const generateKnockout = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+export const updateTiempoAdicionado = async (req, res, next) => {
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
+
+    const updated = await PartidoService.updateTiempoAdicionado(
+      req.params.id, req.organizador.id, req.body.segundos
+    )
+
+    res.status(200).json({ status: 'success', data: updated })
+  } catch (error) { next(error) }
+}
+
 export const generateHorariosJornada = async (req, res, next) => {
   try {
     const errors = validationResult(req)
@@ -128,6 +141,7 @@ const MatchController = {
   getFixture,
   getLiveMatches,
   updateLogistica,
+  updateTiempoAdicionado,
   generateFixture,
   generateKnockout,
   generateHorariosJornada,

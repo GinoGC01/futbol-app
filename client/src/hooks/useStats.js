@@ -57,6 +57,15 @@ export function useJugadorDetalle(inscripcionJugadorId) {
   })
 }
 
+export function usePartidoEventos(partidoId) {
+  return useQuery({
+    queryKey: ['partido-eventos', partidoId],
+    queryFn: () => statsService.getPartidoEventos(partidoId),
+    staleTime: 10 * 1000,
+    enabled: !!partidoId
+  })
+}
+
 export function usePremiosPublicados(temporadaId) {
   return useQuery({
     queryKey: ['premios-pub', temporadaId],

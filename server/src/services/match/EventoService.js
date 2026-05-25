@@ -168,6 +168,128 @@ class EventoService {
   }
 
   /**
+   * Actualiza un gol existente.
+   */
+  async actualizarGol(partidoId, organizadorId, golId, data) {
+    const { partido, temporadaEstado } = await PartidoService.resolveOwnershipChain(partidoId, organizadorId)
+
+    if (temporadaEstado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede modificar (Modo Bóveda)', 403)
+    }
+
+    if (!['en_juego', 'entre_tiempo', 'finalizado'].includes(partido.estado)) {
+      throw new AppError(`No se pueden modificar goles con el partido en estado "${partido.estado}"`, 400)
+    }
+
+    const { data: gol } = await eventoRepository.findGolById(golId)
+    if (!gol || gol.partido_id !== partidoId) {
+      throw new AppError('Gol no encontrado en este partido', 404)
+    }
+
+    const payload = {}
+    if (data.minuto !== undefined) payload.minuto = Number(data.minuto)
+    if (data.es_penal !== undefined) payload.es_penal = Boolean(data.es_penal)
+    if (data.es_contra !== undefined) payload.es_contra = Boolean(data.es_contra)
+
+    if (Object.keys(payload).length === 0) {
+      throw new AppError('No hay campos para actualizar', 400)
+    }
+
+    const { data: updated, error } = await eventoRepository.updateGol(golId, payload)
+    if (error) throw new AppError(`Error actualizando gol: ${error.message}`, 500)
+
+    await this._syncGolesPartido(partidoId)
+
+    return updated
+  }
+
+  /**
+   * Elimina un gol.
+   */
+  async eliminarGol(partidoId, organizadorId, golId) {
+    const { partido, temporadaEstado } = await PartidoService.resolveOwnershipChain(partidoId, organizadorId)
+
+    if (temporadaEstado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede modificar (Modo Bóveda)', 403)
+    }
+
+    if (!['en_juego', 'entre_tiempo', 'finalizado'].includes(partido.estado)) {
+      throw new AppError(`No se pueden eliminar goles con el partido en estado "${partido.estado}"`, 400)
+    }
+
+    const { data: gol } = await eventoRepository.findGolById(golId)
+    if (!gol || gol.partido_id !== partidoId) {
+      throw new AppError('Gol no encontrado en este partido', 404)
+    }
+
+    const { error } = await eventoRepository.deleteGol(golId)
+    if (error) throw new AppError(`Error eliminando gol: ${error.message}`, 500)
+
+    await this._syncGolesPartido(partidoId)
+  }
+
+  /**
+   * Actualiza una tarjeta existente.
+   */
+  async actualizarTarjeta(partidoId, organizadorId, tarjetaId, data) {
+    const { partido, temporadaEstado } = await PartidoService.resolveOwnershipChain(partidoId, organizadorId)
+
+    if (temporadaEstado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede modificar (Modo Bóveda)', 403)
+    }
+
+    if (!['en_juego', 'entre_tiempo', 'finalizado'].includes(partido.estado)) {
+      throw new AppError(`No se pueden modificar tarjetas con el partido en estado "${partido.estado}"`, 400)
+    }
+
+    const { data: tarjeta } = await eventoRepository.findTarjetaById(tarjetaId)
+    if (!tarjeta || tarjeta.partido_id !== partidoId) {
+      throw new AppError('Tarjeta no encontrada en este partido', 404)
+    }
+
+    const payload = {}
+    if (data.minuto !== undefined) payload.minuto = Number(data.minuto)
+    if (data.tipo !== undefined) {
+      if (!['amarilla', 'roja', 'doble_amarilla'].includes(data.tipo)) {
+        throw new AppError('Tipo de tarjeta no válido', 400)
+      }
+      payload.tipo = data.tipo
+    }
+
+    if (Object.keys(payload).length === 0) {
+      throw new AppError('No hay campos para actualizar', 400)
+    }
+
+    const { data: updated, error } = await eventoRepository.updateTarjeta(tarjetaId, payload)
+    if (error) throw new AppError(`Error actualizando tarjeta: ${error.message}`, 500)
+
+    return updated
+  }
+
+  /**
+   * Elimina una tarjeta.
+   */
+  async eliminarTarjeta(partidoId, organizadorId, tarjetaId) {
+    const { partido, temporadaEstado } = await PartidoService.resolveOwnershipChain(partidoId, organizadorId)
+
+    if (temporadaEstado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede modificar (Modo Bóveda)', 403)
+    }
+
+    if (!['en_juego', 'entre_tiempo', 'finalizado'].includes(partido.estado)) {
+      throw new AppError(`No se pueden eliminar tarjetas con el partido en estado "${partido.estado}"`, 400)
+    }
+
+    const { data: tarjeta } = await eventoRepository.findTarjetaById(tarjetaId)
+    if (!tarjeta || tarjeta.partido_id !== partidoId) {
+      throw new AppError('Tarjeta no encontrada en este partido', 404)
+    }
+
+    const { error } = await eventoRepository.deleteTarjeta(tarjetaId)
+    if (error) throw new AppError(`Error eliminando tarjeta: ${error.message}`, 500)
+  }
+
+  /**
    * Obtiene los eventos (goles y tarjetas) de un partido.
    */
   async getEventosByPartido(partidoId, organizadorId) {

@@ -62,6 +62,13 @@ router.get(
   StatController.getJugadorDetalle
 )
 
+// Eventos de un partido (público)
+router.get(
+  '/partidos/:id/eventos',
+  [param('id').isUUID().withMessage('ID de partido inválido')],
+  StatController.getPartidoEventos
+)
+
 // Premios publicados de una temporada (solo publicados=true)
 router.get(
   '/premios',

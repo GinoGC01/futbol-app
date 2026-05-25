@@ -55,6 +55,58 @@ export const eventoRepository = {
       .order('minuto', { ascending: true })
   },
 
+  async findGolById(golId) {
+    return await supabaseAdmin
+      .from('gol')
+      .select('id, partido_id, inscripcion_jugador_id, minuto, es_penal, es_contra')
+      .eq('id', golId)
+      .maybeSingle()
+  },
+
+  async updateGol(golId, payload) {
+    return await supabaseAdmin
+      .from('gol')
+      .update(payload)
+      .eq('id', golId)
+      .select('id, partido_id, inscripcion_jugador_id, minuto, es_penal, es_contra')
+      .single()
+  },
+
+  async deleteGol(golId) {
+    return await supabaseAdmin
+      .from('gol')
+      .delete()
+      .eq('id', golId)
+      .select('id, partido_id')
+      .single()
+  },
+
+  async findTarjetaById(tarjetaId) {
+    return await supabaseAdmin
+      .from('tarjeta')
+      .select('id, partido_id, inscripcion_jugador_id, tipo, minuto')
+      .eq('id', tarjetaId)
+      .maybeSingle()
+  },
+
+  async updateTarjeta(tarjetaId, payload) {
+    return await supabaseAdmin
+      .from('tarjeta')
+      .update(payload)
+      .eq('id', tarjetaId)
+      .select('id, partido_id, inscripcion_jugador_id, tipo, minuto')
+      .single()
+  },
+
+  async deleteTarjeta(tarjetaId) {
+    return await supabaseAdmin
+      .from('tarjeta')
+      .delete()
+      .eq('id', tarjetaId)
+      .select('id, partido_id')
+      .single()
+  },
+
   async findTarjetasByPartido(partidoId) {
     return await supabaseAdmin
       .from('tarjeta')

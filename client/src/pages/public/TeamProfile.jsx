@@ -105,7 +105,6 @@ export default function TeamProfile() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{j.nombre} {j.apellido}</p>
-                        <p className="text-xs text-text-dim truncate">DNI {j.dni}</p>
                       </div>
                     </Link>
                   ))}

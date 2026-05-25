@@ -192,7 +192,7 @@ export default function Omnisearch() {
                             </div>
                             <div>
                               <p className="font-semibold">{j.nombre} {j.apellido}</p>
-                              <p className="text-[11px] text-text-dim">DNI: {j.dni}</p>
+                              <p className="text-[11px] text-text-dim">Jugador Global</p>
                             </div>
                           </button>
                         ))}

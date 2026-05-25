@@ -23,5 +23,7 @@ export const statsService = {
   getJugadorDetalle: (inscripcionJugadorId) => api.get(`/stats/jugador/${inscripcionJugadorId}/detalle`),
 
   getPremiosPublicados: (temporadaId) =>
-    api.get(`/stats/premios?temporada_id=${temporadaId}`)
+    api.get(`/stats/premios?temporada_id=${temporadaId}`),
+
+  getPartidoEventos: (partidoId) => api.get(`/stats/partidos/${partidoId}/eventos`)
 }

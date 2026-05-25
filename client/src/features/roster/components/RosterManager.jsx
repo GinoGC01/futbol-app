@@ -1,6 +1,6 @@
 // Aggressive UI Modernization - Roster Management
 import { useState } from 'react'
-import { useEquipos, useCreateEquipo, useDeleteEquipo, useTemporadas, useInscribirEquiposBatch } from '../../../hooks/useAdmin'
+import { useEquipos, useCreateEquipo, useDeleteEquipo, useTemporadas, useInscribirEquiposBatch, useGlobalMarket } from '../../../hooks/useAdmin'
 import { rosterService } from '../../../services/rosterService'
 import ImageUploader from '../../../components/ui/ImageUploader'
 import GlassCard from '../../../components/ui/GlassCard'
@@ -9,8 +9,10 @@ import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
 import EmptyState from '../../../components/ui/EmptyState'
 import { useToast } from '../../../components/ui/Toast'
-import { Users, Plus, Search, UserPlus, Shield, ExternalLink, Settings, Trash2, ChevronRight, CheckSquare, Square, Layers, ChevronDown } from 'lucide-react'
+import { Users, Plus, Search, UserPlus, Shield, ExternalLink, Settings, Trash2, ChevronRight, CheckSquare, Square, Layers, ChevronDown, Trophy, ChevronLeft } from 'lucide-react'
 import TeamDetailView from './TeamDetailView'
+import PlayerCard from './PlayerCard'
+import BatchFichajeModal from './BatchFichajeModal'
 
 import { useLigaActiva } from '../../../context/LigaContext'
 import Loader from '../../../components/ui/Loader'
@@ -25,7 +27,13 @@ export default function RosterManager() {
   const [selectedEquipo, setSelectedEquipo] = useState(null)
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
+
+  const [playerSelectionMode, setPlayerSelectionMode] = useState(false)
+  const [selectedPlayers, setSelectedPlayers] = useState([])
+  const [showBatchFichaje, setShowBatchFichaje] = useState(false)
   
+  const { allJugadores, totalPages, totalCount, isFetching: isFetchingMarket, page: globalPage, setPage: setGlobalPage } = useGlobalMarket(12)
+
   const deleteEquipo = useDeleteEquipo()
   const toast = useToast()
 
@@ -33,6 +41,14 @@ export default function RosterManager() {
 
   const toggleSelection = (id) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const togglePlayerSelection = (player) => {
+    setSelectedPlayers(prev => {
+      const exists = prev.find(p => p.id === player.id)
+      if (exists) return prev.filter(p => p.id !== player.id)
+      return [...prev, player]
+    })
   }
 
   return (
@@ -71,6 +87,16 @@ export default function RosterManager() {
           )}
           {!selectionMode && (
             <>
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  setSelectedEquipo(null)
+                  setTimeout(() => document.querySelector('#roster-global-market')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+                }}
+                className="flex-1 sm:flex-none h-14 px-6 bg-white/5 border border-white/10 text-text-dim hover:text-primary font-black uppercase italic tracking-wide"
+              >
+                <Search className="w-5 h-5 mr-2" /> Mercado Global
+              </Button>
               <Button 
                 variant="ghost" 
                 onClick={() => setShowSearchPlayer(true)} 
@@ -267,6 +293,155 @@ export default function RosterManager() {
       )}
 
 
+      {/* Mercado Global */}
+      {!selectedEquipo && (
+        <div id="roster-global-market" className="space-y-4 animate-slide-up pt-8 border-t border-white/5">
+          <div className="flex items-center justify-between px-1">
+            <h4 className="text-xs font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+              <Trophy className="w-3.5 h-3.5" /> Mercado de Fichajes (Disponibles)
+              {isFetchingMarket && <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin ml-2" />}
+            </h4>
+            {allJugadores.length > 0 && (
+              <button
+                onClick={() => {
+                  setPlayerSelectionMode(!playerSelectionMode)
+                  setSelectedPlayers([])
+                }}
+                className={`text-[9px] font-black uppercase italic tracking-widest px-3 py-1.5 rounded-lg border transition-all ${
+                  playerSelectionMode
+                    ? 'bg-primary text-bg-deep border-primary'
+                    : 'text-text-dim border-white/10 hover:text-primary hover:border-primary/30'
+                }`}
+              >
+                {playerSelectionMode ? 'Cancelar' : 'Seleccionar'}
+              </button>
+            )}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 sm:py-6 border-b sm:border-t border-white/5 mb-2 sm:mb-0 sm:mt-6">
+              <div className="text-center sm:text-left order-2 sm:order-1">
+                <p className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] italic">
+                  Mostrando <span className="text-primary">{(globalPage - 1) * 12 + 1} - {Math.min(globalPage * 12, totalCount)}</span> de {totalCount}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 order-1 sm:order-2">
+                <Button 
+                  variant="outline" 
+                  size="xs" 
+                  onClick={() => setGlobalPage(p => Math.max(1, p - 1))}
+                  disabled={globalPage === 1}
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 border-white/10 hover:border-primary/50 text-text-primary bg-bg-surface"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) pageNum = i + 1;
+                    else if (globalPage <= 3) pageNum = i + 1;
+                    else if (globalPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                    else pageNum = globalPage - 2 + i;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setGlobalPage(pageNum)}
+                        className={`w-9 h-9 sm:w-8 sm:h-8 rounded-xl text-xs font-black transition-all ${
+                          globalPage === pageNum 
+                            ? 'bg-primary text-bg-deep skew-x-[-12deg]' 
+                            : 'text-text-dim hover:bg-white/5'
+                        }`}
+                      >
+                        <span className={globalPage === pageNum ? 'skew-x-[12deg] block' : ''}>{pageNum}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="xs" 
+                  onClick={() => setGlobalPage(p => Math.min(totalPages, p + 1))}
+                  disabled={globalPage === totalPages}
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 border-white/10 hover:border-primary/50 text-text-primary bg-bg-surface"
+                >
+                  <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {allJugadores.length > 0 ? (
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isFetchingMarket ? 'opacity-50' : 'opacity-100'}`}>
+              {allJugadores.map(jugador => (
+                <PlayerCard 
+                  key={jugador.id} 
+                  jugador={jugador} 
+                  isGlobal={true}
+                  onEnroll={() => {}}
+                  selectionMode={playerSelectionMode}
+                  isSelected={selectedPlayers.some(p => p.id === jugador.id)}
+                  onToggle={() => togglePlayerSelection(jugador)}
+                />
+              ))}
+            </div>
+          ) : (
+            !isFetchingMarket && (
+              <div className="py-16 text-center space-y-4 bg-white/[0.01] rounded-[2.5rem] border-2 border-dashed border-white/5">
+                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto">
+                  <Search className="w-8 h-8 text-text-dim opacity-40" />
+                </div>
+                <div>
+                  <p className="text-base font-black text-text-dim uppercase italic tracking-wide">Mercado Global Vacío</p>
+                  <p className="text-xs text-text-dim/60 font-bold uppercase italic tracking-wide mt-1">
+                    No hay jugadores disponibles para fichar. Todos los talentos globales ya están en tus ligas o fueron creados por vos.
+                  </p>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      )}
+
+      {/* Floating Selection Bar for Players */}
+      {playerSelectionMode && selectedPlayers.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-lg animate-slide-up">
+          <div className="bg-bg-deep/80 backdrop-blur-3xl border border-white/10 rounded-3xl p-2 sm:p-3 flex items-center justify-between shadow-[0_25px_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <div className="flex items-center gap-3 sm:gap-5 pl-2 sm:pl-4">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-primary blur-md opacity-30 animate-pulse-live" />
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-primary text-bg-deep rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-xl italic shadow-lg skew-x-[-10deg]">
+                  <span className="skew-x-[10deg]">{selectedPlayers.length}</span>
+                </div>
+              </div>
+              <div className="hidden xs:block">
+                <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] mb-0.5 italic leading-none">Seleccionados</p>
+                <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider italic leading-none">Roster en espera</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pr-1">
+              <button
+                onClick={() => {
+                  setPlayerSelectionMode(false)
+                  setSelectedPlayers([])
+                }}
+                className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl font-black uppercase italic tracking-widest text-[9px] sm:text-[10px] text-text-dim hover:text-white hover:bg-white/5 transition-all"
+              >
+                Cancelar
+              </button>
+              <Button
+                onClick={() => setShowBatchFichaje(true)}
+                className="h-11 sm:h-12 px-6 sm:px-8 bg-primary text-bg-deep font-black uppercase italic tracking-widest text-[10px] sm:text-xs shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all skew-x-[-15deg] group/btn"
+              >
+                <div className="flex items-center gap-2 skew-x-[15deg]">
+                  Continuar <ChevronRight className="w-4 h-4 stroke-[4] group-hover/btn:translate-x-1 transition-transform" />
+                </div>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showNewEquipo && (
         <NewEquipoModal 
           open={showNewEquipo} 
@@ -290,6 +465,19 @@ export default function RosterManager() {
           }} 
           equipoIds={selectedIds}
           temporadas={temporadas}
+        />
+      )}
+      {showBatchFichaje && (
+        <BatchFichajeModal 
+          open={showBatchFichaje} 
+          selectedPlayers={selectedPlayers}
+          setSelectedPlayers={setSelectedPlayers}
+          ligaId={liga?.id}
+          onClose={() => {
+            setShowBatchFichaje(false)
+            setPlayerSelectionMode(false)
+            setSelectedPlayers([])
+          }} 
         />
       )}
     </div>
@@ -395,7 +583,7 @@ function SearchPlayerModal({ open, onClose }) {
               value={query} 
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()} 
-              placeholder="DNI, Nombre o Apellido..."
+              placeholder="Nombre o Apellido..."
               className="w-full pl-12 pr-4 py-4 bg-bg-input border border-white/5 rounded-2xl text-sm text-text-primary outline-none focus:border-primary transition-all font-bold" 
             />
           </div>

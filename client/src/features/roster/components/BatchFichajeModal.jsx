@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEquipos, useTemporadas, useInscripcionesEquipo, useAddJugadoresBatch } from '../../../hooks/useAdmin'
 import { useToast } from '../../../components/ui/Toast'
 import Modal from '../../../components/ui/Modal'
@@ -17,6 +18,7 @@ export default function BatchFichajeModal({ open, onClose, selectedPlayers, setS
   const [playerData, setPlayerData] = useState({})
   const addBatchMutation = useAddJugadoresBatch()
   const toast = useToast()
+  const queryClient = useQueryClient()
 
   // Find active inscription for the selected team/season to check limits
   const activeInsc = teamInscripciones?.find(i => i.temporada_id === selectedTemporadaId)
@@ -85,14 +87,33 @@ export default function BatchFichajeModal({ open, onClose, selectedPlayers, setS
 
     try {
       await addBatchMutation.mutateAsync(payload)
+      queryClient.invalidateQueries({ queryKey: ["jugadores-organizador"] })
       toast.success(`${selectedPlayers.length} jugadores fichados correctamente`)
       onSuccess?.()
       onClose()
       setStep(1)
       setPlayerData({})
     } catch (e) {
-      console.error("Batch fichaje error:", e.response?.data || e)
-      toast.error('Error al procesar el fichaje en bloque')
+      const errors = e.response?.data?.errors
+      if (Array.isArray(errors) && errors.length > 0) {
+        const firstError = errors[0]
+        const match = firstError.path?.match(/jugadores\[(\d+)\]\.(\w+)/)
+        if (match) {
+          const idx = parseInt(match[1])
+          const field = match[2]
+          const player = selectedPlayers[idx]
+          const name = player ? `${player.nombre} ${player.apellido}` : `#${idx}`
+          if (field === 'dorsal') {
+            toast.error(`El jugador ${name} tiene dorsal inválido (${firstError.value}), corregilo`)
+          } else {
+            toast.error(`${name}: ${firstError.msg}`)
+          }
+        } else {
+          toast.error(firstError.msg)
+        }
+      } else {
+        toast.error(e.response?.data?.error || e.response?.data?.mensaje || e.message || 'Error al procesar el fichaje en bloque')
+      }
     }
   }
 
@@ -216,13 +237,14 @@ export default function BatchFichajeModal({ open, onClose, selectedPlayers, setS
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-black uppercase italic tracking-normal truncate">{p.nombre} {p.apellido}</p>
-                      <p className="text-[9px] text-text-dim font-bold tracking-widest uppercase">ID: {p.dni || p.id.split('-')[0]}</p>
+                      <p className="text-[9px] text-text-dim font-bold tracking-widest uppercase">ID: {p.id.split('-')[0]}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-20">
                       <input 
                         type="number" 
+                        min="0"
                         placeholder="Nº"
                         value={playerData[p.id]?.dorsal || ''}
                         onChange={e => setPlayerData({ ...playerData, [p.id]: { ...playerData[p.id], dorsal: e.target.value } })}

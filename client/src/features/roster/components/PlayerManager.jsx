@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useJugadoresLiga, useJugadoresOrganizador, useSearchGlobalJugadores } from '../../../hooks/useAdmin'
+import { useJugadoresLiga, useGlobalMarket, useSearchGlobalJugadores } from '../../../hooks/useAdmin'
 import Loader from '../../../components/ui/Loader'
 import Button from '../../../components/ui/Button'
 import { Trophy, Search, UserPlus, CheckSquare, X, ChevronLeft, ChevronRight, User, Shield, Plus } from 'lucide-react'
@@ -13,12 +13,8 @@ import BatchFichajeModal from './BatchFichajeModal'
 
 export default function PlayerManager() {
   const { liga } = useLigaActiva()
-  const [globalPage, setGlobalPage] = useState(1)
   const { data: jugadores, isLoading } = useJugadoresLiga(liga?.id)
-  const { data: allJugadoresRaw, isFetching: isFetchingMarket } = useJugadoresOrganizador(globalPage, 12)
-  const allJugadores = allJugadoresRaw?.list || []
-  const totalPages = allJugadoresRaw?.totalPages || 1
-  const totalCount = allJugadoresRaw?.count || 0
+  const { allJugadores, totalPages, totalCount, isFetching: isFetchingMarket, page: globalPage, setPage: setGlobalPage } = useGlobalMarket(12)
   
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -49,8 +45,7 @@ export default function PlayerManager() {
   const { data: searchResults, isFetching: isSearching } = useSearchGlobalJugadores(debouncedQuery)
 
   const filtered = (jugadores || []).filter(j => 
-    `${j.nombre} ${j.apellido}`.toLowerCase().includes(query.toLowerCase()) ||
-    j.dni?.includes(query)
+    `${j.nombre} ${j.apellido}`.toLowerCase().includes(query.toLowerCase())
   )
 
   // Si hay búsqueda activa (>2 chars), mostramos resultados remotos. Si no, mostramos los recientes.
@@ -63,10 +58,6 @@ export default function PlayerManager() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-fade-in pb-32 px-4 sm:px-0">
-      {/* Full Screen Loader for Market Transitions */}
-      {isFetchingMarket && (
-        <Loader fullScreen text="SINCRONIZANDO MERCADO GLOBAL..." size="xl" />
-      )}
       {/* Header Sección - Optimized for Mobile */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/5 pb-6 sm:pb-10">
         <div className="space-y-3 sm:space-y-4">
@@ -93,6 +84,15 @@ export default function PlayerManager() {
                 className="col-span-2 h-14 sm:h-16 px-8 font-black uppercase italic tracking-widest shadow-xl shadow-primary/20 order-first lg:order-last sm:flex-1 lg:flex-none"
               >
                 <Search className="w-5 h-5 sm:w-6 sm:h-6 mr-2 stroke-[4]" /> Fichar Global
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  document.querySelector('#global-market')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+                className="h-12 sm:h-14 px-4 bg-white/5 border border-white/10 text-text-dim hover:text-primary font-black uppercase italic tracking-wide text-[10px] sm:text-xs"
+              >
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Mercado Global
               </Button>
               <Button 
                 variant="ghost" 
@@ -177,7 +177,7 @@ export default function PlayerManager() {
           </div>
           <input 
             type="text" 
-            placeholder="BUSCAR POR NOMBRE, APELLIDO O DNI..."
+            placeholder="BUSCAR POR NOMBRE O APELLIDO..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="w-full pl-16 pr-4 py-6 bg-bg-surface border border-white/5 rounded-3xl outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-black text-sm uppercase italic tracking-wide placeholder:text-text-dim/40 text-text-primary"
@@ -222,8 +222,8 @@ export default function PlayerManager() {
         )}
 
         {/* Mercado Global / Resultados de Búsqueda */}
-        {(globalMatches.length > 0 || isSearching) && (
-          <div className="space-y-4 animate-slide-up">
+        {(debouncedQuery.length < 2 || isSearching) && (
+          <div id="global-market" className="space-y-4 animate-slide-up">
             <h4 className="text-xs font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2 px-1">
               {debouncedQuery.length >= 2 ? (
                 <>
@@ -234,6 +234,7 @@ export default function PlayerManager() {
               ) : (
                 <>
                   <Trophy className="w-3.5 h-3.5" /> Mercado de Fichajes (Disponibles)
+                  {isFetchingMarket && <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin ml-2" />}
                 </>
               )}
             </h4>
@@ -294,25 +295,40 @@ export default function PlayerManager() {
               </div>
             )}
             
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isSearching || isFetchingMarket ? 'opacity-50' : 'opacity-100'}`}>
-              {globalMatches.map(jugador => (
-                <PlayerCard 
-                  key={jugador.id} 
-                  jugador={jugador} 
-                  isGlobal={true}
-                  onEnroll={() => setSelectedForEnroll(jugador)} 
-                  selectionMode={selectionMode}
-                  isSelected={selectedPlayers.some(p => p.id === jugador.id)}
-                  onToggle={() => toggleSelection(jugador)}
-                />
-              ))}
-            </div>
+            {globalMatches.length > 0 ? (
+              <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity ${isSearching || isFetchingMarket ? 'opacity-50' : 'opacity-100'}`}>
+                {globalMatches.map(jugador => (
+                  <PlayerCard 
+                    key={jugador.id} 
+                    jugador={jugador} 
+                    isGlobal={true}
+                    onEnroll={() => setSelectedForEnroll(jugador)} 
+                    selectionMode={selectionMode}
+                    isSelected={selectedPlayers.some(p => p.id === jugador.id)}
+                    onToggle={() => toggleSelection(jugador)}
+                  />
+                ))}
+              </div>
+            ) : (
+              !isSearching && !isFetchingMarket && (
+                <div className="py-16 text-center space-y-4 bg-white/[0.01] rounded-[2.5rem] border-2 border-dashed border-white/5">
+                  <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto">
+                    <Search className="w-8 h-8 text-text-dim opacity-40" />
+                  </div>
+                  <div>
+                    <p className="text-base font-black text-text-dim uppercase italic tracking-wide">Mercado Global Vacío</p>
+                    <p className="text-xs text-text-dim/60 font-bold uppercase italic tracking-wide mt-1">
+                      No hay jugadores disponibles para fichar. Todos los talentos globales ya están en tus ligas o fueron creados por vos.
+                    </p>
+                  </div>
+                </div>
+              )
+            )}
           </div>
         )}
 
-        {/* Empty Search State */}
-        {((query && filtered.length === 0 && globalMatches.length === 0 && !isSearching && !isFetchingMarket) || 
-          (!query && totalCount === 0 && !isFetchingMarket)) && (
+        {/* Empty Search State (solo cuando no hay nada que mostrar) */}
+        {filtered.length === 0 && globalMatches.length === 0 && !isSearching && !isFetchingMarket && (
           <div className="py-24 text-center space-y-8 animate-fade-in">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full animate-pulse-live" />

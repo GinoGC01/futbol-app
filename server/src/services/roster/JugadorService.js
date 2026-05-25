@@ -2,10 +2,7 @@ import { jugadorRepository } from '../../repositories/jugadorRepository.js'
 import AppError from '../../utils/AppError.js'
 
 const JugadorService = {
-  /**
-   * Soft-Duplicate Check + Create.
-   */
-  async getOrCreateJugador(data) {
+  async getOrCreateJugador(data, organizadorId) {
     const { nombre, apellido, fecha_nacimiento, dni, foto_url } = data
 
     if (!nombre || nombre.trim().length < 2) {
@@ -19,7 +16,7 @@ const JugadorService = {
       const { data: dniMatch, error: dniError } = await jugadorRepository.findJugadorByDni(dni.trim())
 
       if (dniError) throw new AppError('Error al verificar identidad por DNI', 500, dniError)
-      
+
       if (dniMatch) {
         return { jugador: dniMatch, created: false }
       }
@@ -57,9 +54,6 @@ const JugadorService = {
     return { jugador: nuevoJugador, created: true }
   },
 
-  /**
-   * Búsqueda global de jugadores.
-   */
   async searchJugadores(queryText, ligaId = null) {
     if (!queryText || queryText.trim().length < 2) {
       throw new AppError('La búsqueda debe tener al menos 2 caracteres', 400)
@@ -68,9 +62,8 @@ const JugadorService = {
     const sanitizedQuery = queryText.replace(/[,()"{}*[\]]/g, '').trim()
     const searchTerm = `%${sanitizedQuery}%`
 
-    let select = 'id, nombre, apellido, fecha_nacimiento, dni, foto_url'
+    let select = 'id, nombre, apellido, fecha_nacimiento'
     if (ligaId) {
-      // Traer inscripciones activas en la liga actual para marcar duplicados
       select += `,
         inscripciones:inscripcion_jugador(
           estado,
@@ -89,10 +82,9 @@ const JugadorService = {
 
     if (!ligaId) return data || []
 
-    // Post-procesar para anotar inscripciones en la liga solicitada
     return data.map(j => {
-      const inscripcionActiva = j.inscripciones?.find(ins => 
-        ins.estado === 'activo' && 
+      const inscripcionActiva = j.inscripciones?.find(ins =>
+        ins.estado === 'activo' &&
         ins.plantel?.equipo?.liga_id === ligaId
       )
 
@@ -108,9 +100,6 @@ const JugadorService = {
     })
   },
 
-  /**
-   * Obtiene jugadores por liga.
-   */
   async getJugadoresByLiga(ligaId) {
     if (!ligaId) throw new AppError('ID de liga requerido', 400)
 
@@ -131,47 +120,37 @@ const JugadorService = {
     return unique
   },
 
-  /**
-   * Mercado Global de jugadores con seguridad de DNI.
-   */
   async getJugadoresByOrganizador(organizadorId, page = 1, limit = 20) {
     if (!organizadorId) throw new AppError('ID de organizador requerido', 400)
 
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    const { data, error, count } = await jugadorRepository.findJugadoresByOrganizador(from, to)
+    const excludeIds = await jugadorRepository.findJugadorIdsInOrganizadorLeagues(organizadorId)
+
+    const { data, error, count } = await jugadorRepository.findJugadoresByOrganizador(from, to, excludeIds)
 
     if (error) throw new AppError('Error al obtener el listado global de jugadores', 500, error)
 
     const processedData = data.map(j => {
       const ligasParticipantes = []
       const seenLigas = new Set()
-      let belongsToMe = false
-      
+
       if (j.inscripciones) {
         for (const ins of j.inscripciones) {
           const l = ins.plantel?.equipo?.liga
-          if (l) {
-            if (!seenLigas.has(l.id)) {
-              seenLigas.add(l.id)
-              ligasParticipantes.push(l.nombre)
-            }
-            if (l.organizador_id === organizadorId) belongsToMe = true
+          if (l && !seenLigas.has(l.id)) {
+            seenLigas.add(l.id)
+            ligasParticipantes.push(l.nombre)
           }
         }
       }
 
-      const result = { 
-        ...j, 
-        ligas_historial: ligasParticipantes 
+      const result = {
+        ...j,
+        ligas_historial: ligasParticipantes
       }
       delete result.inscripciones
-
-      if (!belongsToMe && result.dni) {
-        result.dni = '********'
-      }
-
       return result
     })
 

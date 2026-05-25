@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { 
   useTemporadas, useTemporadaTree, useFixtureAdmin, 
   useEventos, useCambiarEstadoPartido, useRegistrarGol, 
-  useRegistrarTarjeta, useInscripcionesEquipo 
+  useRegistrarTarjeta, useInscripcionesEquipo,
+  useUpdateTiempoAdicionado, useActualizarGol, useEliminarGol,
+  useActualizarTarjeta, useEliminarTarjeta
 } from '../../../hooks/useAdmin'
 import { useToast } from '../../../components/ui/Toast'
 import GlassCard from '../../../components/ui/GlassCard'
@@ -28,6 +30,9 @@ export default function MatchEdgeBox() {
   const [isRunning, setIsRunning] = useState(false)
   const timerRef = useRef(0)
   const [initialTimer, setInitialTimer] = useState(0)
+  const [editEvent, setEditEvent] = useState(null) // { type: 'gol'|'tarjeta', id, data }
+  const [confirmDelete, setConfirmDelete] = useState(null) // { type: 'gol'|'tarjeta', id }
+  const [tiempoAdicionado, setTiempoAdicionado] = useState(0)
 
   const jornadaId = selectedJornada || allJornadas[0]?.id
   const { data: fixtureData, isLoading: loadingFixture } = useFixtureAdmin(jornadaId)
@@ -38,6 +43,11 @@ export default function MatchEdgeBox() {
   const cambiarEstado = useCambiarEstadoPartido()
   const registrarGol = useRegistrarGol()
   const registrarTarjeta = useRegistrarTarjeta()
+  const updateTiempoAdicionado = useUpdateTiempoAdicionado()
+  const actualizarGol = useActualizarGol()
+  const eliminarGol = useEliminarGol()
+  const actualizarTarjeta = useActualizarTarjeta()
+  const eliminarTarjeta = useEliminarTarjeta()
   const partido = partidos.find(p => p.id === selectedPartido)
 
   
@@ -47,6 +57,12 @@ export default function MatchEdgeBox() {
 
   // D-03: Live matches tracking
   const liveMatches = partidos.filter(p => p.estado === 'en_juego' || p.estado === 'entre_tiempo')
+
+  useEffect(() => {
+    if (partido) {
+      setTiempoAdicionado(partido.tiempo_adicionado || 0)
+    }
+  }, [partido])
 
   useEffect(() => {
     if (!selectedPartido) {
@@ -142,6 +158,65 @@ export default function MatchEdgeBox() {
         toast.success('Partido Finalizado.')
       }
     })
+  }
+
+  const handleTiempoAdicionado = (deltaMinutos) => {
+    const nuevo = Math.max(0, tiempoAdicionado + deltaMinutos * 60)
+    setTiempoAdicionado(nuevo)
+    updateTiempoAdicionado.mutate({ id: partido.id, segundos: nuevo })
+  }
+
+  const handleEditEvent = (ev) => {
+    const isGol = ev.tipo_evento === 'gol' || !ev.tipo
+    setEditEvent({
+      type: isGol ? 'gol' : 'tarjeta',
+      id: ev.id,
+      minuto: ev.minuto || 0,
+      es_penal: ev.es_penal || false,
+      es_contra: ev.es_contra || false,
+      tipo: ev.tipo || 'amarilla'
+    })
+  }
+
+  const handleSaveEditEvent = () => {
+    if (!editEvent) return
+    if (editEvent.type === 'gol') {
+      actualizarGol.mutate({
+        partidoId: partido.id,
+        golId: editEvent.id,
+        minuto: editEvent.minuto,
+        es_penal: editEvent.es_penal,
+        es_contra: editEvent.es_contra
+      }, {
+        onSuccess: () => { setEditEvent(null); toast.success('Gol actualizado') },
+        onError: (err) => toast.error(err.message)
+      })
+    } else {
+      actualizarTarjeta.mutate({
+        partidoId: partido.id,
+        tarjetaId: editEvent.id,
+        minuto: editEvent.minuto,
+        tipo: editEvent.tipo
+      }, {
+        onSuccess: () => { setEditEvent(null); toast.success('Tarjeta actualizada') },
+        onError: (err) => toast.error(err.message)
+      })
+    }
+  }
+
+  const handleDeleteEvent = () => {
+    if (!confirmDelete) return
+    if (confirmDelete.type === 'gol') {
+      eliminarGol.mutate({ partidoId: partido.id, golId: confirmDelete.id }, {
+        onSuccess: () => { setConfirmDelete(null); toast.success('Gol eliminado') },
+        onError: (err) => toast.error(err.message)
+      })
+    } else {
+      eliminarTarjeta.mutate({ partidoId: partido.id, tarjetaId: confirmDelete.id }, {
+        onSuccess: () => { setConfirmDelete(null); toast.success('Tarjeta eliminada') },
+        onError: (err) => toast.error(err.message)
+      })
+    }
   }
 
   const handleIncident = (type) => {
@@ -408,6 +483,7 @@ export default function MatchEdgeBox() {
                         initialSeconds={initialTimer} 
                         isRunning={isRunning} 
                         estado={partido.estado} 
+                        tiempoAdicionado={tiempoAdicionado}
                         onTick={(val) => { timerRef.current = val }}
                       />
                     )}
@@ -549,8 +625,154 @@ export default function MatchEdgeBox() {
                 </GlassCard>
               )}
 
+              {/* Tiempo Adicionado Section */}
+              {(partido.estado === 'en_juego' || partido.estado === 'entre_tiempo') && !entryMode && !editEvent && !confirmDelete && (
+                <GlassCard hover={false} className="!p-4 border-2 border-accent-gold/20 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Timer className="w-4 h-4 text-accent-gold" />
+                      <h3 className="font-heading font-black uppercase text-xs italic tracking-widest text-accent-gold">Adicionar Tiempo</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleTiempoAdicionado(-1)}
+                        disabled={updateTiempoAdicionado.isPending || tiempoAdicionado <= 0}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-text-dim hover:text-primary hover:border-primary/30 disabled:opacity-30 transition-all text-sm font-black"
+                      >
+                        -1
+                      </button>
+                      <span className="font-heading font-black text-lg text-accent-gold italic min-w-[4rem] text-center tabular-nums">
+                        {tiempoAdicionado > 0 ? `+${Math.floor(tiempoAdicionado / 60)}'` : '0\' 00"'}
+                      </span>
+                      <button
+                        onClick={() => handleTiempoAdicionado(1)}
+                        disabled={updateTiempoAdicionado.isPending}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-text-dim hover:text-primary hover:border-primary/30 transition-all text-sm font-black"
+                      >
+                        +1
+                      </button>
+                      <div className="w-px h-6 bg-white/10 mx-1" />
+                      <button
+                        onClick={() => handleTiempoAdicionado(2)}
+                        disabled={updateTiempoAdicionado.isPending}
+                        className="px-3 h-8 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-wider text-text-dim hover:text-primary hover:border-primary/30 transition-all"
+                      >
+                        +2'
+                      </button>
+                      <button
+                        onClick={() => handleTiempoAdicionado(3)}
+                        disabled={updateTiempoAdicionado.isPending}
+                        className="px-3 h-8 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-wider text-text-dim hover:text-primary hover:border-primary/30 transition-all"
+                      >
+                        +3'
+                      </button>
+                      <button
+                        onClick={() => handleTiempoAdicionado(5)}
+                        disabled={updateTiempoAdicionado.isPending}
+                        className="px-3 h-8 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-wider text-text-dim hover:text-primary hover:border-primary/30 transition-all"
+                      >
+                        +5'
+                      </button>
+                      <button
+                        onClick={() => handleTiempoAdicionado(10)}
+                        disabled={updateTiempoAdicionado.isPending}
+                        className="px-3 h-8 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-wider text-text-dim hover:text-primary hover:border-primary/30 transition-all"
+                      >
+                        +10'
+                      </button>
+                    </div>
+                  </div>
+                </GlassCard>
+              )}
+
+              {/* Edit Event Modal */}
+              {editEvent && (
+                <GlassCard hover={false} className="border-2 border-primary/20 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-heading font-black uppercase text-sm italic tracking-wide text-primary flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      EDITAR {editEvent.type === 'gol' ? 'GOL' : 'TARJETA'}
+                    </h3>
+                    <button onClick={() => setEditEvent(null)} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded-full transition-colors">
+                      <X className="w-5 h-5 text-text-dim" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-text-dim block mb-1">Minuto</label>
+                      <input
+                        type="number" min={0} max={130}
+                        value={editEvent.minuto}
+                        onChange={e => setEditEvent({ ...editEvent, minuto: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 rounded-xl bg-bg-deep border border-white/10 text-sm font-bold text-text-primary focus:border-primary/40 focus:outline-none"
+                      />
+                    </div>
+
+                    {editEvent.type === 'gol' && (
+                      <>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input type="checkbox" checked={editEvent.es_penal} onChange={e => setEditEvent({ ...editEvent, es_penal: e.target.checked })} className="rounded border-white/20 bg-bg-deep text-primary focus:ring-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-text-dim">Penal</span>
+                        </label>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input type="checkbox" checked={editEvent.es_contra} onChange={e => setEditEvent({ ...editEvent, es_contra: e.target.checked })} className="rounded border-white/20 bg-bg-deep text-primary focus:ring-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-text-dim">En Contra</span>
+                        </label>
+                      </>
+                    )}
+
+                    {editEvent.type === 'tarjeta' && (
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-text-dim block mb-1">Tipo</label>
+                        <select
+                          value={editEvent.tipo}
+                          onChange={e => setEditEvent({ ...editEvent, tipo: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-bg-deep border border-white/10 text-sm font-bold text-text-primary focus:border-primary/40 focus:outline-none"
+                        >
+                          <option value="amarilla">Amarilla</option>
+                          <option value="roja">Roja</option>
+                          <option value="doble_amarilla">Doble Amarilla</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button onClick={handleSaveEditEvent} className="flex-1" disabled={actualizarGol.isPending || actualizarTarjeta.isPending}>
+                        Guardar Cambios
+                      </Button>
+                      <Button onClick={() => setEditEvent(null)} variant="ghost" className="flex-1">
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </GlassCard>
+              )}
+
+              {/* Confirm Delete */}
+              {confirmDelete && (
+                <GlassCard hover={false} className="border-2 border-danger/30 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-danger" />
+                  <div className="text-center py-2">
+                    <p className="font-heading font-black uppercase text-sm tracking-wide text-danger mb-4">
+                      ¿Eliminar {confirmDelete.type === 'gol' ? 'este gol' : 'esta tarjeta'}?
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={handleDeleteEvent} variant="danger" disabled={eliminarGol.isPending || eliminarTarjeta.isPending}>
+                        Sí, Eliminar
+                      </Button>
+                      <Button onClick={() => setConfirmDelete(null)} variant="ghost">
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </GlassCard>
+              )}
+
               {/* Event Feed */}
-              {!entryMode && (
+              {!entryMode && !editEvent && !confirmDelete && (
                 <div className="space-y-4 pt-4">
                   <div className="flex items-center justify-between px-2">
                     <h3 className="font-heading font-black uppercase italic text-xs tracking-widest flex items-center gap-2">
@@ -569,33 +791,55 @@ export default function MatchEdgeBox() {
                       <div className="flex flex-col gap-3">
                         {[...eventos.goles, ...eventos.tarjetas]
                           .sort((a, b) => (b.minuto || 0) - (a.minuto || 0))
-                          .map((e, idx) => (
-                            <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-bg-surface/50 border border-white/5 animate-in fade-in slide-in-from-left-2 duration-300 relative overflow-hidden group" 
-                                 style={{ animationDelay: `${idx * 50}ms` }}>
-                              <div className="absolute top-0 left-0 w-1 h-full bg-white/5 group-hover:bg-primary/20 transition-colors" />
-                              
-                              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 group-hover:border-primary/20 transition-all">
-                                {e.tipo ? (
-                                  <div className={`w-3.5 h-5 rounded-sm rotate-6 shadow-lg ${e.tipo === 'amarilla' ? 'bg-warning' : 'bg-danger'}`} />
-                                ) : (
-                                  <Target className="w-5 h-5 text-primary" />
-                                )}
-                              </div>
+                          .map((e, idx) => {
+                            const isGol = !e.tipo
+                            const eventId = e.id
+                            return (
+                              <div key={isGol ? `gol-${eventId}` : `tarjeta-${eventId}`} className="flex items-center gap-4 p-4 rounded-2xl bg-bg-surface/50 border border-white/5 animate-in fade-in slide-in-from-left-2 duration-300 relative overflow-hidden group" 
+                                   style={{ animationDelay: `${idx * 50}ms` }}>
+                                <div className="absolute top-0 left-0 w-1 h-full bg-white/5 group-hover:bg-primary/20 transition-colors" />
+                                
+                                <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 group-hover:border-primary/20 transition-all">
+                                  {e.tipo ? (
+                                    <div className={`w-3.5 h-5 rounded-sm rotate-6 shadow-lg ${e.tipo === 'amarilla' ? 'bg-warning' : 'bg-danger'}`} />
+                                  ) : (
+                                    <Target className="w-5 h-5 text-primary" />
+                                  )}
+                                </div>
 
-                              <div className="flex-1 min-w-0">
-                                 <p className="font-black text-sm uppercase italic tracking-wide truncate leading-tight">
-                                   {e.inscripcion_jugador?.jugador?.nombre} {e.inscripcion_jugador?.jugador?.apellido}
-                                 </p>
-                                 <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mt-0.5">
-                                   {e.inscripcion_jugador?.plantel?.equipo?.nombre}
-                                 </p>
-                              </div>
+                                <div className="flex-1 min-w-0">
+                                   <p className="font-black text-sm uppercase italic tracking-wide truncate leading-tight">
+                                     {e.inscripcion_jugador?.jugador?.nombre} {e.inscripcion_jugador?.jugador?.apellido}
+                                   </p>
+                                   <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mt-0.5">
+                                     {e.inscripcion_jugador?.plantel?.equipo?.nombre}
+                                   </p>
+                                </div>
 
-                              <div className="px-3 py-1.5 bg-bg-deep rounded-lg border border-white/5 text-[11px] font-mono font-black text-primary italic">
-                                {e.minuto}'
+                                <div className="px-3 py-1.5 bg-bg-deep rounded-lg border border-white/5 text-[11px] font-mono font-black text-primary italic">
+                                  {e.minuto}'
+                                </div>
+
+                                {/* Edit/Delete buttons */}
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => handleEditEvent({ ...e, tipo_evento: isGol ? 'gol' : 'tarjeta' })}
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-primary/20 text-text-dim hover:text-primary transition-all"
+                                    title="Editar"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                  </button>
+                                  <button
+                                    onClick={() => setConfirmDelete({ type: isGol ? 'gol' : 'tarjeta', id: eventId })}
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-danger/20 text-text-dim hover:text-danger transition-all"
+                                    title="Eliminar"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                       </div>
                     ) : (
                        <div className="text-center py-12 bg-bg-surface/30 rounded-3xl border border-dashed border-white/5">
@@ -614,7 +858,7 @@ export default function MatchEdgeBox() {
   )
 }
 
-function MatchTimer({ initialSeconds, isRunning, estado, onTick }) {
+function MatchTimer({ initialSeconds, isRunning, estado, tiempoAdicionado, onTick }) {
   const [seconds, setSeconds] = useState(initialSeconds)
 
   useEffect(() => {
@@ -656,6 +900,13 @@ function MatchTimer({ initialSeconds, isRunning, estado, onTick }) {
         <span className={`text-lg md:text-2xl font-heading italic ${
           estado === 'entre_tiempo' ? 'text-warning/60' : 'text-primary/60'
         }`}>'</span>
+        {tiempoAdicionado > 0 && (
+          <span className={`text-lg md:text-2xl font-heading font-bold italic ${
+            estado === 'entre_tiempo' ? 'text-warning' : 'text-accent-gold'
+          }`}>
+            +{Math.floor(tiempoAdicionado / 60)}'
+          </span>
+        )}
       </div>
     </div>
   )

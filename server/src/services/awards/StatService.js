@@ -194,6 +194,17 @@ class StatService {
   }
 
   /**
+   * Eventos (goles y tarjetas) de un partido — público, sin auth.
+   */
+  async getPartidoEventos(partidoId) {
+    if (!partidoId) throw new AppError('partido_id es requerido', 400)
+
+    const { goles, tarjetas } = await statRepository.findEventosByPartido(partidoId)
+
+    return { goles, tarjetas }
+  }
+
+  /**
    * Premios publicados de una temporada (PÚBLICO).
    * Solo devuelve premios con publicado = true.
    */

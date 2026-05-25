@@ -24,7 +24,7 @@ export const getOrCreate = async (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(400).json({ status: 'fail', errors: errors.array() })
 
-    const result = await JugadorService.getOrCreateJugador(req.body)
+    const result = await JugadorService.getOrCreateJugador(req.body, req.organizador.id)
 
     const statusCode = result.created ? 201 : 200
     res.status(statusCode).json({

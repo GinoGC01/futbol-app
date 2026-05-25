@@ -53,9 +53,7 @@ export default function PlayerCard({ jugador, onEnroll, isGlobal = false, select
                   {new Date(jugador.fecha_nacimiento).toLocaleDateString('es-AR', { year: 'numeric', month: 'short', day: '2-digit' })}
                 </div>
               )}
-              <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] font-mono text-text-dim uppercase tracking-[0.2em] font-bold">
-                <span className="w-1 h-2 bg-white/20 skew-x-[-15deg]" /> DNI: {jugador.dni || '—'}
-              </div>
+
             </div>
           </div>
         </div>

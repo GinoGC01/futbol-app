@@ -56,7 +56,6 @@ export default function PlayerProfile() {
                 </Link>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-4">
                   <Badge status="activa" label="Fichaje Confirmado" />
-                  <span className="text-xs bg-bg-surface border border-white/10 px-2 py-1 rounded-md text-text-dim font-mono">DNI: {jugador?.dni}</span>
                 </div>
               </div>
             </div>

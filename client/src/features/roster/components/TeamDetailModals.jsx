@@ -150,7 +150,7 @@ export function AddPlayerModal({ open, onClose, plantelId, ligaId }) {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" />
-              <input type="text" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} placeholder="DNI, Nombre o Apellido..." className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-medium bg-bg-surface" />
+              <input type="text" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()} placeholder="Nombre o Apellido..." className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/5 rounded-xl outline-none focus:border-primary text-sm font-medium bg-bg-surface" />
             </div>
             <Button onClick={handleSearch} loading={searching} className="h-11">Buscar</Button>
           </div>
@@ -193,7 +193,7 @@ export function AddPlayerModal({ open, onClose, plantelId, ligaId }) {
               </div>
             )}
           </div>
-          <p className="text-[10px] text-text-dim text-center px-6 italic">Tip: El jugador es un recurso global. Si ya jugó en otra liga, búscalo por su nombre completo o DNI.</p>
+              <p className="text-[10px] text-text-dim text-center px-6 italic">Tip: El jugador es un recurso global. Si ya jugó en otra liga, búscalo por su nombre completo.</p>
         </div>
       ) : isCreating ? (
         <form onSubmit={handleCreateAndEnroll} className="space-y-6 animate-fade-in">

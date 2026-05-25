@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { ArrowLeft, Shield, Trophy, Target, AlertTriangle, Award } from 'lucide-react'
+import { ArrowLeft, Shield, Trophy, Target, AlertTriangle, Award, ChevronDown, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { useTabla, useGoleadores, useTarjetas, useFixture, usePremiosPublicados } from '../../hooks/useStats'
+import { useTabla, useGoleadores, useTarjetas, useFixture, usePremiosPublicados, usePartidoEventos } from '../../hooks/useStats'
 import Badge from '../../components/ui/Badge'
 import GlassCard from '../../components/ui/GlassCard'
 import EmptyState from '../../components/ui/EmptyState'
@@ -14,6 +14,7 @@ import { motion as Motion } from 'framer-motion'
 export default function LeagueArena() {
   const { slug } = useParams()
   const [activeTab, setActiveTab] = useState('posiciones')
+  const queryClient = useQueryClient()
 
   // Fetch liga
   const { data: liga, isLoading: loadingLiga } = useQuery({
@@ -76,8 +77,13 @@ export default function LeagueArena() {
   })
 
   const [selectedJornada, setSelectedJornada] = useState(null)
+
   const faseId = fases?.[0]?.id
   const jornadaId = selectedJornada || jornadas?.[0]?.id
+
+  const handleRefreshFixture = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['fixture', jornadaId] })
+  }, [queryClient, jornadaId])
 
   const { data: tabla } = useTabla({ fase_id: faseId })
   const { data: goleadores } = useGoleadores({ temporada_id: temporada?.id })
@@ -147,7 +153,7 @@ export default function LeagueArena() {
       {/* Content */}
       <Motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
         {activeTab === 'posiciones' && <StandingsTab data={tabla} />}
-        {activeTab === 'fixture' && <FixtureTab fixture={fixture} jornadas={jornadas} selected={jornadaId} onSelect={setSelectedJornada} />}
+        {activeTab === 'fixture' && <FixtureTab fixture={fixture} jornadas={jornadas} selected={jornadaId} onSelect={setSelectedJornada} onRefresh={handleRefreshFixture} />}
         {activeTab === 'goleadores' && <ScorersTab data={goleadores} />}
         {activeTab === 'tarjetas' && <CardsTab data={tarjetas} />}
         {activeTab === 'premios' && <AwardsTab data={premios} />}
@@ -201,7 +207,9 @@ export function StandingsTab({ data }) {
   )
 }
 
-function FixtureTab({ fixture, jornadas, selected, onSelect }) {
+function FixtureTab({ fixture, jornadas, selected, onSelect, onRefresh }) {
+  const [expandedId, setExpandedId] = useState(null)
+
   return (
     <div>
       {/* Jornada selector */}
@@ -227,27 +235,143 @@ function FixtureTab({ fixture, jornadas, selected, onSelect }) {
         <EmptyState icon={Shield} title="Sin partidos" description="Selecciona una jornada para ver los partidos." />
       ) : (
         <div className="flex flex-col gap-3">
-          {fixture.map(p => (
-            <GlassCard key={p.partido_id} className="!p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge status={p.partido_estado} />
-                {p.cancha && <span className="text-[11px] text-text-dim">{p.cancha}</span>}
-              </div>
-              <div className="flex items-center justify-between">
-                <Link to={`/equipo/${p.local_id}`} className="flex-1 text-right font-medium text-sm hover:text-primary transition-colors truncate">{p.local_nombre}</Link>
-                <div className="mx-4 text-center min-w-[60px]">
-                  {p.partido_estado === 'finalizado' || p.partido_estado === 'en_juego' ? (
-                    <span className="text-xl font-heading font-bold text-primary">{p.goles_local} - {p.goles_visitante}</span>
-                  ) : (
-                    <span className="text-sm text-text-dim">vs</span>
-                  )}
+          {fixture.map(p => {
+            const isLive = p.partido_estado === 'en_juego' || p.partido_estado === 'entre_tiempo'
+            const isExpanded = expandedId === p.partido_id
+
+            return (
+              <GlassCard key={p.partido_id} className={`!p-4 ${isLive ? 'ring-1 ring-primary/30' : ''}`}>
+                {/* Header: status + venue */}
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge status={p.partido_estado} />
+                  {p.cancha && <span className="text-[11px] text-text-dim">{p.cancha}</span>}
                 </div>
-                <Link to={`/equipo/${p.visitante_id}`} className="flex-1 text-left font-medium text-sm hover:text-primary transition-colors truncate">{p.visitante_nombre}</Link>
-              </div>
-            </GlassCard>
-          ))}
+
+                {/* Teams + score */}
+                <div className="flex items-center justify-between">
+                  <Link to={`/equipo/${p.local_id}`} className="flex-1 flex items-center justify-end gap-2 min-w-0">
+                    <span className="font-medium text-sm hover:text-primary transition-colors truncate">{p.local_nombre}</span>
+                    {p.local_escudo ? (
+                      <img src={p.local_escudo} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <Shield className="w-5 h-5 text-text-dim flex-shrink-0" />
+                    )}
+                  </Link>
+
+                  <div className="mx-4 text-center min-w-[60px]">
+                    {p.partido_estado === 'finalizado' || p.partido_estado === 'en_juego' ? (
+                      <span className="text-xl font-heading font-bold text-primary">{p.goles_local} - {p.goles_visitante}</span>
+                    ) : (
+                      <span className="text-sm text-text-dim">vs</span>
+                    )}
+                  </div>
+
+                  <Link to={`/equipo/${p.visitante_id}`} className="flex-1 flex items-center gap-2 min-w-0">
+                    {p.visitante_escudo ? (
+                      <img src={p.visitante_escudo} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <Shield className="w-5 h-5 text-text-dim flex-shrink-0" />
+                    )}
+                    <span className="font-medium text-sm hover:text-primary transition-colors truncate">{p.visitante_nombre}</span>
+                  </Link>
+                </div>
+
+                {/* Live match: expand toggle + reload */}
+                {isLive && (
+                  <div className="mt-3 flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : p.partido_id)}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      {isExpanded ? 'Ocultar eventos' : 'Eventos del partido'}
+                    </button>
+                    <button
+                      onClick={() => onRefresh?.()}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-dim hover:text-primary transition-colors"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Actualizar
+                    </button>
+                  </div>
+                )}
+
+                {/* Expanded events */}
+                {isExpanded && (
+                  <LiveMatchEvents partidoId={p.partido_id} localId={p.local_id} visitanteId={p.visitante_id} />
+                )}
+              </GlassCard>
+            )
+          })}
         </div>
       )}
+    </div>
+  )
+}
+
+function LiveMatchEvents({ partidoId, localId, visitanteId }) {
+  const { data: eventosData, isLoading } = usePartidoEventos(partidoId)
+  const eventos = eventosData
+
+  if (isLoading) return (
+    <div className="mt-3 pt-3 border-t border-border-default flex items-center justify-center py-4">
+      <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  )
+
+  const goles = eventos?.goles || []
+  const tarjetas = eventos?.tarjetas || []
+
+  if (!goles.length && !tarjetas.length) {
+    return (
+      <div className="mt-3 pt-3 border-t border-border-default text-center py-4">
+        <p className="text-xs text-text-dim">Sin eventos registrados aún</p>
+      </div>
+    )
+  }
+
+  const allEvents = [
+    ...goles.map(g => ({ ...g, tipo_evento: 'gol', minuto: g.minuto ?? 0 })),
+    ...tarjetas.map(t => ({ ...t, tipo_evento: 'tarjeta', minuto: t.minuto ?? 0 }))
+  ].sort((a, b) => a.minuto - b.minuto || (a.tipo_evento === 'gol' ? -1 : 1))
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border-default">
+      <div className="space-y-1.5">
+        {allEvents.map((ev, i) => {
+          const equipoId = ev.inscripcion_jugador?.plantel?.equipo?.id
+          const isLocal = equipoId === localId
+          const jugador = ev.inscripcion_jugador?.jugador
+          const nombreJugador = jugador ? `${jugador.nombre} ${jugador.apellido}` : 'Jugador'
+          const equipoNombre = ev.inscripcion_jugador?.plantel?.equipo?.nombre || ''
+
+          if (ev.tipo_evento === 'gol') {
+            return (
+              <div key={`gol-${ev.id}`} className={`flex items-center gap-2 text-xs ${isLocal ? 'justify-start' : 'justify-end flex-row-reverse'}`}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg">⚽</span>
+                  <span className="font-semibold text-text-primary">{nombreJugador}</span>
+                  {ev.es_contra && <span className="text-[10px] text-danger font-bold">(EC)</span>}
+                  {ev.es_penal && <span className="text-[10px] text-warning font-bold">(P)</span>}
+                  <span className="text-text-dim">{ev.minuto}'</span>
+                </div>
+              </div>
+            )
+          }
+
+          const esAmarilla = ev.tipo === 'amarilla'
+          const esRoja = ev.tipo === 'roja' || ev.tipo === 'doble_amarilla'
+          return (
+            <div key={`tarjeta-${ev.id}`} className={`flex items-center gap-2 text-xs ${isLocal ? 'justify-start' : 'justify-end flex-row-reverse'}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-3.5 rounded-[2px] ${esAmarilla ? 'bg-yellow-400' : 'bg-red-500'} shadow-sm`} />
+                <span className="font-semibold text-text-primary">{nombreJugador}</span>
+                <span className="text-text-dim">{ev.minuto}'</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

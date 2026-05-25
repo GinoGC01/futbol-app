@@ -44,7 +44,7 @@ export const jugadorRepository = {
     return await supabaseAdmin
       .from('jugador')
       .select(`
-        id, nombre, apellido, fecha_nacimiento, dni, foto_url,
+        id, nombre, apellido, fecha_nacimiento,
         inscripcion_jugador!inner (
           plantel!inner (
             equipo!inner (
@@ -56,11 +56,44 @@ export const jugadorRepository = {
       .eq('inscripcion_jugador.plantel.equipo.liga_id', ligaId)
   },
 
-  async findJugadoresByOrganizador(from, to) {
-    return await supabaseAdmin
+  async findJugadorIdsInOrganizadorLeagues(organizadorId) {
+    const { data: ligas } = await supabaseAdmin
+      .from('liga')
+      .select('id')
+      .eq('organizador_id', organizadorId)
+    if (!ligas?.length) return []
+
+    const ligaIds = ligas.map(l => l.id)
+
+    const { data: equipos } = await supabaseAdmin
+      .from('equipo')
+      .select('id')
+      .in('liga_id', ligaIds)
+    if (!equipos?.length) return []
+
+    const equipoIds = equipos.map(e => e.id)
+
+    const { data: planteles } = await supabaseAdmin
+      .from('plantel')
+      .select('id')
+      .in('equipo_id', equipoIds)
+    if (!planteles?.length) return []
+
+    const plantelIds = planteles.map(p => p.id)
+
+    const { data: inscripciones } = await supabaseAdmin
+      .from('inscripcion_jugador')
+      .select('jugador_id')
+      .in('plantel_id', plantelIds)
+
+    return [...new Set((inscripciones || []).map(i => i.jugador_id))]
+  },
+
+  async findJugadoresByOrganizador(from, to, excludeIds) {
+    let query = supabaseAdmin
       .from('jugador')
       .select(`
-        id, nombre, apellido, fecha_nacimiento, dni, foto_url, created_at,
+        id, nombre, apellido, fecha_nacimiento, created_at,
         inscripciones:inscripcion_jugador(
           plantel:plantel(
             equipo:equipo(
@@ -70,6 +103,13 @@ export const jugadorRepository = {
         )
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(from, to)
+
+    if (excludeIds.length > 0) {
+      for (const id of excludeIds) {
+        query = query.neq('id', id)
+      }
+    }
+
+    return await query.range(from, to)
   }
 }

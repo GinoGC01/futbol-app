@@ -242,6 +242,37 @@ class PartidoService {
   }
 
   /**
+   * Actualiza el tiempo adicionado (descuento / añadido) de un partido.
+   * Almacena en DB si la columna existe, sino fallback cliente-side.
+   */
+  async updateTiempoAdicionado(partidoId, organizadorId, segundos) {
+    if (segundos === undefined || segundos === null || !Number.isInteger(segundos) || segundos < 0) {
+      throw new AppError('tiempo_adicionado debe ser un entero >= 0', 400)
+    }
+
+    const { partido, temporadaEstado } = await this.resolveOwnershipChain(partidoId, organizadorId)
+
+    if (temporadaEstado === 'finalizada') {
+      throw new AppError('Temporada finalizada: no se puede modificar (Modo Bóveda)', 403)
+    }
+
+    if (!['en_juego', 'entre_tiempo'].includes(partido.estado)) {
+      throw new AppError(`Solo se puede ajustar tiempo adicional en partidos en vivo (estado actual: ${partido.estado})`, 400)
+    }
+
+    const { data: updated, error } = await partidoRepository.updatePartidoTiempoAdicionado(partidoId, segundos)
+
+    if (error) {
+      if (error.message?.includes('does not exist')) {
+        return { id: partidoId, tiempo_adicionado: segundos }
+      }
+      throw new AppError(`Error actualizando tiempo adicionado: ${error.message}`, 500)
+    }
+
+    return updated
+  }
+
+  /**
    * Genera y asigna horarios automáticos para todos los partidos de una jornada.
    */
   async generateHorariosForJornada(jornadaId, organizadorId) {

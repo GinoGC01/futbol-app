@@ -25,6 +25,16 @@ export const matchService = {
   registrarTarjeta: (partidoId, data) =>
     api.post(`/match/partidos/${partidoId}/tarjetas`, data),
   getEventos: (partidoId) => api.get(`/match/partidos/${partidoId}/eventos`),
+  updateTiempoAdicionado: (id, segundos) =>
+    api.patch(`/match/partidos/${id}/tiempo-adicionado`, { segundos }),
+  actualizarGol: (partidoId, golId, data) =>
+    api.patch(`/match/partidos/${partidoId}/goles/${golId}`, data),
+  eliminarGol: (partidoId, golId) =>
+    api.delete(`/match/partidos/${partidoId}/goles/${golId}`),
+  actualizarTarjeta: (partidoId, tarjetaId, data) =>
+    api.patch(`/match/partidos/${partidoId}/tarjetas/${tarjetaId}`, data),
+  eliminarTarjeta: (partidoId, tarjetaId) =>
+    api.delete(`/match/partidos/${partidoId}/tarjetas/${tarjetaId}`),
   verificarElegibilidad: (inscripcionJugadorId) =>
     api.get(`/match/elegibilidad/${inscripcionJugadorId}`),
 };
