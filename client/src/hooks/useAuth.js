@@ -13,7 +13,7 @@ export function useAuth() {
         // nuestro perfil. Si responde 200, estamos dentro.
         const data = await api.get('/identity/me')
         setUser(data)
-      } catch (err) {
+      } catch {
         // Si falla el /me (401), simplemente no hay usuario
         setUser(null)
       } finally {
@@ -35,7 +35,7 @@ export function useAuth() {
   const signOut = async () => {
     try {
       await api.post('/identity/logout')
-    } catch (e) {
+    } catch {
       console.error('Error al cerrar sesión en el servidor')
     }
     localStorage.removeItem('user')

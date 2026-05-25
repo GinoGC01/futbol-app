@@ -1,10 +1,10 @@
 const variants = {
-  primary:   'bg-primary text-text-on-primary hover:bg-primary-dim shadow-[0_0_15px_rgba(206,222,11,0.2)]',
+  primary: 'bg-primary text-text-on-primary hover:bg-primary-dim shadow-[0_0_15px_rgba(206,222,11,0.2)]',
   secondary: 'bg-secondary text-white hover:bg-secondary-dim shadow-[0_0_15px_rgba(131,153,14,0.2)]',
-  danger:    'bg-danger text-white hover:opacity-90',
-  ghost:     'bg-transparent text-text-secondary border border-border-default hover:bg-bg-hover hover:text-text-primary',
-  gold:      'bg-accent-gold text-bg-deep hover:opacity-90 shadow-[0_0_15px_rgba(212,175,55,0.2)]',
-  outline:   'bg-transparent text-primary border border-primary/30 hover:bg-primary-glow'
+  danger: 'bg-danger text-white hover:opacity-90',
+  ghost: 'bg-transparent text-text-secondary border border-border-default hover:bg-bg-hover hover:text-text-primary',
+  gold: 'bg-accent-gold text-bg-deep hover:opacity-90 shadow-[0_0_15px_rgba(212,175,55,0.2)]',
+  outline: 'bg-transparent text-primary border border-primary/30 hover:bg-primary-glow'
 }
 
 const sizes = {
@@ -16,7 +16,7 @@ const sizes = {
 
 export default function Button({
   children, variant = 'primary', size = 'md',
-  disabled = false, loading = false, className = '', 
+  disabled = false, loading = false, className = '',
   noSkew = false, ...props
 }) {
   // Aplicamos el polígono estándar solicitado
@@ -38,7 +38,7 @@ export default function Button({
     >
       <div className="flex items-center gap-2 w-full justify-center">
         {loading && <span className="spinner !w-4 !h-4 !border-2" />}
-        {children}
+        {!loading && children}
       </div>
     </button>
   )

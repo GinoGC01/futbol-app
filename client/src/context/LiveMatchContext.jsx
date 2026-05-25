@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { useLigaActiva } from './LigaContext'
 import { useTemporadas } from '../hooks/useAdmin'
-import { adminService } from '../services/adminService'
+import { matchService } from '../services/matchService'
 import { useAuth } from '../hooks/useAuth'
 
 const LiveMatchContext = createContext()
@@ -35,7 +35,7 @@ export function LiveMatchProvider({ children }) {
     }
 
     try {
-      const response = await adminService.getLiveMatches(temporadaActiva.id)
+      const response = await matchService.getLiveMatches(temporadaActiva.id)
       const matches = Array.isArray(response) ? response : (response?.data || [])
       setLiveMatches(matches)
     } catch {

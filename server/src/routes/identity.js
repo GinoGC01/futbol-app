@@ -12,9 +12,9 @@ const router = Router()
 // ============================================
 
 // Login con JWT propio
-router.post('/login', AuthController.login.bind(AuthController))
-router.post('/google', AuthController.googleLogin.bind(AuthController))
-router.post('/logout', AuthController.logout.bind(AuthController))
+router.post('/login', AuthController.login)
+router.post('/google', AuthController.googleLogin)
+router.post('/logout', AuthController.logout)
 router.post(
   '/register',
   [
@@ -31,16 +31,16 @@ router.post(
 )
 
 // --- Auth Endpoints ---
-router.post('/verify-email', AuthController.verifyEmail.bind(AuthController))
-router.post('/resend-verification', AuthController.resendVerification.bind(AuthController))
-router.post('/forgot-password', AuthController.forgotPassword.bind(AuthController))
-router.post('/reset-password', AuthController.resetPassword.bind(AuthController))
+router.post('/verify-email', AuthController.verifyEmail)
+router.post('/resend-verification', AuthController.resendVerification)
+router.post('/forgot-password', AuthController.forgotPassword)
+router.post('/reset-password', AuthController.resetPassword)
 
 // ============================================
 // ENDPOINTS PROTEGIDOS (Requieren ser Organizador)
 // ============================================
 
-router.post('/change-password', requireAuth, requireOrganizador, AuthController.changePassword.bind(AuthController))
+router.post('/change-password', requireAuth, requireOrganizador, AuthController.changePassword)
 
 // --- Perfil del Organizador ---
 router.get('/me', requireAuth, requireOrganizador, OrganizadorController.getMe)

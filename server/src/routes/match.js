@@ -91,6 +91,34 @@ router.post(
 )
 
 // ============================================
+// HORARIOS AUTOMÁTICOS
+// ============================================
+router.post(
+  '/horarios/jornada/:jornadaId',
+  [
+    param('jornadaId').isUUID().withMessage('ID de jornada inválido')
+  ],
+  MatchController.generateHorariosJornada
+)
+
+router.post(
+  '/horarios/fase/:faseId',
+  [
+    param('faseId').isUUID().withMessage('ID de fase inválido')
+  ],
+  MatchController.generateHorariosFase
+)
+
+router.patch(
+  '/partidos/:id/tiempo-adicionado',
+  [
+    param('id').isUUID().withMessage('ID de partido inválido'),
+    body('segundos').isInt({ min: 0 }).withMessage('segundos debe ser un entero >= 0')
+  ],
+  MatchController.updateTiempoAdicionado
+)
+
+// ============================================
 // EVENTOS — Goles y Tarjetas (Minuto a Minuto)
 // ============================================
 router.post(
@@ -114,6 +142,47 @@ router.post(
     body('minuto').optional({ nullable: true }).isInt({ min: 0, max: 130 }).withMessage('Minuto entre 0 y 130')
   ],
   IncidentController.registrarTarjeta
+)
+
+router.patch(
+  '/partidos/:id/goles/:golId',
+  [
+    param('id').isUUID().withMessage('ID de partido inválido'),
+    param('golId').isUUID().withMessage('ID de gol inválido'),
+    body('minuto').optional().isInt({ min: 0, max: 130 }),
+    body('es_penal').optional().isBoolean(),
+    body('es_contra').optional().isBoolean()
+  ],
+  IncidentController.actualizarGol
+)
+
+router.delete(
+  '/partidos/:id/goles/:golId',
+  [
+    param('id').isUUID().withMessage('ID de partido inválido'),
+    param('golId').isUUID().withMessage('ID de gol inválido')
+  ],
+  IncidentController.eliminarGol
+)
+
+router.patch(
+  '/partidos/:id/tarjetas/:tarjetaId',
+  [
+    param('id').isUUID().withMessage('ID de partido inválido'),
+    param('tarjetaId').isUUID().withMessage('ID de tarjeta inválido'),
+    body('minuto').optional().isInt({ min: 0, max: 130 }),
+    body('tipo').optional().isIn(['amarilla', 'roja', 'doble_amarilla'])
+  ],
+  IncidentController.actualizarTarjeta
+)
+
+router.delete(
+  '/partidos/:id/tarjetas/:tarjetaId',
+  [
+    param('id').isUUID().withMessage('ID de partido inválido'),
+    param('tarjetaId').isUUID().withMessage('ID de tarjeta inválido')
+  ],
+  IncidentController.eliminarTarjeta
 )
 
 router.get(

@@ -119,6 +119,7 @@ export default function Login() {
                     onChange={e => setEmail(e.target.value)} 
                     placeholder="CORREO ELECTRÓNICO"
                     required
+                    data-testid="email-input"
                     className="w-full px-5 py-4 bg-bg-input border border-border-default text-sm text-white placeholder:text-text-dim outline-none focus:border-primary/50 transition-all rounded-none" 
                   />
                   <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-primary transition-all duration-300 group-focus-within:w-full" />
@@ -141,6 +142,7 @@ export default function Login() {
                     onChange={e => setPassword(e.target.value)} 
                     placeholder="••••••••"
                     required
+                    data-testid="password-input"
                     className="w-full px-5 py-4 bg-bg-input border border-border-default text-sm text-white placeholder:text-text-dim outline-none focus:border-primary/50 transition-all rounded-none" 
                   />
                   <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-primary transition-all duration-300 group-focus-within:w-full" />
@@ -154,6 +156,7 @@ export default function Login() {
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     className="bg-danger/10 border-l-4 border-danger p-3"
+                    data-testid="error-msg"
                   >
                     <p className="text-[10px] text-danger font-black uppercase tracking-widest leading-tight">
                       Error: {error}
@@ -165,6 +168,7 @@ export default function Login() {
               <button 
                 type="submit" 
                 disabled={loading}
+                data-testid="login-btn"
                 className="w-full relative overflow-hidden bg-primary text-bg-deep py-5 font-heading text-xl italic font-black uppercase tracking-tighter group transition-all active:scale-95 disabled:opacity-50"
               >
                 <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-[-20deg]" />

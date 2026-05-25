@@ -3,7 +3,7 @@ import { useCreateLiga } from '../../hooks/useAdmin'
 import { useToast } from '../../components/ui/Toast'
 import Modal from '../../components/ui/Modal'
 import Button from '../../components/ui/Button'
-import LeagueLimitScreen from '../../pages/admin/LeagueLimitScreen'
+import LeagueLimitScreen from '../../features/alerts/components/LeagueLimitScreen'
 
 export default function NewLigaModal({ open, onClose, limitReached, setLimitReached }) {
   const [form, setForm] = useState({ nombre: '', slug: '', tipo_futbol: 'f7', zona: '', monto_inscripcion: 0 })

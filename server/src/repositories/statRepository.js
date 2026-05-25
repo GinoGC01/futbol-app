@@ -1,0 +1,153 @@
+import { supabaseAdmin } from '../lib/supabase.js'
+
+export const statRepository = {
+  getTablaPosicionesQuery() {
+    return supabaseAdmin.from('vista_tabla_posiciones').select('*')
+  },
+
+  getGoleadoresQuery() {
+    return supabaseAdmin.from('vista_goleadores').select('*')
+  },
+
+  getTarjetasQuery() {
+    return supabaseAdmin.from('vista_tarjetas').select('*')
+  },
+
+  async findFixtureByJornada(jornadaId) {
+    return await supabaseAdmin
+      .from('vista_fixture')
+      .select('*')
+      .eq('jornada_id', jornadaId)
+  },
+
+  async findEquipoWithLiga(equipoId) {
+    return await supabaseAdmin
+      .from('equipo')
+      .select('*, liga:liga_id(*)')
+      .eq('id', equipoId)
+      .maybeSingle()
+  },
+
+  async findLatestInscripcionEquipo(equipoId) {
+    return await supabaseAdmin
+      .from('inscripcion_equipo')
+      .select('id, temporada_id, temporada!inner(deleted_at)')
+      .eq('equipo_id', equipoId)
+      .is('temporada.deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  },
+
+  async findPlantelByEquipoAndTemporada(equipoId, temporadaId) {
+    return await supabaseAdmin
+      .from('plantel')
+      .select('id')
+      .eq('equipo_id', equipoId)
+      .eq('temporada_id', temporadaId)
+      .maybeSingle()
+  },
+
+  async findTablaPosicionesForEquipo(equipoId, temporadaId) {
+    return await supabaseAdmin
+      .from('vista_tabla_posiciones')
+      .select('*')
+      .eq('equipo_id', equipoId)
+      .eq('temporada_id', temporadaId)
+      .maybeSingle()
+  },
+
+  async findInscripcionJugadorWithJugador(plantelId) {
+    return await supabaseAdmin
+      .from('inscripcion_jugador')
+      .select('*, jugador(*)')
+      .eq('plantel_id', plantelId)
+  },
+
+  async findFixtureForEquipo(equipoId, temporadaId) {
+    return await supabaseAdmin
+      .from('vista_fixture')
+      .select('*')
+      .eq('temporada_id', temporadaId)
+      .or(`local_id.eq.${equipoId},visitante_id.eq.${equipoId}`)
+  },
+
+  async findPagosByEquipo(equipoId) {
+    return await supabaseAdmin
+      .from('vista_pagos')
+      .select('*')
+      .eq('equipo_id', equipoId)
+  },
+
+  async findJugadorDetalle(inscripcionJugadorId) {
+    return await supabaseAdmin
+      .from('inscripcion_jugador')
+      .select('*, jugador(*), plantel:plantel_id(*, equipo:equipo_id(*))')
+      .eq('id', inscripcionJugadorId)
+      .maybeSingle()
+  },
+
+  async findGoleadorByJugadorAndTemporada(jugadorId, temporadaId) {
+    return await supabaseAdmin
+      .from('vista_goleadores')
+      .select('goles')
+      .eq('jugador_id', jugadorId)
+      .eq('temporada_id', temporadaId)
+      .maybeSingle()
+  },
+
+  async findTarjetasByJugadorAndTemporada(jugadorId, temporadaId) {
+    return await supabaseAdmin
+      .from('vista_tarjetas')
+      .select('amarillas, rojas')
+      .eq('jugador_id', jugadorId)
+      .eq('temporada_id', temporadaId)
+      .maybeSingle()
+  },
+
+  async findEventosByPartido(partidoId) {
+    const [golesResult, tarjetasResult] = await Promise.all([
+      supabaseAdmin
+        .from('gol')
+        .select(`
+          id, minuto, es_penal, es_contra,
+          inscripcion_jugador:inscripcion_jugador!inner(
+            id, dorsal,
+            jugador:jugador!inner(nombre, apellido),
+            plantel:plantel!inner(equipo:equipo!inner(id, nombre))
+          )
+        `)
+        .eq('partido_id', partidoId)
+        .order('minuto', { ascending: true }),
+      supabaseAdmin
+        .from('tarjeta')
+        .select(`
+          id, minuto, tipo,
+          inscripcion_jugador:inscripcion_jugador!inner(
+            id, dorsal,
+            jugador:jugador!inner(nombre, apellido),
+            plantel:plantel!inner(equipo:equipo!inner(id, nombre))
+          )
+        `)
+        .eq('partido_id', partidoId)
+        .order('minuto', { ascending: true }),
+    ])
+
+    return { goles: golesResult.data || [], tarjetas: tarjetasResult.data || [] }
+  },
+
+  async findPremiosPublicados(temporadaId) {
+    return await supabaseAdmin
+      .from('premio')
+      .select(`
+        id, nombre, descripcion, criterio, categoria, premio_fisico, imagen_url,
+        ganadores:ganador_premio(
+          id, valor_record, nota_desempate, compartido,
+          equipo:equipo(id, nombre, escudo_url),
+          jugador:jugador(id, nombre, apellido, foto_url)
+        )
+      `)
+      .eq('temporada_id', temporadaId)
+      .eq('publicado', true)
+  }
+}

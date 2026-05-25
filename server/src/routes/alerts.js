@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { supabaseAdmin } from '../lib/supabase.js'
 import { requireAuth, requireOrganizador, requireActiveStatus } from '../middleware/auth.js'
+import AlertController from '../controllers/alerts/AlertController.js'
 
 const router = Router()
 
@@ -8,50 +8,12 @@ const router = Router()
 router.use(requireAuth, requireOrganizador, requireActiveStatus)
 
 // GET /api/alerts?liga_id=...
-router.get('/', async (req, res, next) => {
-  try {
-    const { liga_id } = req.query
-    if (!liga_id) return res.status(400).json({ error: 'liga_id es requerido' })
-
-    const { data, error } = await supabaseAdmin
-      .from('alerta')
-      .select('*')
-      .eq('liga_id', liga_id)
-      .eq('resuelta', false)
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    res.json({ data })
-  } catch (err) {
-    next(err)
-  }
-})
+router.get('/', AlertController.getUnresolvedAlerts)
 
 // PATCH /api/alerts/:id/resolve
-router.patch('/:id/resolve', async (req, res, next) => {
-  try {
-    const { id } = req.params
-    const { error } = await supabaseAdmin
-      .from('alerta')
-      .update({ resuelta: true })
-      .eq('id', id)
-
-    if (error) throw error
-    res.json({ data: { success: true } })
-  } catch (err) {
-    next(err)
-  }
-})
+router.patch('/:id/resolve', AlertController.resolveAlert)
 
 // POST /api/alerts/evaluate (Manual trigger)
-router.post('/evaluate', async (req, res, next) => {
-  try {
-    const { error } = await supabaseAdmin.rpc('evaluar_alertas')
-    if (error) throw error
-    res.json({ data: { message: 'Evaluación completada' } })
-  } catch (err) {
-    next(err)
-  }
-})
+router.post('/evaluate', AlertController.evaluateAlerts)
 
 export default router

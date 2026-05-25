@@ -6,6 +6,12 @@ import { MemoryRouter } from 'react-router-dom'
 // MOCKS — hoisted por Vitest, deben ir antes de los imports
 // ============================================================
 
+vi.mock('@react-oauth/google', () => ({
+  GoogleOAuthProvider: ({ children }) => <div>{children}</div>,
+  GoogleLogin: () => <div>Google Login Mock</div>,
+  useGoogleLogin: () => vi.fn()
+}))
+
 vi.mock('../lib/supabase', () => ({
   supabase: {
     auth: {
@@ -85,14 +91,13 @@ describe('📋 Register — Step 1: Formulario de cuenta', () => {
 
   it('muestra el link "Iniciar sesión" en el step 1', () => {
     renderRegister()
-    expect(screen.getByText(/Iniciar sesión/i)).toBeInTheDocument()
+    expect(screen.getByText(/INGRESAR/i)).toBeInTheDocument()
   })
 
-  it('muestra el step indicator con "Cuenta", "Liga" y "Listo"', () => {
+  it('muestra el step indicator con el paso actual', () => {
     renderRegister()
-    expect(screen.getByText('Cuenta')).toBeInTheDocument()
-    expect(screen.getByText('Liga')).toBeInTheDocument()
-    expect(screen.getByText('Listo')).toBeInTheDocument()
+    expect(screen.getByText('PASO 01')).toBeInTheDocument()
+    expect(screen.getByText('DATOS DE LA CUENTA')).toBeInTheDocument()
   })
 })
 
@@ -233,7 +238,7 @@ describe('🚀 Register — Envío al backend (mock de api.post)', () => {
     renderRegister()
     await completeRegistration()
     fireEvent.click(screen.getByTestId('register-submit'))
-    await waitFor(() => expect(screen.getByText('¡Todo listo!')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('¡CASI LISTO!')).toBeInTheDocument())
   })
 
   it('muestra mensaje de error cuando la API falla', async () => {

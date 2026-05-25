@@ -48,6 +48,24 @@ export function useEquipoDetalle(equipoId) {
   })
 }
 
+export function useJugadorDetalle(inscripcionJugadorId) {
+  return useQuery({
+    queryKey: ['jugador-detalle', inscripcionJugadorId],
+    queryFn: () => statsService.getJugadorDetalle(inscripcionJugadorId),
+    staleTime: STALE_30S,
+    enabled: !!inscripcionJugadorId
+  })
+}
+
+export function usePartidoEventos(partidoId) {
+  return useQuery({
+    queryKey: ['partido-eventos', partidoId],
+    queryFn: () => statsService.getPartidoEventos(partidoId),
+    staleTime: 10 * 1000,
+    enabled: !!partidoId
+  })
+}
+
 export function usePremiosPublicados(temporadaId) {
   return useQuery({
     queryKey: ['premios-pub', temporadaId],

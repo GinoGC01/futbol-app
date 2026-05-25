@@ -15,7 +15,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-50 bg-black/60"
               />
             </Dialog.Overlay>
             <Dialog.Content asChild aria-describedby={undefined}>
@@ -27,7 +27,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
                 className={`
                   fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2
                   w-[calc(100%-2rem)] ${widths[size]}
-                  bg-bg-deep border border-white/10 rounded-none p-0 shadow-[0_0_100px_rgba(0,0,0,0.8)]
+                  bg-bg-deep border border-white/10 rounded-none p-0 shadow-2xl
                   max-h-[85vh] overflow-y-auto
                 `}
               >

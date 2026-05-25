@@ -2,6 +2,12 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
+vi.mock('@react-oauth/google', () => ({
+  GoogleOAuthProvider: ({ children }) => <div>{children}</div>,
+  GoogleLogin: () => <div>Google Login Mock</div>,
+  useGoogleLogin: () => vi.fn()
+}))
+
 vi.mock('../lib/supabase', () => ({
   supabase: {
     auth: {

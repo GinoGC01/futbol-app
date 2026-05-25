@@ -11,6 +11,7 @@ import {
   Zap,
   ShieldCheck,
   Layout,
+  Layers,
   BarChart3
 } from 'lucide-react'
 import GlassCard from '../ui/GlassCard'
@@ -18,7 +19,7 @@ import GlassCard from '../ui/GlassCard'
 const HelpStep = ({ icon: Icon, title, description, details, order }) => (
   <div className="relative flex gap-6 group">
     {/* Line connector */}
-    {order !== 5 && (
+    {order !== 6 && (
       <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-primary/10 group-hover:bg-primary/20 transition-colors" />
     )}
     
@@ -94,6 +95,17 @@ export default function HelpSection() {
         'Selecciona qué equipos participan en esta edición',
         'Define fechas de inicio y finalización aproximadas',
         'Configura el número de ascensos/descensos o premios'
+      ]
+    },
+    {
+      icon: Layers,
+      title: 'Organización en Grupos',
+      description: 'En fases de tipo "Todos contra todos", puedes subdividir a los equipos en grupos competitivos.',
+      details: [
+        'Gestiona grupos desde la tarjeta de la fase',
+        'Agrega equipos rápidamente a sus grupos respectivos',
+        'Requiere un mínimo de 4 equipos por cada grupo',
+        'El Fixture se genera automáticamente respetando los grupos'
       ]
     },
     {

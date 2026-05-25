@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { awardRepository } from '../../repositories/awardRepository.js'
 import LigaService from '../identity/LigaService.js'
 import StatService from './StatService.js'
 import AppError from '../../utils/AppError.js'
@@ -14,14 +14,7 @@ class AwardService {
    * Resuelve ownership de un premio: premio → temporada → liga → organizador.
    */
   async resolveOwnership(premioId, organizadorId) {
-    const { data: premio, error } = await supabaseAdmin
-      .from('premio')
-      .select(`
-        id, temporada_id, fase_id, nombre, criterio, categoria, publicado,
-        temporada:temporada!inner(liga_id)
-      `)
-      .eq('id', premioId)
-      .maybeSingle()
+    const { data: premio, error } = await awardRepository.findPremioWithOwnership(premioId)
 
     if (error || !premio) throw new AppError('Premio no encontrado', 404)
 
@@ -48,11 +41,7 @@ class AwardService {
     }
 
     // Verificar ownership de la temporada
-    const { data: temporada, error: tErr } = await supabaseAdmin
-      .from('temporada')
-      .select('liga_id')
-      .eq('id', temporada_id)
-      .maybeSingle()
+    const { data: temporada, error: tErr } = await awardRepository.findTemporadaLiga(temporada_id)
 
     if (tErr || !temporada) throw new AppError('Temporada no encontrada', 404)
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId)
@@ -69,11 +58,7 @@ class AwardService {
     if (premio_fisico) payload.premio_fisico = premio_fisico.trim()
     if (imagen_url) payload.imagen_url = imagen_url.trim()
 
-    const { data: premio, error } = await supabaseAdmin
-      .from('premio')
-      .insert([payload])
-      .select('*')
-      .single()
+    const { data: premio, error } = await awardRepository.createPremio(payload)
 
     if (error) throw new AppError(`Error al crear premio: ${error.message}`, 500)
 
@@ -181,12 +166,7 @@ class AwardService {
   async _escrutinioVallaMenosVencida(temporadaId, faseId) {
     if (!faseId) {
       // Si no hay fase, buscar todas las fases de la temporada
-      const { data: fases } = await supabaseAdmin
-        .from('fase')
-        .select('id')
-        .eq('temporada_id', temporadaId)
-        .order('orden', { ascending: true })
-        .limit(1)
+      const { data: fases } = await awardRepository.findFirstFaseId(temporadaId)
 
       if (!fases || fases.length === 0) return { criterio: 'valla_menos_vencida', candidatos: [] }
       faseId = fases[0].id
@@ -300,12 +280,7 @@ class AwardService {
    */
   async _escrutinioVallaInvicta(temporadaId, faseId) {
     if (!faseId) {
-      const { data: fases } = await supabaseAdmin
-        .from('fase')
-        .select('id')
-        .eq('temporada_id', temporadaId)
-        .order('orden', { ascending: true })
-        .limit(1)
+      const { data: fases } = await awardRepository.findFirstFaseId(temporadaId)
 
       if (!fases || fases.length === 0) return { criterio: 'valla_invicta', candidatos: [] }
       faseId = fases[0].id
@@ -315,11 +290,7 @@ class AwardService {
     const tabla = await StatService.getTablaPosiciones(faseId)
 
     // Para valla invicta necesitamos datos más granulares del fixture
-    const { data: partidos, error } = await supabaseAdmin
-      .from('vista_fixture')
-      .select('*')
-      .eq('fase_id', faseId)
-      .eq('partido_estado', 'finalizado')
+    const { data: partidos, error } = await awardRepository.findFixtureForVallaInvicta(faseId)
 
     if (error) throw new AppError(`Error consultando fixture: ${error.message}`, 500)
 
@@ -372,11 +343,7 @@ class AwardService {
     if (equipo_id) payload.equipo_id = equipo_id
     if (jugador_id) payload.jugador_id = jugador_id
 
-    const { data: ganador, error } = await supabaseAdmin
-      .from('ganador_premio')
-      .insert([payload])
-      .select('id, premio_id, equipo_id, jugador_id, valor_record, nota_desempate, compartido')
-      .single()
+    const { data: ganador, error } = await awardRepository.createGanador(payload)
 
     if (error) throw new AppError(`Error asignando ganador: ${error.message}`, 500)
 
@@ -389,12 +356,7 @@ class AwardService {
   async togglePublicacion(premioId, organizadorId, publicado) {
     await this.resolveOwnership(premioId, organizadorId)
 
-    const { data: updated, error } = await supabaseAdmin
-      .from('premio')
-      .update({ publicado: Boolean(publicado) })
-      .eq('id', premioId)
-      .select('id, nombre, publicado')
-      .single()
+    const { data: updated, error } = await awardRepository.updatePremioPublicacion(premioId, publicado)
 
     if (error) throw new AppError(`Error actualizando publicación: ${error.message}`, 500)
 
@@ -405,27 +367,12 @@ class AwardService {
    * Lista premios de una temporada (vista de admin).
    */
   async getPremiosByTemporada(temporadaId, organizadorId) {
-    const { data: temporada, error: tErr } = await supabaseAdmin
-      .from('temporada')
-      .select('liga_id')
-      .eq('id', temporadaId)
-      .maybeSingle()
+    const { data: temporada, error: tErr } = await awardRepository.findTemporadaLiga(temporadaId)
 
     if (tErr || !temporada) throw new AppError('Temporada no encontrada', 404)
     await LigaService.verifyOwnership(temporada.liga_id, organizadorId)
 
-    const { data, error } = await supabaseAdmin
-      .from('premio')
-      .select(`
-        id, nombre, descripcion, criterio, categoria, premio_fisico, imagen_url, publicado, created_at,
-        ganadores:ganador_premio(
-          id, valor_record, nota_desempate, compartido,
-          equipo:equipo(id, nombre, escudo_url),
-          jugador:jugador(id, nombre, apellido, foto_url)
-        )
-      `)
-      .eq('temporada_id', temporadaId)
-      .order('created_at', { ascending: true })
+    const { data, error } = await awardRepository.findPremiosByTemporada(temporadaId)
 
     if (error) throw new AppError(`Error listando premios: ${error.message}`, 500)
 
@@ -433,4 +380,5 @@ class AwardService {
   }
 }
 
-export default new AwardService()
+const instance = new AwardService()
+export default instance

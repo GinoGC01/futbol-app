@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { supabaseAdmin } from '../lib/supabase.js'
 import AppError from '../utils/AppError.js'
-import AuthController from '../controllers/identity/AuthController.js'
+import { signToken, setTokenCookie } from '../utils/jwtUtils.js'
 
 export async function requireAuth(req, res, next) {
   try {
@@ -38,8 +38,8 @@ export async function requireAuth(req, res, next) {
     const timeLeft = decoded.exp - now
     
     if (timeLeft < 3600) { // < 1 hora
-      const newToken = AuthController.signToken(decoded.sub, decoded.email)
-      AuthController.setTokenCookie(res, newToken)
+      const newToken = signToken(decoded.sub, decoded.email)
+      setTokenCookie(res, newToken)
       res.setHeader('X-New-Token', newToken) // Mantenemos el header por si el cliente lo escucha
       res.setHeader('Access-Control-Expose-Headers', 'X-New-Token')
     }

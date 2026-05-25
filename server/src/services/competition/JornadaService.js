@@ -1,69 +1,56 @@
-import { supabaseAdmin } from '../../lib/supabase.js'
+import { jornadaRepository } from '../../repositories/jornadaRepository.js'
 import TemporadaService from './TemporadaService.js'
 import LigaService from '../identity/LigaService.js'
 import AppError from '../../utils/AppError.js'
 
-class JornadaService {
+const ESTADOS_ACTIVOS = ['programada', 'jugada']
+const ESTADO_VENCIDA = 'vencida'
+
+export const JornadaService = {
   /**
    * Generación atómica en batch de N jornadas.
-   * Supabase insert([...]) realiza una transacción a nivel de API sobre la tabla. 
-   * Si falla internamente (ej: un constraint de unicidad de numero de jornada en misma fase), revertirá todo el bloque insertado en esa petición.
    */
-  async createJornadasBatch(faseId, organizadorId, cantidad) {
+  async createJornadasBatch(faseId, organizadorId, cantidad, fechaTentativa) {
     if (!cantidad || cantidad < 1 || cantidad > 100) {
       throw new AppError('La cantidad debe ser un número válido (1-100)', 400)
     }
 
-    // 1. Obtener la Fase y la Temporada para verificar Estado "Bóveda" y Propiedad
-    const { data: fase, error: faseError } = await supabaseAdmin
-      .from('fase')
-      .select(`
-        temporada_id,
-        temporada:temporada(liga_id)
-      `)
-      .eq('id', faseId)
-      .maybeSingle()
+    const { data: fase, error: faseError } = await jornadaRepository.findFaseTemporadaLiga(faseId)
 
     if (faseError || !fase) throw new AppError('La Fase no existe', 404)
 
-    // 2. Aislamiento Total
     await LigaService.verifyOwnership(fase.temporada.liga_id, organizadorId)
 
-    // 3. Hard Lock: Control de Estado Bóveda
     await TemporadaService.validateNotFinalizada(fase.temporada_id)
 
-    // 4. Determinar número de arranque (Evitar duplicidad de números en la misma fase)
-    const { data: ultimasJornadas, error: uqError } = await supabaseAdmin
-      .from('jornada')
-      .select('numero')
-      .eq('fase_id', faseId)
-      .order('numero', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const { data: ultimasJornadas, error: uqError } = await jornadaRepository.findLatestJornadaNumero(faseId)
 
     if (uqError) throw new AppError(`Error al verificar jornadas previas: ${uqError.message}`, 500)
 
     const startNumber = ultimasJornadas ? ultimasJornadas.numero + 1 : 1
 
-    // 5. Armar Array Batch
+    // Calcular fecha base para auto-incremento semanal si no se provee
+    const fechaBase = fechaTentativa ? new Date(fechaTentativa) : new Date()
+    if (isNaN(fechaBase.getTime())) {
+      throw new AppError('Fecha tentativa inválida', 400)
+    }
+
     const payloadBuffer = []
     for (let i = 0; i < cantidad; i++) {
-       payloadBuffer.push({
-         fase_id: faseId,
-         numero: startNumber + i,
-         estado: 'programada', // Valor inicial validado en el schema
-       })
+      const fechaJornada = new Date(fechaBase)
+      fechaJornada.setDate(fechaJornada.getDate() + i * 7) // +1 semana por jornada
+      payloadBuffer.push({
+        fase_id: faseId,
+        numero: startNumber + i,
+        fecha_tentativa: fechaJornada.toISOString(),
+        estado: 'programada',
+      })
     }
 
     try {
-      // 6. Transacción en API (Supabase Postgres)
-      const { data: jornadasInsertadas, error: batchError } = await supabaseAdmin
-        .from('jornada')
-        .insert(payloadBuffer)
-        .select('id, numero, estado')
+      const { data: jornadasInsertadas, error: batchError } = await jornadaRepository.insertJornadas(payloadBuffer)
 
       if (batchError) {
-        // Falló la operación en bloque
         throw new AppError(`Falló la creación atómica de jornadas: ${batchError.message}`, 500)
       }
 
@@ -72,69 +59,78 @@ class JornadaService {
         jornadas: jornadasInsertadas
       }
     } catch (e) {
-      // Si fue AppError lo arrojamos directo
       if (e instanceof AppError) throw e
       throw new AppError(`Error fatal generando batch: ${e.message}`, 500)
     }
-  }
+  },
 
   /**
-   * Actualiza una jornada (fecha_tentativa).
+   * Actualiza una jornada (fecha_tentativa, estado).
    */
   async updateJornada(jornadaId, organizadorId, updateData) {
-    // 1. Resolve: jornada → fase → temporada → liga
-    const { data: jornada, error: jErr } = await supabaseAdmin
-      .from('jornada')
-      .select(`
-        id, fase_id,
-        fase:fase(
-          temporada_id,
-          temporada:temporada(liga_id, estado)
-        )
-      `)
-      .eq('id', jornadaId)
-      .maybeSingle()
+    const { data: jornada, error: jErr } = await jornadaRepository.findJornadaOwnershipCheck(jornadaId)
 
     if (jErr || !jornada) throw new AppError('Jornada no encontrada', 404)
 
-    // 2. Aislamiento
     await LigaService.verifyOwnership(jornada.fase.temporada.liga_id, organizadorId)
 
-    // 3. Vault
     if (jornada.fase.temporada.estado === 'finalizada') {
       throw new AppError('Temporada finalizada: no se puede editar la jornada (Modo Bóveda)', 403)
     }
 
-    // 4. Update
+    // Auto-detect vencida si la fecha ya pasó y el estado es programada
+    let estadoAuto = updateData.estado
+    if (updateData.estado === undefined && updateData.fecha_tentativa !== undefined) {
+      const ahora = new Date()
+      const fechaUsuario = new Date(updateData.fecha_tentativa)
+      if (fechaUsuario <= ahora && ESTADOS_ACTIVOS.includes(jornada.estado)) {
+        estadoAuto = ESTADO_VENCIDA
+      }
+    }
+
     const payload = {}
     if (updateData.fecha_tentativa !== undefined) payload.fecha_tentativa = updateData.fecha_tentativa
-    if (updateData.estado !== undefined) payload.estado = updateData.estado
+    if (estadoAuto !== undefined) payload.estado = estadoAuto
 
     if (Object.keys(payload).length === 0) {
       throw new AppError('No hay datos para actualizar', 400)
     }
 
-    // 5. Si se está cerrando, podemos querer lógica adicional (ej: marcar partidos pendientes)
     if (payload.estado === 'cerrada') {
-      // Opcional: Marcar partidos programados como postergados si se cierra la fecha sin jugarlos
-      await supabaseAdmin
-        .from('partido')
-        .update({ estado: 'postergado' })
-        .eq('jornada_id', jornadaId)
-        .eq('estado', 'programado')
+      await jornadaRepository.postponeProgrammedMatchesByJornada(jornadaId)
     }
 
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from('jornada')
-      .update(payload)
-      .eq('id', jornadaId)
-      .select('id, numero, estado, fecha_tentativa')
-      .single()
+    const { data: updated, error: updateError } = await jornadaRepository.updateJornada(jornadaId, payload)
 
     if (updateError) throw new AppError(`Error al actualizar jornada: ${updateError.message}`, 500)
 
     return updated
+  },
+
+  /**
+   * Verifica y actualiza automáticamente las jornadas vencidas.
+   * Recorre todas las jornadas con estado 'programada' cuya fecha_tentativa ya pasó
+   * y las marca como 'vencida'.
+   */
+  async autoExpirarJornadasVencidas() {
+    const { data: jornadasVencidas, error } = await jornadaRepository.findExpiredJornadas()
+
+    if (error) throw new AppError(`Error consultando jornadas vencidas: ${error.message}`, 500)
+
+    if (!jornadasVencidas || jornadasVencidas.length === 0) {
+      return { message: 'No hay jornadas vencidas', actualizadas: 0 }
+    }
+
+    const ids = jornadasVencidas.map(j => j.id)
+    const { data: actualizadas, error: updateError } = await jornadaRepository.batchUpdateEstado(ids, ESTADO_VENCIDA)
+
+    if (updateError) throw new AppError(`Error actualizando jornadas vencidas: ${updateError.message}`, 500)
+
+    return {
+      message: `${actualizadas?.length || 0} jornadas marcadas como vencidas`,
+      actualizadas: actualizadas?.length || 0
+    }
   }
 }
 
-export default new JornadaService()
+export default JornadaService
