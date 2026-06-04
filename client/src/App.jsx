@@ -5,10 +5,7 @@ import { ToastProvider } from './components/ui/Toast'
 
 import React, { Suspense, lazy } from 'react'
 
-// ============================================
-// MANTENIMIENTO: cambiar a true para activar el modo mantenimiento
-// ============================================
-const MAINTENANCE_MODE = true
+const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
 
 // Layouts & Synchronous Components
 import Omnisearch from './components/ui/Omnisearch'
